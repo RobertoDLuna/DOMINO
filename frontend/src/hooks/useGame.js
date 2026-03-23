@@ -20,7 +20,8 @@ const useGame = () => {
         setCurrentTurn,
         iWon,
         gameOverMsg,
-        winner
+        winner,
+        scores
     } = useGameContext();
 
     return {
@@ -41,7 +42,8 @@ const useGame = () => {
         setCurrentTurn,
         iWon,
         gameOverMsg,
-        winner
+        winner,
+        scores
     };
 };
 

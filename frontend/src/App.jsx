@@ -206,7 +206,7 @@ function GameContainer() {
   const { 
     room, players, gameState, myHand, board, currentTurn, 
     createRoom, joinRoom, startGame, makeMove, passTurn, 
-    iWon, gameOverMsg 
+    iWon, gameOverMsg, scores 
   } = useGame();
   
   const [roomIdInput, setRoomIdInput] = useState("");
@@ -280,7 +280,21 @@ function GameContainer() {
         <div className="flex-1 flex flex-col items-center bg-green-900 overflow-y-auto relative py-12 px-4 scrollbar-hide">
            <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/felt.png')] fixed pointer-events-none"></div>
            
-           <div className="z-10 w-full max-w-5xl flex justify-center">
+           {/* Placar em Tempo Real */}
+           <div className="absolute top-4 left-0 right-0 flex justify-center gap-4 z-40">
+             {players.map((p, idx) => (
+                <div key={p.id} className={`flex items-center gap-2 px-4 py-2 rounded-full border-2 transition-all 
+                  ${currentTurn === p.id ? 'bg-yellow-400 border-yellow-500 text-blue-900 scale-110 shadow-lg' : 'bg-black/40 border-white/10 text-white/70'}`}>
+                  <span className="text-xl">{p.id === myId ? '🔥' : '👤'}</span>
+                  <div className="flex flex-col leading-tight">
+                    <span className="text-[10px] font-bold uppercase tracking-widest">{p.id === myId ? 'Você' : `J${idx+1}`}</span>
+                    <span className="text-lg font-black">{scores[p.id] || 0} pts</span>
+                  </div>
+                </div>
+             ))}
+           </div>
+
+           <div className="z-10 w-full max-w-5xl flex justify-center mt-8">
              <SnakeBoard 
                board={board} 
                isMyTurn={isMyTurn} 
@@ -346,8 +360,17 @@ function GameContainer() {
                {iWon ? 'VOCÊ VENCEU!' : 'NÃO FOI DESTA VEZ...'}
             </h2>
             
-            <div className={`text-xl font-bold mb-12 p-6 rounded-3xl ${iWon ? 'bg-yellow-50 text-yellow-800' : 'bg-white/5 text-white/50'}`}>
+            <div className={`text-xl font-bold mb-8 p-6 rounded-3xl ${iWon ? 'bg-yellow-50 text-yellow-800' : 'bg-white/5 text-white/50'}`}>
                {gameOverMsg}
+            </div>
+
+            <div className={`mb-12 w-full flex justify-center gap-4`}>
+               {players.map((p, i) => (
+                  <div key={p.id} className={`p-4 rounded-2xl border-2 ${p.id === myId ? 'bg-blue-500 border-blue-400 text-white' : 'bg-gray-100 border-gray-200 text-gray-500'}`}>
+                     <p className="text-[10px] uppercase font-bold tracking-tighter opacity-70">J{i+1}</p>
+                     <p className="text-2xl font-black">{scores[p.id] || 0} pts</p>
+                  </div>
+               ))}
             </div>
 
             <button 

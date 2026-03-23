@@ -1,4 +1,5 @@
 const rooms = new Map();
+const ScoringService = require("../services/ScoringService");
 
 const generateRoomId = () => Math.random().toString(36).substring(2, 7).toUpperCase();
 
@@ -15,13 +16,16 @@ const createGame = (players) => {
   pieces.sort(() => Math.random() - 0.5);
 
   const playerHands = {};
+  const playerScores = {};
   players.forEach((pId) => {
     playerHands[pId] = pieces.splice(0, 7);
+    playerScores[pId] = 0;
   });
 
   return {
     board: [],
     hands: playerHands,
+    scores: playerScores,
     pile: pieces,
     currentTurn: players[0],
     players: players,
@@ -110,7 +114,8 @@ module.exports = (io) => {
           io.to(pId).emit("gameStarted", {
             hand: gameData.hands[pId],
             currentTurn: gameData.currentTurn,
-            board: gameData.board
+            board: gameData.board,
+            scores: gameData.scores
           });
         });
       }
@@ -171,8 +176,12 @@ module.exports = (io) => {
         socket.emit("updateHand", playerHand);
 
         if (playerHand.length === 0) {
+           const winPoints = ScoringService.calculateWinScore(piece);
+           game.scores[socket.id] += winPoints;
+           io.to(roomId).emit("updateScores", game.scores);
+
            // MENSAGEM PERSONALIZADA PARA O VENCEDOR
-           socket.emit("gameOver", { iWon: true, message: "🏆 Parabéns! Você jogou todas as peças!" });
+           socket.emit("gameOver", { iWon: true, message: `🏆 Parabéns! Você bateu e ganhou mais ${winPoints} pontos!` });
            // MENSAGEM PERSONALIZADA PARA OS PERDEDORES
            socket.to(roomId).emit("gameOver", { iWon: false, message: "😿 Alguém venceu! Ele jogou todas as peças." });
            return;
@@ -183,12 +192,22 @@ module.exports = (io) => {
 
         if (checkDeadlock(game)) {
            const winnerId = getWinnerOnDeadlock(game);
+
+           // Regra Trancamento: +1 ponto para quem venceu por menos peças
+           const trancamentoWinnerId = ScoringService.getTrancamentoWinner(game);
+           if (trancamentoWinnerId) {
+             const deadlockPoints = ScoringService.calculateDeadlockScore();
+             game.scores[trancamentoWinnerId] += deadlockPoints;
+             io.to(roomId).emit("updateScores", game.scores);
+           }
            
            game.players.forEach(pId => {
               const won = pId === winnerId;
               io.to(pId).emit("gameOver", { 
                  iWon: won, 
-                 message: won ? "🏆 Você venceu! Tinha menos peças no impasse." : "🏳️ Jogo travado! O outro jogador tinha menos peças." 
+                 message: won 
+                   ? `🏆 Você venceu! Ganhou 1 ponto de trancamento.` 
+                   : "🏳️ Jogo travado! O outro jogador tinha menos peças." 
               });
            });
         } else {
@@ -206,11 +225,22 @@ module.exports = (io) => {
 
       if (checkDeadlock(game)) {
         const winnerId = getWinnerOnDeadlock(game);
+
+        // Regra Trancamento: +1 ponto para quem venceu por menos peças
+        const trancamentoWinnerId = ScoringService.getTrancamentoWinner(game);
+        if (trancamentoWinnerId) {
+          const deadlockPoints = ScoringService.calculateDeadlockScore();
+          game.scores[trancamentoWinnerId] += deadlockPoints;
+          io.to(roomId).emit("updateScores", game.scores);
+        }
+
         game.players.forEach(pId => {
            const won = pId === winnerId;
            io.to(pId).emit("gameOver", { 
               iWon: won, 
-              message: won ? "🏆 Você venceu! Tinha menos peças no impasse." : "🏳️ Jogo travado! O outro jogador tinha menos peças." 
+              message: won 
+                ? `🏆 Você venceu! Ganhou 1 ponto de trancamento.` 
+                : "🏳️ Jogo travado! O outro jogador tinha menos peças." 
            });
         });
       } else {

@@ -15,6 +15,7 @@ export const GameProvider = ({ children }) => {
   const [winner, setWinner] = useState(null);
   const [gameOverMsg, setGameOverMsg] = useState("");
   const [iWon, setIWon] = useState(false);
+  const [scores, setScores] = useState({});
 
   useEffect(() => {
     // Se já estiver conectado, pega o ID imediatamente
@@ -42,10 +43,11 @@ export const GameProvider = ({ children }) => {
       setPlayers(updatedPlayers);
     });
 
-    socket.on('gameStarted', ({ hand, currentTurn, board }) => {
+    socket.on('gameStarted', ({ hand, currentTurn, board, scores }) => {
       setMyHand(hand || []); // Garantir array
       setCurrentTurn(currentTurn);
       setBoard(board || []); // Garantir array
+      setScores(scores || {});
       setWinner(null);
       setGameOverMsg("");
       setGameState('playing');
@@ -60,6 +62,11 @@ export const GameProvider = ({ children }) => {
     socket.on('updateHand', (hand) => {
       console.log('🎒 Sua mão:', hand);
       setMyHand(hand || []);
+    });
+
+    socket.on('updateScores', (newScores) => {
+      console.log('📊 Placar atualizado:', newScores);
+      setScores(newScores);
     });
 
     socket.on('gameOver', ({ iWon, message }) => {
@@ -118,6 +125,7 @@ export const GameProvider = ({ children }) => {
     winner,
     iWon,
     gameOverMsg,
+    scores,
     setGameState,
   };
 

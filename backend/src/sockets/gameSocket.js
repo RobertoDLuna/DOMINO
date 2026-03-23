@@ -34,17 +34,25 @@ const checkDeadlock = (game) => {
 
   const leftEnd = game.board[0].ladoA;
   const rightEnd = game.board[game.board.length - 1].ladoB;
+  
+  console.log(`🔎 Checando deadlock. Bordas: ${leftEnd} | ${rightEnd}`);
 
   for (const pId of game.players) {
     const hand = game.hands[pId];
     if (!hand) continue;
+    
     const canPlay = hand.some(p => 
       p.ladoA === leftEnd || p.ladoB === leftEnd || 
       p.ladoA === rightEnd || p.ladoB === rightEnd
     );
-    if (canPlay) return false;
+    
+    if (canPlay) {
+      console.log(`✅ Jogador ${pId} ainda pode jogar.`);
+      return false;
+    }
   }
 
+  console.log("🏳️ DEADLOCK DETECTADO!");
   return true;
 };
 
@@ -110,7 +118,10 @@ module.exports = (io) => {
 
     socket.on("makeMove", ({ pieceId, side, room: roomId }) => {
       const game = rooms.get(roomId);
-      if (!game || game.currentTurn !== socket.id) return;
+      if (!game || game.currentTurn !== socket.id) {
+        console.warn(`🛑 Tentativa de jogada inválida: Sala ${roomId}, Turno: ${game?.currentTurn}, Socket: ${socket.id}`);
+        return;
+      }
 
       const playerHand = game.hands[socket.id];
       if (!playerHand) return;
@@ -122,28 +133,37 @@ module.exports = (io) => {
       let canPlay = false;
       let finalPiece = { ...piece };
 
+      console.log(`🎲 Tentando mover: ${piece.ladoA}|${piece.ladoB} na ponta: ${side}`);
+
       if (game.board.length === 0) {
         canPlay = true;
+        console.log("📌 Primeira peça da mesa.");
       } else {
         const leftEnd = game.board[0].ladoA;
         const rightEnd = game.board[game.board.length - 1].ladoB;
+        console.log(`🔍 Bordas Atuais - Left: ${leftEnd}, Right: ${rightEnd}`);
 
         if (side === 'left') {
-          if (piece.ladoB === leftEnd) canPlay = true;
-          else if (piece.ladoA === leftEnd) {
-             finalPiece = { ...piece, ladoA: piece.ladoB, ladoB: piece.ladoA };
-             canPlay = true;
+          if (piece.ladoB === leftEnd) {
+            canPlay = true;
+          } else if (piece.ladoA === leftEnd) {
+            finalPiece = { ...piece, ladoA: piece.ladoB, ladoB: piece.ladoA };
+            canPlay = true;
+            console.log("🔄 Girando peça para o lado esquerdo.");
           }
-        } else {
-          if (piece.ladoA === rightEnd) canPlay = true;
-          else if (piece.ladoB === rightEnd) {
-             finalPiece = { ...piece, ladoA: piece.ladoB, ladoB: piece.ladoA };
-             canPlay = true;
+        } else if (side === 'right') {
+          if (piece.ladoA === rightEnd) {
+            canPlay = true;
+          } else if (piece.ladoB === rightEnd) {
+            finalPiece = { ...piece, ladoA: piece.ladoB, ladoB: piece.ladoA };
+            canPlay = true;
+            console.log("🔄 Girando peça para o lado direito.");
           }
         }
       }
 
       if (canPlay) {
+        console.log(`✅ Jogada válida: ${finalPiece.ladoA}|${finalPiece.ladoB}`);
         playerHand.splice(pieceIdx, 1);
         if (side === 'left' || game.board.length === 0) game.board.unshift(finalPiece);
         else game.board.push(finalPiece);

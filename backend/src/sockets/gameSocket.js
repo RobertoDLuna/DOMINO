@@ -143,9 +143,41 @@ module.exports = (io) => {
     });
 
     /**
+     * Leave Room Handler
+     */
+    socket.on("leaveRoom", ({ roomId }) => {
+      const room = rooms.get(roomId);
+      if (room) {
+        socket.leave(roomId);
+        room.players = room.players.filter(id => id !== socket.id);
+        
+        if (room.players.length === 0) {
+          rooms.delete(roomId);
+          console.log(`🗑️ Sala ${roomId} excluída (vazia)`);
+        } else {
+          const playerList = room.players.map(id => ({ id }));
+          io.to(roomId).emit("playerJoined", playerList);
+          console.log(`🚪 ${socket.id} saiu da sala ${roomId}`);
+        }
+      }
+    });
+
+    /**
      * Disconnect Handler
      */
     socket.on("disconnect", () => {
+      // Remover de todas as salas onde o usuário estava
+      rooms.forEach((room, roomId) => {
+        if (room.players.includes(socket.id)) {
+          room.players = room.players.filter(id => id !== socket.id);
+          if (room.players.length === 0) {
+            rooms.delete(roomId);
+          } else {
+            const playerList = room.players.map(id => ({ id }));
+            io.to(roomId).emit("playerJoined", playerList);
+          }
+        }
+      });
       console.log(`👋 Usuário desconectado: ${socket.id}`);
     });
   });

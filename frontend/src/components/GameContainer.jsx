@@ -7,7 +7,7 @@ import SnakeBoard from "./SnakeBoard";
 export default function GameContainer() {
   const { 
     room, players, gameState, myHand, board, currentTurn, 
-    createRoom, joinRoom, startGame, makeMove, passTurn, 
+    createRoom, joinRoom, leaveRoom, startGame, makeMove, passTurn, 
     iWon, gameOverMsg, scores 
   } = useGame();
   
@@ -77,7 +77,7 @@ export default function GameContainer() {
   if (room && gameState === "lobby") {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-indigo-900 text-white p-6 text-center">
-        <h1 className="text-3xl font-bold mb-4 animate-pulse">Aguardando amiguinhos...</h1>
+        <h1 className="text-3xl font-bold mb-4 animate-pulse">Aguardando adversário...</h1>
         
         <div className="bg-white/10 p-10 rounded-[2rem] border-2 border-white/10 mb-10 w-full max-w-xs shadow-2xl relative overflow-hidden group">
           <div className="absolute inset-0 bg-yellow-400/5 group-hover:bg-yellow-400/10 transition-colors"></div>
@@ -99,13 +99,22 @@ export default function GameContainer() {
         {players.length >= 2 ? (
             <button 
               onClick={startGame} 
-              className="bg-orange-500 hover:bg-orange-400 px-16 py-6 rounded-3xl font-black text-3xl shadow-2xl animate-bounce border-b-8 border-orange-800"
+              className="bg-orange-500 hover:bg-orange-400 px-16 py-6 rounded-[2.5rem] font-black text-3xl shadow-[0_15px_60px_rgba(249,115,22,0.4)] animate-bounce border-b-8 border-orange-800 transition-all active:scale-95"
             >
               JOGAR! 🚀
             </button>
         ) : (
-            <div className="text-white/40 italic font-bold">Aguardando mais um jogador...</div>
+            <div className="text-white/40 italic font-bold mb-8 text-xl">Aguardando adversário... ⏳</div>
         )}
+
+        {/* Botão de Voltar Redesenhado para Crianças */}
+        <button 
+          onClick={leaveRoom}
+          className="mt-12 bg-white/10 hover:bg-white/20 px-8 py-4 rounded-3xl border-2 border-white/10 flex items-center gap-4 transition-all hover:scale-105 active:scale-95 group shadow-xl"
+        >
+          <span className="text-3xl bg-white/10 p-2 rounded-2xl group-hover:bg-white/20 transition-colors">🏠</span>
+          <span className="text-xl font-black text-white leading-none uppercase tracking-tight">Voltar para o início</span>
+        </button>
       </div>
     );
   }
@@ -214,7 +223,7 @@ export default function GameContainer() {
             </div>
 
             <button 
-               onClick={() => window.location.reload()}
+               onClick={leaveRoom}
                className={`font-black px-16 py-8 rounded-[2rem] text-3xl transition-all transform hover:scale-110 active:scale-95 shadow-2xl ${iWon ? 'bg-blue-600 text-white' : 'bg-white text-black'}`}
             >
                NOVO JOGO 🏠

@@ -102,6 +102,19 @@ export const GameProvider = ({ children }) => {
     socket.emit('startGame', { room });
   };
 
+  const leaveRoom = () => {
+    if (room) {
+      socket.emit('leaveRoom', { roomId: room });
+      setRoom(null);
+      setPlayers([]);
+      setGameState('lobby');
+      setMyHand([]);
+      setBoard([]);
+      setWinner(null);
+      setGameOverMsg("");
+    }
+  };
+
   const passTurn = () => {
     socket.emit('passTurn', { room });
   };
@@ -119,6 +132,7 @@ export const GameProvider = ({ children }) => {
     currentTurn,
     createRoom,
     joinRoom,
+    leaveRoom,
     startGame,
     passTurn,
     makeMove,

@@ -1,105 +1,49 @@
 const rooms = new Map();
 const ScoringService = require("../services/ScoringService");
+const GameService = require("../services/GameService");
 
-const generateRoomId = () => Math.random().toString(36).substring(2, 7).toUpperCase();
-
-const createGame = (players) => {
-  const images = ["🐶", "🐱", "🐰", "🦊", "🐨", "🦁", "🐯"];
-  const pieces = [];
-
-  for (let i = 0; i < images.length; i++) {
-    for (let j = i; j < images.length; j++) {
-      pieces.push({ id: `p-${i}-${j}`, ladoA: images[i], ladoB: images[j] });
-    }
-  }
-
-  pieces.sort(() => Math.random() - 0.5);
-
-  const playerHands = {};
-  const playerScores = {};
-  players.forEach((pId) => {
-    playerHands[pId] = pieces.splice(0, 7);
-    playerScores[pId] = 0;
-  });
-
-  return {
-    board: [],
-    hands: playerHands,
-    scores: playerScores,
-    pile: pieces,
-    currentTurn: players[0],
-    players: players,
-    status: 'playing'
-  };
-};
-
-const checkDeadlock = (game) => {
-  if (game.board.length === 0) return false;
-
-  const leftEnd = game.board[0].ladoA;
-  const rightEnd = game.board[game.board.length - 1].ladoB;
-  
-  console.log(`🔎 Checando deadlock. Bordas: ${leftEnd} | ${rightEnd}`);
-
-  for (const pId of game.players) {
-    const hand = game.hands[pId];
-    if (!hand) continue;
-    
-    const canPlay = hand.some(p => 
-      p.ladoA === leftEnd || p.ladoB === leftEnd || 
-      p.ladoA === rightEnd || p.ladoB === rightEnd
-    );
-    
-    if (canPlay) {
-      console.log(`✅ Jogador ${pId} ainda pode jogar.`);
-      return false;
-    }
-  }
-
-  console.log("🏳️ DEADLOCK DETECTADO!");
-  return true;
-};
-
-const getWinnerOnDeadlock = (game) => {
-  let winner = game.players[0];
-  let minPieces = game.hands[winner] ? game.hands[winner].length : 999;
-
-  game.players.forEach(pId => {
-    const handLen = game.hands[pId] ? game.hands[pId].length : 999;
-    if (handLen < minPieces) {
-      minPieces = handLen;
-      winner = pId;
-    }
-  });
-
-  return winner;
-};
-
+/**
+ * Socket.io Controller for Domino Game.
+ * Handles event routing and session management.
+ */
 module.exports = (io) => {
   io.on("connection", (socket) => {
-    console.log(`🔌 Novo usuário conectado: ${socket.id}`);
+    console.log(`🔌 Usuário conectado: ${socket.id}`);
 
+    /**
+     * Create Room Handler
+     */
     socket.on("createRoom", () => {
-      const roomId = generateRoomId();
+      const roomId = GameService.generateRoomId();
       socket.join(roomId);
       rooms.set(roomId, { players: [socket.id], status: 'lobby' });
       socket.emit("roomCreated", { roomId });
       io.to(roomId).emit("playerJoined", [{ id: socket.id }]);
+      console.log(`🏠 Sala criada: ${roomId} por ${socket.id}`);
     });
 
+    /**
+     * Join Room Handler
+     */
     socket.on("joinRoom", ({ roomId }) => {
       const room = rooms.get(roomId);
       if (room) {
         socket.join(roomId);
-        if (!room.players.includes(socket.id)) room.players.push(socket.id);
+        if (!room.players.includes(socket.id)) {
+          room.players.push(socket.id);
+        }
         const playerList = room.players.map(id => ({ id }));
         io.to(roomId).emit("playerJoined", playerList);
         socket.emit("joinedSuccess", { roomId });
+        console.log(`🤝 ${socket.id} entrou na sala ${roomId}`);
       } else {
         socket.emit("error", { message: "Sala não encontrada." });
       }
     });
 
+    /**
+     * Start Game Handler
+     */
     socket.on("startGame", ({ room: roomId }) => {
       const room = rooms.get(roomId);
       if (!room) return;
@@ -107,7 +51,7 @@ module.exports = (io) => {
       const activeSocketIds = Array.from(io.sockets.adapter.rooms.get(roomId) || []);
       
       if (activeSocketIds.length >= 2) {
-        const gameData = createGame(activeSocketIds);
+        const gameData = GameService.createGame(activeSocketIds);
         rooms.set(roomId, { ...room, players: activeSocketIds, ...gameData, status: 'playing' });
 
         activeSocketIds.forEach(pId => {
@@ -118,136 +62,89 @@ module.exports = (io) => {
             scores: gameData.scores
           });
         });
+        console.log(`🚀 Jogo iniciado na sala ${roomId}`);
       }
     });
 
-    socket.on("makeMove", ({ pieceId, side, room: roomId }) => {
-      const game = rooms.get(roomId);
-      if (!game || game.currentTurn !== socket.id) {
-        console.warn(`🛑 Tentativa de jogada inválida: Sala ${roomId}, Turno: ${game?.currentTurn}, Socket: ${socket.id}`);
-        return;
-      }
-
-      const playerHand = game.hands[socket.id];
-      if (!playerHand) return;
-
-      const pieceIdx = playerHand.findIndex(p => p.id === pieceId);
-      if (pieceIdx === -1) return;
-
-      const piece = playerHand[pieceIdx];
-      let canPlay = false;
-      let finalPiece = { ...piece };
-
-      console.log(`🎲 Tentando mover: ${piece.ladoA}|${piece.ladoB} na ponta: ${side}`);
-
-      if (game.board.length === 0) {
-        canPlay = true;
-        console.log("📌 Primeira peça da mesa.");
-      } else {
-        const leftEnd = game.board[0].ladoA;
-        const rightEnd = game.board[game.board.length - 1].ladoB;
-        console.log(`🔍 Bordas Atuais - Left: ${leftEnd}, Right: ${rightEnd}`);
-
-        if (side === 'left') {
-          if (piece.ladoB === leftEnd) {
-            canPlay = true;
-          } else if (piece.ladoA === leftEnd) {
-            finalPiece = { ...piece, ladoA: piece.ladoB, ladoB: piece.ladoA };
-            canPlay = true;
-            console.log("🔄 Girando peça para o lado esquerdo.");
-          }
-        } else if (side === 'right') {
-          if (piece.ladoA === rightEnd) {
-            canPlay = true;
-          } else if (piece.ladoB === rightEnd) {
-            finalPiece = { ...piece, ladoA: piece.ladoB, ladoB: piece.ladoA };
-            canPlay = true;
-            console.log("🔄 Girando peça para o lado direito.");
-          }
-        }
-      }
-
-      if (canPlay) {
-        console.log(`✅ Jogada válida: ${finalPiece.ladoA}|${finalPiece.ladoB}`);
-        playerHand.splice(pieceIdx, 1);
-        if (side === 'left' || game.board.length === 0) game.board.unshift(finalPiece);
-        else game.board.push(finalPiece);
-
-        socket.emit("updateHand", playerHand);
-
-        if (playerHand.length === 0) {
-           const winPoints = ScoringService.calculateWinScore(piece);
-           game.scores[socket.id] += winPoints;
-           io.to(roomId).emit("updateScores", game.scores);
-
-           // MENSAGEM PERSONALIZADA PARA O VENCEDOR
-           socket.emit("gameOver", { iWon: true, message: `🏆 Parabéns! Você bateu e ganhou mais ${winPoints} pontos!` });
-           // MENSAGEM PERSONALIZADA PARA OS PERDEDORES
-           socket.to(roomId).emit("gameOver", { iWon: false, message: "😿 Alguém venceu! Ele jogou todas as peças." });
-           return;
-        }
-
-        const currentIdx = game.players.indexOf(socket.id);
-        game.currentTurn = game.players[(currentIdx + 1) % game.players.length];
-
-        if (checkDeadlock(game)) {
-           const winnerId = getWinnerOnDeadlock(game);
-
-           // Regra Trancamento: +1 ponto para quem venceu por menos peças
-           const trancamentoWinnerId = ScoringService.getTrancamentoWinner(game);
-           if (trancamentoWinnerId) {
-             const deadlockPoints = ScoringService.calculateDeadlockScore();
-             game.scores[trancamentoWinnerId] += deadlockPoints;
-             io.to(roomId).emit("updateScores", game.scores);
-           }
-           
-           game.players.forEach(pId => {
-              const won = pId === winnerId;
-              io.to(pId).emit("gameOver", { 
-                 iWon: won, 
-                 message: won 
-                   ? `🏆 Você venceu! Ganhou 1 ponto de trancamento.` 
-                   : "🏳️ Jogo travado! O outro jogador tinha menos peças." 
-              });
-           });
-        } else {
-           io.to(roomId).emit("updateBoard", { board: game.board, currentTurn: game.currentTurn });
-        }
-      }
-    });
-
-    socket.on("passTurn", ({ room: roomId }) => {
-      const game = rooms.get(roomId);
-      if (!game || game.currentTurn !== socket.id) return;
-
-      const currentIdx = game.players.indexOf(socket.id);
+    /**
+     * Helper to handle turn transitions and deadlock checks
+     */
+    const finalizeTurn = (game, roomId, socketId) => {
+      const currentIdx = game.players.indexOf(socketId);
       game.currentTurn = game.players[(currentIdx + 1) % game.players.length];
 
-      if (checkDeadlock(game)) {
-        const winnerId = getWinnerOnDeadlock(game);
+      if (GameService.checkDeadlock(game)) {
+        console.log(`🏳️ Deadlock na sala ${roomId}`);
+        const winnerId = GameService.getWinnerOnDeadlock(game);
 
-        // Regra Trancamento: +1 ponto para quem venceu por menos peças
+        // Trancamento Rule: +1 point for winner
         const trancamentoWinnerId = ScoringService.getTrancamentoWinner(game);
         if (trancamentoWinnerId) {
           const deadlockPoints = ScoringService.calculateDeadlockScore();
           game.scores[trancamentoWinnerId] += deadlockPoints;
           io.to(roomId).emit("updateScores", game.scores);
         }
-
+        
         game.players.forEach(pId => {
-           const won = pId === winnerId;
-           io.to(pId).emit("gameOver", { 
-              iWon: won, 
-              message: won 
-                ? `🏆 Você venceu! Ganhou 1 ponto de trancamento.` 
-                : "🏳️ Jogo travado! O outro jogador tinha menos peças." 
-           });
+          const won = pId === winnerId;
+          io.to(pId).emit("gameOver", { 
+            iWon: won, 
+            message: won 
+              ? `🏆 Você venceu! Ganhou 1 ponto de trancamento.` 
+              : "🏳️ Jogo travado! O outro jogador tinha menos peças." 
+          });
         });
       } else {
         io.to(roomId).emit("updateBoard", { board: game.board, currentTurn: game.currentTurn });
       }
+    };
+
+    /**
+     * Move Execution Handler
+     */
+    socket.on("makeMove", ({ pieceId, side, room: roomId }) => {
+      const game = rooms.get(roomId);
+      if (!game || game.currentTurn !== socket.id) {
+        console.warn(`🛑 Tentativa inválida: Sala ${roomId}, Socket: ${socket.id}`);
+        return;
+      }
+
+      const moveResult = GameService.processMove(game, socket.id, pieceId, side);
+
+      if (moveResult.canPlay) {
+        console.log(`✅ Jogada válida de ${socket.id} na sala ${roomId}`);
+        
+        socket.emit("updateHand", game.hands[socket.id]);
+
+        if (moveResult.isOver) {
+           const piece = game.board[side === 'left' ? 0 : game.board.length - 1]; // Last played piece
+           const winPoints = ScoringService.calculateWinScore(piece);
+           game.scores[socket.id] += winPoints;
+           io.to(roomId).emit("updateScores", game.scores);
+
+           socket.emit("gameOver", { iWon: true, message: `🏆 Parabéns! Você bateu e ganhou mais ${winPoints} pontos!` });
+           socket.to(roomId).emit("gameOver", { iWon: false, message: "😿 Alguém venceu! Ele jogou todas as peças." });
+           return;
+        }
+
+        finalizeTurn(game, roomId, socket.id);
+      }
     });
 
+    /**
+     * Pass Turn Handler
+     */
+    socket.on("passTurn", ({ room: roomId }) => {
+      const game = rooms.get(roomId);
+      if (!game || game.currentTurn !== socket.id) return;
+      
+      console.log(`⏭️ Turno passado por ${socket.id} na sala ${roomId}`);
+      finalizeTurn(game, roomId, socket.id);
+    });
+
+    /**
+     * Disconnect Handler
+     */
     socket.on("disconnect", () => {
       console.log(`👋 Usuário desconectado: ${socket.id}`);
     });

@@ -62,7 +62,8 @@ export default function SnakeBoard({ board, isMyTurn, onDrop, draggingPiece }) {
 
   // Layout calculation
   items.forEach((item, index) => {
-    const isDouble = item.ladoA === item.ladoB;
+    // Only actual pieces can be doubles! DropZones have undefined ladoA/ladoB.
+    const isDouble = item.type === 'piece' && item.ladoA === item.ladoB;
     const isAtEnd = (direction === 1 && col >= maxPerRow - 1) || (direction === -1 && col <= 0);
     
     // Determine orientation: 
@@ -97,10 +98,11 @@ export default function SnakeBoard({ board, isMyTurn, onDrop, draggingPiece }) {
       direction *= -1;
       
       // Update x for the new row's anchor
+      // The anchor must be on the 'inner' side of the U-turn block
       if (direction === -1) {
-         x = posX + pieceWidth;
+         x = posX - GAP;
       } else {
-         x = posX;
+         x = posX + pieceWidth + GAP;
       }
     } else if (board.length > 0) {
       if (direction === 1) {

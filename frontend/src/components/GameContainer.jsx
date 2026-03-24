@@ -248,26 +248,38 @@ export default function GameContainer() {
   if (gameState === "finished") {
     return (
       <div className={`h-screen flex flex-col items-center justify-center p-4 sm:p-8 transition-all duration-1000 overflow-hidden ${iWon ? 'bg-[#FFCE00]' : 'bg-[#009660]'}`}>
-         {iWon && (
+         {iWon ? (
            <div className="absolute inset-0 pointer-events-none overflow-hidden z-20">
               {[...Array(20)].map((_, i) => (
-                <div key={i} className="absolute text-5xl animate-bounce" style={{ left: `${Math.random()*100}%`, top: `${Math.random()*100}%`, animationDelay: `${Math.random()*3}s` }}>💎</div>
+                <div key={`gem-${i}`} className="absolute text-5xl animate-bounce" style={{ left: `${Math.random()*100}%`, top: `${Math.random()*100}%`, animationDelay: `${Math.random()*3}s` }}>💎</div>
               ))}
               {[...Array(20)].map((_, i) => (
-                <div key={i} className="absolute text-5xl animate-pulse" style={{ left: `${Math.random()*100}%`, top: `${Math.random()*100}%`, animationDelay: `${Math.random()*2}s` }}>⭐</div>
+                <div key={`star-${i}`} className="absolute text-5xl animate-pulse" style={{ left: `${Math.random()*100}%`, top: `${Math.random()*100}%`, animationDelay: `${Math.random()*2}s` }}>⭐</div>
+              ))}
+           </div>
+         ) : (
+           <div className="absolute inset-0 pointer-events-none overflow-hidden z-20 opacity-30">
+              {[...Array(15)].map((_, i) => (
+                <div key={`puzzle-${i}`} className="absolute text-5xl animate-pulse" style={{ left: `${Math.random()*100}%`, top: `${Math.random()*100}%`, animationDelay: `${Math.random()*4}s`, transform: `rotate(${Math.random()*360}deg)` }}>🧩</div>
+              ))}
+              {[...Array(15)].map((_, i) => (
+                <div key={`bulb-${i}`} className="absolute text-4xl animate-bounce flex items-center justify-center filter grayscale contrast-200" style={{ left: `${Math.random()*100}%`, top: `${Math.random()*100}%`, animationDelay: `${Math.random()*3}s` }}>💡</div>
+              ))}
+              {[...Array(10)].map((_, i) => (
+                <div key={`book-${i}`} className="absolute text-4xl animate-pulse" style={{ left: `${Math.random()*100}%`, top: `${Math.random()*100}%`, animationDelay: `${Math.random()*5}s`, transform: `rotate(${Math.random()*45}deg)` }}>📚</div>
               ))}
            </div>
          )}
 
-         <div className="scale-75 sm:scale-100 flex flex-col items-center gap-6 sm:gap-8 z-30">
-           <section className={`p-8 sm:p-20 rounded-[3.5rem] sm:rounded-[4.5rem] flex flex-col items-center text-center max-w-xl w-full shadow-[0_40px_100px_rgba(0,0,0,0.3)] transform transition-all animate-in zoom-in duration-700 border-[10px] sm:border-[16px] backdrop-blur-md ${iWon ? 'bg-white border-[#FFCE00]' : 'bg-white border-white/20'}`}>
-              <h1 className="text-xl sm:text-3xl font-black mb-4 sm:mb-6 uppercase tracking-widest text-[#009660] opacity-50">Fim de Jogo</h1>
+         <div className="scale-75 sm:scale-100 flex flex-col items-center gap-4 sm:gap-6 z-30 max-h-[90vh] sm:max-h-none justify-center">
+           <section className={`p-6 sm:p-12 md:p-16 rounded-[3rem] sm:rounded-[4rem] flex flex-col items-center text-center max-w-xl w-full shadow-[0_40px_100px_rgba(0,0,0,0.3)] transform transition-all animate-in zoom-in duration-700 border-[10px] sm:border-[16px] backdrop-blur-md bg-white ${iWon ? 'border-[#FFCE00]' : 'border-[#009660]'}`}>
+              <h1 className="text-lg sm:text-2xl font-black mb-2 sm:mb-4 uppercase tracking-widest text-[#009660] opacity-50">Fim de Jogo</h1>
               
-              <h2 className={`text-6xl sm:text-8xl font-black mb-6 sm:mb-8 uppercase italic tracking-tighter leading-none ${iWon ? 'text-[#009660]' : 'text-red-500'}`}>
+              <h2 className={`whitespace-nowrap font-black mb-4 sm:mb-6 uppercase italic tracking-tighter leading-none ${iWon ? 'text-6xl sm:text-8xl text-[#009660]' : 'text-5xl sm:text-7xl text-red-500'}`}>
                  {iWon ? 'VITÓRIA!' : 'FOI QUASE!'}
               </h2>
               
-              <div className={`text-xl sm:text-2xl font-black mb-8 sm:mb-12 p-6 sm:p-10 rounded-[2rem] sm:rounded-[2.5rem] shadow-inner ${iWon ? 'bg-emerald-50 text-[#009660]' : 'bg-red-50 text-red-900'}`}>
+              <div className={`text-lg sm:text-xl font-black mb-6 sm:mb-8 p-4 sm:p-6 rounded-[1.5rem] sm:rounded-[2rem] shadow-inner ${iWon ? 'bg-emerald-50 text-[#009660]' : 'bg-red-50 text-red-900'}`}>
                  {gameOverMsg}
               </div>
    

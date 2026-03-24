@@ -3,34 +3,59 @@
 @tailwind utilities;
 
 :root {
-  font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
+  /* Campina Grande Educational Palette */
+  --color-primary: #009660;   /* Verde Municipal */
+  --color-secondary: #FFCE00; /* Amarelo Pimentão */
+  --color-accent: #00764D;    /* Verde Escuro */
+  --color-text: #1A1A1A;
+  --color-bg: #F0FDF4;        /* Verde suave para imersão */
+
+  font-family: 'Outfit', 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  color: var(--color-text);
+  background-color: var(--color-bg);
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  -moz-osx-smoothing: grayscale;
 }
 
 body {
   margin: 0;
   display: flex;
-  place-items: center;
   min-width: 320px;
   min-height: 100vh;
-}
-
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+  justify-content: center;
+  align-items: center;
+  background: radial-gradient(circle at center, #FFFFFF 0%, #F0FDF4 100%);
 }
 
 #root {
   width: 100%;
-  margin: 0 auto;
+}
+
+.child-friendly-shadow {
+  box-shadow: 0 10px 40px rgba(0, 150, 96, 0.15);
+}
+
+.text-stroke {
+  -webkit-text-stroke: 1.5px white;
+}
+
+@keyframes bounce-slow {
+  0%, 100% {
+    transform: translateY(-5%);
+    animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+  }
+  50% {
+    transform: translateY(0);
+    animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+  }
+}
+
+.animate-bounce-slow {
+  animation: bounce-slow 3s infinite;
 }

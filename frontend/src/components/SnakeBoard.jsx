@@ -7,21 +7,31 @@ const METRICS = {
   H_W: 120,
   H_H: 68,
   V_W: 60,
-  V_H: 128,
-  GAP: 32,
-  MARGIN: 60
+  V_H: 128, 
+  GAP: 4,   
+  MARGIN: 40 
 };
 
 /**
  * SnakeBoard component handles the adaptive "snake" layout for the dominoes.
  */
 export default function SnakeBoard({ board, isMyTurn, onDrop, draggingPiece }) {
-  const [containerWidth, setContainerWidth] = useState(window.innerWidth);
+  const containerRef = React.useRef(null);
+  const [containerSize, setContainerSize] = useState({ width: 800, height: 600 });
 
   useEffect(() => {
-    const handleResize = () => setContainerWidth(window.innerWidth);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    if (!containerRef.current) return;
+    const observer = new ResizeObserver(entries => {
+      for (let entry of entries) {
+        // Debounce or directly set state to track exact pixel space
+        setContainerSize({
+          width: entry.contentRect.width,
+          height: entry.contentRect.height
+        });
+      }
+    });
+    observer.observe(containerRef.current);
+    return () => observer.disconnect();
   }, []);
 
   const { H_W, H_H, V_W, V_H, GAP, MARGIN } = METRICS;
@@ -41,8 +51,8 @@ export default function SnakeBoard({ board, isMyTurn, onDrop, draggingPiece }) {
   let direction = 1; // 1 = Left to Right, -1 = Right to Left
   let col = 0;
   
-  const availableWidth = Math.max(containerWidth - MARGIN * 2, 400);
-  const maxPerRow = Math.floor(availableWidth / (H_W + GAP));
+  const maxPerRow = 6; // FIXED Logical Grid to guarantee predictability
+  const boardFullWidth = (maxPerRow * (H_W + GAP)) + (MARGIN * 2);
 
   // Center start position on empty table
   if (board.length === 0 && items.length > 0) {
@@ -52,50 +62,126 @@ export default function SnakeBoard({ board, isMyTurn, onDrop, draggingPiece }) {
 
   // Layout calculation
   items.forEach((item, index) => {
+    const isDouble = item.ladoA === item.ladoB;
     const isAtEnd = (direction === 1 && col >= maxPerRow - 1) || (direction === -1 && col <= 0);
-    // Vertical transition happens if we're at the end and there are more items to draw
-    const isVertical = isAtEnd && index < items.length - 1 && board.length > 0;
+    
+    // Determine orientation: 
+    // - Vertical turn pieces (isVertical) are ALWAYS vertical.
+    // - Doubles in horizontal rows are vertical (T-shape).
+    const isVerticalPiece = (isAtEnd && index < items.length - 1 && board.length > 0) || (isDouble && board.length > 0);
+    
+    // Calculate precise width/height based on orientation
+    const pieceWidth = isVerticalPiece ? V_W : H_W;
+    const pieceHeight = isVerticalPiece ? V_H : H_H;
+    
+    // When moving left, x marks the right-most bounding edge for the next piece.
+    let posX = x;
+    if (direction === -1 && board.length > 0) {
+       posX = x - pieceWidth;
+    }
 
+    // Docking adjustment for Doubles (centers them on the row)
+    const yOffset = (isDouble && !isAtEnd && board.length > 0) ? (H_H - V_H) / 2 : 0;
+    
     positions.push({
       ...item,
-      posX: x,
-      posY: y,
-      horizontal: !isVertical,
+      posX: posX,
+      posY: y + yOffset,
+      horizontal: !isVerticalPiece,
       reverse: direction === -1
     });
 
-    if (isVertical) {
+    if (isAtEnd && index < items.length - 1 && board.length > 0) {
+      // Transition Vertical
       y += V_H + GAP;
       direction *= -1;
+      
+      // Update x for the new row's anchor
+      if (direction === -1) {
+         x = posX + pieceWidth;
+      } else {
+         x = posX;
+      }
     } else if (board.length > 0) {
-      x += direction * (H_W + GAP);
+      if (direction === 1) {
+         x += pieceWidth + GAP;
+      } else {
+         x -= (pieceWidth + GAP);
+      }
       col += direction;
     }
   });
 
-  const totalHeight = Math.max(y + V_H + MARGIN, 500);
+  // ----------------------------------------------------------------
+  // Bounding Box Calculation
+  // ----------------------------------------------------------------
+  let minX = Infinity, maxX = -Infinity;
+  let minY = Infinity, maxY = -Infinity;
+
+  if (positions.length > 0) {
+    positions.forEach(pos => {
+      const pieceWidth = pos.horizontal ? H_W : V_W;
+      const pieceHeight = pos.horizontal ? H_H : V_H;
+      
+      minX = Math.min(minX, pos.posX);
+      maxX = Math.max(maxX, pos.posX + pieceWidth);
+      minY = Math.min(minY, pos.posY);
+      maxY = Math.max(maxY, pos.posY + pieceHeight);
+    });
+  } else {
+    minX = 0; maxX = boardFullWidth;
+    minY = 0; maxY = 400;
+  }
+
+  const bbWidth = maxX - minX;
+  const bbHeight = maxY - minY;
+
+  // The new logical container dimensions (with strict safety margins)
+  const logicalWidth = bbWidth + (MARGIN * 2);
+  const logicalHeight = Math.max(bbHeight + (MARGIN * 2), 400);
+
+  // Shift all pieces so the top-left extreme is EXACTLY at MARGIN
+  const offsetX = MARGIN - minX;
+  const offsetY = MARGIN - minY;
+
+  positions.forEach(pos => {
+    pos.posX += offsetX;
+    pos.posY += offsetY;
+  });
+
+  // Viewport Zoom Calculation (Camera effect)
+  // Fit logical bounding box into available screen space perfectly
+  const scaleX = containerSize.width / logicalWidth;
+  const scaleY = containerSize.height / logicalHeight;
+  const boardScale = Math.min(scaleX, scaleY, 1); // Never blow up piece size > 1x
 
   return (
-    <div 
-      className="relative transition-all duration-700 mx-auto" 
-      style={{ height: totalHeight, width: (maxPerRow * (H_W + GAP)) }}
-    >
+    <div ref={containerRef} className="w-full h-full relative overflow-hidden flex justify-center items-center">
+      <div 
+        className="relative transition-all duration-700 ease-in-out" 
+        style={{ 
+          width: logicalWidth,
+          height: logicalHeight,
+          transform: `scale(${boardScale})`,
+          transformOrigin: 'center center'
+        }}
+      >
       {/* Empty board background */}
       {board.length === 0 && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center opacity-10 pointer-events-none -translate-y-12">
-           <div className="text-[12rem] mb-4">🧩</div>
-           <p className="text-white text-5xl font-black uppercase italic tracking-widest text-center leading-tight">
-             Mesa Vazia<br/><span className="text-2xl opacity-50">Arraste a primeira peça para o meio!</span>
+        <div className="absolute inset-0 flex flex-col items-center justify-center opacity-10 pointer-events-none">
+           <div className="text-[8rem] mb-4">🧩</div>
+           <p className="text-white text-3xl font-black uppercase italic tracking-widest text-center leading-tight">
+             Mesa Vazia<br/><span className="text-lg opacity-50 lowercase font-sans">Arraste a primeira peça para o meio!</span>
            </p>
         </div>
       )}
 
-      {/* Path line helper */}
+      {/* Visual Path (Dashed Line) */}
       {board.length > 1 && (
-        <svg className="absolute inset-0 pointer-events-none" style={{ width: '100%', height: '100%' }}>
-          {positions.map((pos, i) => {
+        <svg className="absolute inset-0 pointer-events-none opacity-10 w-full h-full">
+          {positions.filter(p => !p.type).map((pos, i, arr) => {
             if (i === 0) return null;
-            const prev = positions[i-1];
+            const prev = arr[i-1];
             return (
               <line 
                 key={`path-${i}`}
@@ -103,11 +189,9 @@ export default function SnakeBoard({ board, isMyTurn, onDrop, draggingPiece }) {
                 y1={prev.posY + (prev.horizontal ? H_H/2 : V_H/2)}
                 x2={pos.posX + (pos.horizontal ? H_W/2 : V_W/2)}
                 y2={pos.posY + (pos.horizontal ? H_H/2 : V_H/2)}
-                stroke="rgba(255,255,255,0.05)"
-                strokeWidth="8"
-                strokeLinecap="round"
-                strokeDasharray="1, 20"
-                className="animate-[dash_10s_linear_infinite]"
+                stroke="white"
+                strokeWidth="4"
+                strokeDasharray="8, 12"
               />
             );
           })}
@@ -140,22 +224,17 @@ export default function SnakeBoard({ board, isMyTurn, onDrop, draggingPiece }) {
         }
 
         return (
-          <div key={pos.id || idx} style={itemStyle}>
+          <div key={`${pos.id}-${idx}`} style={itemStyle}>
             <Piece 
               piece={pos} 
               horizontal={pos.horizontal} 
               reverse={pos.reverse}
-              className={`${draggingPiece === pos.id ? 'opacity-30 scale-90' : 'hover:z-50'}`}
+              className={`${draggingPiece === pos.id ? 'opacity-30 scale-90' : 'hover:z-50 shadow-2xl'}`}
             />
           </div>
         );
       })}
-
-      <style>{`
-        @keyframes dash {
-          to { stroke-dashoffset: -200; }
-        }
-      `}</style>
+      </div>
     </div>
   );
 }

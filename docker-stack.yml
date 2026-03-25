@@ -12,13 +12,13 @@ services:
       labels:
         - "traefik.enable=true"
         # Dominio Principal
-        - "traefik.http.routers.domino.rule=Host(games.portaleducampina.com.br)"
+        - "traefik.http.routers.domino.rule=Host(`games.portaleducampina.com.br`)"
         - "traefik.http.routers.domino.entrypoints=websecure"
         - "traefik.http.routers.domino.tls.certresolver=letsencryptresolver"
         # Servico
         - "traefik.http.services.domino.loadbalancer.server.port=3001"
-        # Middlewares (Assumindo que os nomes seguem o seu traefik global)
-        - "traefik.http.routers.domino.middlewares=secure-headers,ratelimit"
+        # Comentado middlewares para depurar o 404
+        #- "traefik.http.routers.domino.middlewares=secure-headers,ratelimit"
       resources:
         limits:
           memory: 384M

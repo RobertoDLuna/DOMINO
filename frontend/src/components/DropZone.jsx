@@ -30,8 +30,8 @@ export default function DropZone({
     onDrop(side);
   };
 
-  const baseStyles = `relative group rounded-2xl flex items-center justify-center transition-all duration-300 overflow-hidden flex-shrink-0 mx-2 text-white font-black text-center`;
-  const sizeStyles = horizontal ? 'w-[120px] h-[60px]' : 'w-[60px] h-[120px]';
+  const baseStyles = `relative group rounded-2xl flex items-center justify-center transition-all duration-300 overflow-hidden flex-shrink-0 text-white font-black text-center`;
+  const sizeStyles = horizontal ? 'w-[120px] h-[68px]' : 'w-[60px] h-[128px]';
   const overStyles = isOver 
     ? 'bg-yellow-400 scale-110 shadow-[0_0_40px_rgba(250,204,21,0.6)]' 
     : active 

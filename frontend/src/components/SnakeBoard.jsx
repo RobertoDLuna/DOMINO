@@ -38,7 +38,6 @@ export default function SnakeBoard({ board, isMyTurn, onDrop, draggingPiece }) {
 
   // ----------------------------------------------------------------
   // 1. DETERMINISTIC ITEM LIST
-  // We ALWAYS include placeholders for DropZones to maintain grid indices.
   // ----------------------------------------------------------------
   const layoutItems = board.length === 0 
     ? [{ type: 'drop', side: 'left', label: 'COMEÇAR ✨' }]
@@ -49,110 +48,158 @@ export default function SnakeBoard({ board, isMyTurn, onDrop, draggingPiece }) {
       ];
 
   const positions = [];
-  let x = 0;
-  let y = 0;
-  let direction = 1; // 1 = Left to Right, -1 = Right to Left
+  const maxPerRow = 6;
+  
+  let mode = 'RIGHT'; // 'RIGHT', 'LEFT', 'DOWN'
+  let nextMode = 'LEFT';
   let col = 0;
   
-  const maxPerRow = 6; 
+  // Axes for perfect alignment
+  let rowAxisY = MARGIN + V_H / 2;
+  let colAxisX = 0; 
+  
+  // Cursors for placing the next piece in the current axis
+  let cursorX = MARGIN;
+  let cursorY = 0;
+  
+  let downCount = 0;
 
-  // Center start position on empty table
+  // Center start for empty board
   if (board.length === 0) {
-      x = (maxPerRow * (H_W + GAP)) / 2 - H_W / 2;
-      y = 60;
+    cursorX = (containerSize.width / 2) - (H_W / 2);
   }
 
-  // ----------------------------------------------------------------
-  // 2. LAYOUT CALCULATION (Grid-based Snake)
-  // ----------------------------------------------------------------
   layoutItems.forEach((item, index) => {
     const isPiece = item.type === 'piece';
-    const isDouble = isPiece && item.ladoA === item.ladoB;
-    const isAtEnd = (direction === 1 && col >= maxPerRow - 1) || (direction === -1 && col <= 0);
+    const isDouble = isPiece && String(item.ladoA) === String(item.ladoB);
     
-    // Transition pieces (Turns) are horizontal OR vertical based on position
-    const isVerticalPiece = (isAtEnd && index < layoutItems.length - 1 && board.length > 0) || (isDouble && board.length > 0);
-    
-    const pieceWidth = isVerticalPiece ? V_W : H_W;
-    const pieceHeight = isVerticalPiece ? V_H : H_H;
-    
-    let posX = x;
-    if (direction === -1 && board.length > 0) {
-        posX = x - pieceWidth;
+    // Determine dimensions based on mode and piece type
+    let horizontal = false;
+    if (mode === 'RIGHT' || mode === 'LEFT') {
+      horizontal = !isDouble; // In rows, double is vertical
+    } else {
+      horizontal = isDouble;  // In columns, double is horizontal
     }
-
-    const yOffset = (isDouble && !isAtEnd && board.length > 0) ? (H_H - V_H) / 2 : 0;
     
-    // Always add to positions to maintain deterministic grid
-    positions.push({
-      ...item,
-      posX: posX,
-      posY: y + yOffset,
-      horizontal: !isVerticalPiece,
-      reverse: direction === -1,
-      isActive: isMyTurn // Global turn state
-    });
+    const w = horizontal ? H_W : V_W;
+    const h = horizontal ? H_H : V_H;
 
-    // Logic for the NEXT item in the grid
-    if (isAtEnd && index < layoutItems.length - 1 && board.length > 0) {
-      // Transition to next row! Attach to the BOTTOM of the U-turn piece.
-      // U-turn top is y + yOffset. Its bottom is y + yOffset + pieceHeight.
-      // So next row y is exactly the bottom plus GAP.
-      y = y + yOffset + pieceHeight + GAP;
-      direction *= -1;
+    let posX = 0;
+    let posY = 0;
+    let reverse = false;
+
+    if (mode === 'RIGHT') {
+      posX = cursorX;
+      posY = rowAxisY - h / 2;     // Alinha top/bottom!
       
-      if (direction === -1) {
-         // Next piece is horizontal, moves Left.
-         // Its right edge should align with the right edge of the U-turn.
-         // U-turn right edge is posX + pieceWidth.
-         // So x (the cursor for right edge) becomes posX + pieceWidth.
-         x = posX + pieceWidth;
-      } else {
-         // Next piece moves Right. Its left edge aligns with left edge of U-turn.
-         x = posX;
+      positions.push({ ...item, posX, posY, horizontal, reverse: false, isActive: isMyTurn });
+      
+      col++;
+      cursorX += w + GAP;
+      
+      // NATURAL ELBOW: Preditively turn if next piece is a normal piece, 
+      // allowing it to act as the vertical column bridge.
+      const nextItem = layoutItems[index + 1];
+      const nextIsDouble = nextItem && nextItem.type === 'piece' && String(nextItem.ladoA) === String(nextItem.ladoB);
+      
+      if (col >= maxPerRow - 1 && (!nextIsDouble || col >= maxPerRow + 1) && index < layoutItems.length - 1) {
+        mode = 'DOWN';
+        nextMode = 'LEFT';
+        // Define descending column axis perfectly aligned to the right/center
+        if (isDouble) {
+          colAxisX = posX + V_W / 2; 
+        } else {
+          colAxisX = posX + H_W - V_W / 2; 
+        }
+        cursorY = posY + h + GAP;
+        downCount = 0;
       }
-    } else if (board.length > 0 || (board.length === 0 && index < layoutItems.length - 1)) {
-      if (direction === 1) {
-         x += pieceWidth + GAP;
-      } else {
-         x -= (pieceWidth + GAP);
+    } 
+    else if (mode === 'LEFT') {
+      // In LEFT mode, cursorX acts as the RIGHT limit of the piece
+      posX = cursorX - w;
+      posY = rowAxisY - h / 2;     // Alinha top/bottom!
+      
+      positions.push({ ...item, posX, posY, horizontal, reverse: true, isActive: isMyTurn });
+      
+      col++;
+      cursorX -= (w + GAP);
+      
+      const nextItem = layoutItems[index + 1];
+      const nextIsDouble = nextItem && nextItem.type === 'piece' && String(nextItem.ladoA) === String(nextItem.ladoB);
+      
+      if (col >= maxPerRow - 1 && (!nextIsDouble || col >= maxPerRow + 1) && index < layoutItems.length - 1) {
+        mode = 'DOWN';
+        nextMode = 'RIGHT';
+        // Define descending column axis perfectly aligned to the left/center
+        if (isDouble) {
+          colAxisX = posX + V_W / 2; 
+        } else {
+          colAxisX = posX + V_W / 2; 
+        }
+        cursorY = posY + h + GAP;
+        downCount = 0;
       }
-      col += direction;
+    }
+    else if (mode === 'DOWN') {
+      posX = colAxisX - w / 2;     // Alinha left/right!
+      posY = cursorY;
+      
+      positions.push({ ...item, posX, posY, horizontal, reverse: false, isActive: isMyTurn });
+      
+      downCount++;
+      cursorY += h + GAP;
+      
+      // Single piece down to transition rows
+      if (downCount >= 1 && index < layoutItems.length - 1) {
+        mode = nextMode;
+        col = 0;
+        
+        // Peek slightly ahead: If the first piece of the new row is a Double (carroça),
+        // it will render vertically (taller). We must push the row axis down to prevent
+        // its top edge from overlapping/amontoando with the piece we just placed.
+        const firstRowItem = layoutItems[index + 1];
+        const isFirstRowItemDouble = firstRowItem && firstRowItem.type === 'piece' && String(firstRowItem.ladoA) === String(firstRowItem.ladoB);
+        
+        // Next row starts exactly below
+        rowAxisY = cursorY + (isFirstRowItemDouble ? V_H / 2 : H_H / 2);
+        
+        // Define start margin for the new row based on the corner piece
+        if (nextMode === 'LEFT') {
+          if (isDouble) {
+             cursorX = colAxisX;            // Busca o meio da carroça horizontal!
+          } else {
+             cursorX = colAxisX + V_W / 2;  // Alinha com a borda direita da peça vertical
+          }
+        } else { // nextMode === 'RIGHT'
+          if (isDouble) {
+             cursorX = colAxisX;            // Busca o meio da carroça horizontal!
+          } else {
+             cursorX = colAxisX - V_W / 2;  // Alinha com a borda esquerda da peça vertical
+          }
+        }
+      }
     }
   });
 
-  // ----------------------------------------------------------------
-  // Bounding Box Calculation
-  // ----------------------------------------------------------------
-  let minX = Infinity, maxX = -Infinity;
-  let minY = Infinity, maxY = -Infinity;
 
-  if (positions.length > 0) {
-    positions.forEach(pos => {
-      const pieceWidth = pos.horizontal ? H_W : V_W;
-      const pieceHeight = pos.horizontal ? H_H : V_H;
-      
-      minX = Math.min(minX, pos.posX);
-      maxX = Math.max(maxX, pos.posX + pieceWidth);
-      minY = Math.min(minY, pos.posY);
-      maxY = Math.max(maxY, pos.posY + pieceHeight);
-    });
-  } else {
-    minX = 0; maxX = boardFullWidth;
-    minY = 0; maxY = 400;
-  }
+  // Calculate final bounding box for centering/scaling
+  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+  positions.forEach(pos => {
+    const pw = pos.horizontal ? H_W : V_W;
+    const ph = pos.horizontal ? H_H : V_H;
+    minX = Math.min(minX, pos.posX);
+    maxX = Math.max(maxX, pos.posX + pw);
+    minY = Math.min(minY, pos.posY);
+    maxY = Math.max(maxY, pos.posY + ph);
+  });
 
-  const bbWidth = maxX - minX;
-  const bbHeight = maxY - minY;
+  const logicalWidth = (maxX - minX) + (MARGIN * 2);
+  const logicalHeight = Math.max((maxY - minY) + (MARGIN * 2), 400);
 
-  // The new logical container dimensions (with strict safety margins)
-  const logicalWidth = bbWidth + (MARGIN * 2);
-  const logicalHeight = Math.max(bbHeight + (MARGIN * 2), 400);
-
-  // Shift all pieces so the top-left extreme is EXACTLY at MARGIN
+  // Normalize positions within logical container
   const offsetX = MARGIN - minX;
   const offsetY = MARGIN - minY;
-
   positions.forEach(pos => {
     pos.posX += offsetX;
     pos.posY += offsetY;

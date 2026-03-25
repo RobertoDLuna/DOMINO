@@ -1,8 +1,10 @@
 import { io } from "socket.io-client";
 
-const SOCKET_URL = "http://localhost:3001"; 
+// Detect if we are in production to use relative URL
+const isProduction = window.location.hostname !== "localhost";
+const SOCKET_URL = isProduction ? window.location.origin : "http://localhost:3001"; 
 
 export const socket = io(SOCKET_URL, {
-  autoConnect: true, // Conectar automaticamente ao carregar
+  autoConnect: true,
   reconnection: true,
 });

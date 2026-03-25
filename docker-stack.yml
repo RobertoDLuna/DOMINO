@@ -1,0 +1,32 @@
+version: "3.8"
+
+services:
+  app:
+    image: robsluna/domino-game:latest
+    networks:
+      - public-proxy-v2
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      labels:
+        - "traefik.enable=true"
+        # Dominio Principal
+        - "traefik.http.routers.domino.rule=Host(games.portaleducampina.com.br)"
+        - "traefik.http.routers.domino.entrypoints=websecure"
+        - "traefik.http.routers.domino.tls.certresolver=letsencryptresolver"
+        # Servico
+        - "traefik.http.services.domino.loadbalancer.server.port=3001"
+        # Middlewares (Assumindo que os nomes seguem o seu traefik global)
+        - "traefik.http.routers.domino.middlewares=secure-headers,ratelimit"
+      resources:
+        limits:
+          memory: 384M
+          cpus: "0.5"
+        reservations:
+          memory: 128M
+          cpus: "0.2"
+
+networks:
+  public-proxy-v2:
+    external: true

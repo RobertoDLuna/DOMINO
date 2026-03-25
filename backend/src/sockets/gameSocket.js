@@ -44,14 +44,14 @@ module.exports = (io) => {
     /**
      * Start Game Handler
      */
-    socket.on("startGame", ({ room: roomId }) => {
+    socket.on("startGame", ({ room: roomId, themeId }) => {
       const room = rooms.get(roomId);
       if (!room) return;
 
       const activeSocketIds = Array.from(io.sockets.adapter.rooms.get(roomId) || []);
       
       if (activeSocketIds.length >= 2) {
-        const gameData = GameService.createGame(activeSocketIds);
+        const gameData = GameService.createGame(activeSocketIds, themeId);
         rooms.set(roomId, { ...room, players: activeSocketIds, ...gameData, status: 'playing' });
 
         activeSocketIds.forEach(pId => {
@@ -59,10 +59,11 @@ module.exports = (io) => {
             hand: gameData.hands[pId],
             currentTurn: gameData.currentTurn,
             board: gameData.board,
-            scores: gameData.scores
+            scores: gameData.scores,
+            theme: gameData.theme
           });
         });
-        console.log(`🚀 Jogo iniciado na sala ${roomId}`);
+        console.log(`🚀 Jogo iniciado na sala ${roomId} com o tema ${gameData.theme.name}`);
       }
     });
 

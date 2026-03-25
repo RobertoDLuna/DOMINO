@@ -36,13 +36,16 @@ export default function SnakeBoard({ board, isMyTurn, onDrop, draggingPiece }) {
 
   const { H_W, H_H, V_W, V_H, GAP, MARGIN } = METRICS;
 
-  // Build items list (drops + pieces + drops)
-  const items = board.length === 0 
-    ? (isMyTurn ? [{ type: 'drop', side: 'left', label: 'COMEÇAR ✨' }] : [])
+  // ----------------------------------------------------------------
+  // 1. DETERMINISTIC ITEM LIST
+  // We ALWAYS include placeholders for DropZones to maintain grid indices.
+  // ----------------------------------------------------------------
+  const layoutItems = board.length === 0 
+    ? [{ type: 'drop', side: 'left', label: 'COMEÇAR ✨' }]
     : [
-        ...(isMyTurn ? [{ type: 'drop', side: 'left', label: 'Cá' }] : []),
+        { type: 'drop', side: 'left', label: 'Cá' },
         ...board.map(p => ({ type: 'piece', ...p })),
-        ...(isMyTurn ? [{ type: 'drop', side: 'right', label: 'Lá' }] : [])
+        { type: 'drop', side: 'right', label: 'Lá' }
       ];
 
   const positions = [];
@@ -51,60 +54,64 @@ export default function SnakeBoard({ board, isMyTurn, onDrop, draggingPiece }) {
   let direction = 1; // 1 = Left to Right, -1 = Right to Left
   let col = 0;
   
-  const maxPerRow = 6; // FIXED Logical Grid to guarantee predictability
-  const boardFullWidth = (maxPerRow * (H_W + GAP)) + (MARGIN * 2);
+  const maxPerRow = 6; 
 
   // Center start position on empty table
-  if (board.length === 0 && items.length > 0) {
-     x = (maxPerRow * (H_W + GAP)) / 2 - H_W / 2;
-     y = 60;
+  if (board.length === 0) {
+      x = (maxPerRow * (H_W + GAP)) / 2 - H_W / 2;
+      y = 60;
   }
 
-  // Layout calculation
-  items.forEach((item, index) => {
-    // Only actual pieces can be doubles! DropZones have undefined ladoA/ladoB.
-    const isDouble = item.type === 'piece' && item.ladoA === item.ladoB;
+  // ----------------------------------------------------------------
+  // 2. LAYOUT CALCULATION (Grid-based Snake)
+  // ----------------------------------------------------------------
+  layoutItems.forEach((item, index) => {
+    const isPiece = item.type === 'piece';
+    const isDouble = isPiece && item.ladoA === item.ladoB;
     const isAtEnd = (direction === 1 && col >= maxPerRow - 1) || (direction === -1 && col <= 0);
     
-    // Determine orientation: 
-    // - Vertical turn pieces (isVertical) are ALWAYS vertical.
-    // - Doubles in horizontal rows are vertical (T-shape).
-    const isVerticalPiece = (isAtEnd && index < items.length - 1 && board.length > 0) || (isDouble && board.length > 0);
+    // Transition pieces (Turns) are horizontal OR vertical based on position
+    const isVerticalPiece = (isAtEnd && index < layoutItems.length - 1 && board.length > 0) || (isDouble && board.length > 0);
     
-    // Calculate precise width/height based on orientation
     const pieceWidth = isVerticalPiece ? V_W : H_W;
     const pieceHeight = isVerticalPiece ? V_H : H_H;
     
-    // When moving left, x marks the right-most bounding edge for the next piece.
     let posX = x;
     if (direction === -1 && board.length > 0) {
-       posX = x - pieceWidth;
+        posX = x - pieceWidth;
     }
 
-    // Docking adjustment for Doubles (centers them on the row)
     const yOffset = (isDouble && !isAtEnd && board.length > 0) ? (H_H - V_H) / 2 : 0;
     
+    // Always add to positions to maintain deterministic grid
     positions.push({
       ...item,
       posX: posX,
       posY: y + yOffset,
       horizontal: !isVerticalPiece,
-      reverse: direction === -1
+      reverse: direction === -1,
+      isActive: isMyTurn // Global turn state
     });
 
-    if (isAtEnd && index < items.length - 1 && board.length > 0) {
-      // Transition Vertical
-      y += V_H + GAP;
+    // Logic for the NEXT item in the grid
+    if (isAtEnd && index < layoutItems.length - 1 && board.length > 0) {
+      // Transition to next row! Attach to the BOTTOM of the U-turn piece.
+      // U-turn top is y + yOffset. Its bottom is y + yOffset + pieceHeight.
+      // So next row y is exactly the bottom plus GAP.
+      y = y + yOffset + pieceHeight + GAP;
       direction *= -1;
       
-      // Update x for the new row's anchor
-      // The anchor must be on the 'inner' side of the U-turn block
       if (direction === -1) {
-         x = posX - GAP;
+         // Next piece is horizontal, moves Left.
+         // Its right edge should align with the right edge of the U-turn.
+         // U-turn right edge is posX + pieceWidth.
+         // So x (the cursor for right edge) becomes posX + pieceWidth.
+         x = posX + pieceWidth;
       } else {
-         x = posX + pieceWidth + GAP;
+         // Next piece moves Right. Its left edge aligns with left edge of U-turn.
+         x = posX;
       }
-    } else if (board.length > 0) {
+    } else if (board.length > 0 || (board.length === 0 && index < layoutItems.length - 1)) {
       if (direction === 1) {
          x += pieceWidth + GAP;
       } else {
@@ -220,6 +227,7 @@ export default function SnakeBoard({ board, isMyTurn, onDrop, draggingPiece }) {
                 onDrop={onDrop} 
                 matchIcon={matchIcon}
                 horizontal={pos.horizontal || board.length === 0}
+                active={pos.isActive}
               />
             </div>
           );

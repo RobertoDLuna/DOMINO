@@ -16,6 +16,7 @@ export const GameProvider = ({ children }) => {
   const [gameOverMsg, setGameOverMsg] = useState("");
   const [iWon, setIWon] = useState(false);
   const [scores, setScores] = useState({});
+  const [currentTheme, setCurrentTheme] = useState(null);
 
   useEffect(() => {
     // Se já estiver conectado, pega o ID imediatamente
@@ -43,11 +44,12 @@ export const GameProvider = ({ children }) => {
       setPlayers(updatedPlayers);
     });
 
-    socket.on('gameStarted', ({ hand, currentTurn, board, scores }) => {
+    socket.on('gameStarted', ({ hand, currentTurn, board, scores, theme }) => {
       setMyHand(hand || []); // Garantir array
       setCurrentTurn(currentTurn);
       setBoard(board || []); // Garantir array
       setScores(scores || {});
+      setCurrentTheme(theme);
       setWinner(null);
       setGameOverMsg("");
       setGameState('playing');
@@ -98,8 +100,8 @@ export const GameProvider = ({ children }) => {
     socket.emit('joinRoom', { roomId: roomId.trim().toUpperCase() });
   };
 
-  const startGame = () => {
-    socket.emit('startGame', { room });
+  const startGame = (themeId) => {
+    socket.emit('startGame', { room, themeId });
   };
 
   const leaveRoom = () => {
@@ -112,6 +114,7 @@ export const GameProvider = ({ children }) => {
       setBoard([]);
       setWinner(null);
       setGameOverMsg("");
+      setCurrentTheme(null);
     }
   };
 
@@ -140,6 +143,7 @@ export const GameProvider = ({ children }) => {
     iWon,
     gameOverMsg,
     scores,
+    currentTheme,
     setGameState,
   };
 

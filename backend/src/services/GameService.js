@@ -1,8 +1,8 @@
 const ScoringService = require("./ScoringService");
+const themes = require("../config/themes");
 
 /**
  * GameService handles the core business logic for the Dominoes game.
- * Separation of concerns: Logic is here, Event handling is in the socket controller.
  */
 class GameService {
   /**
@@ -15,14 +15,20 @@ class GameService {
   /**
    * Initializes a new game instance.
    */
-  createGame(players) {
-    const images = ["🐶", "🐱", "🐰", "🦊", "🐨", "🦁", "🐯"];
+  createGame(players, themeId = 'animais') {
+    const theme = themes[themeId] || themes.animais;
+    const images = theme.symbols;
     const pieces = [];
 
-    // Generate all combinations for a double-6 set (using emojis)
+    // Generate all combinations for a double-6 set (using theme symbols)
     for (let i = 0; i < images.length; i++) {
       for (let j = i; j < images.length; j++) {
-        pieces.push({ id: `p-${i}-${j}`, ladoA: images[i], ladoB: images[j] });
+        pieces.push({ 
+          id: `p-${i}-${j}`, 
+          ladoA: images[i], 
+          ladoB: images[j],
+          theme: theme.name 
+        });
       }
     }
 
@@ -43,6 +49,7 @@ class GameService {
       pile: pieces,
       currentTurn: players[0],
       players: players,
+      theme: theme, // Store theme for UI info
       status: 'playing'
     };
   }

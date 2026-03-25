@@ -8,11 +8,13 @@ export default function DropZone({
   side, 
   label, 
   matchIcon, 
-  horizontal = false 
+  horizontal = false,
+  active = true
 }) {
   const [isOver, setIsOver] = useState(false);
 
   const handleDragOver = (e) => {
+    if (!active) return;
     e.preventDefault();
     setIsOver(true);
   };
@@ -22,6 +24,7 @@ export default function DropZone({
   };
 
   const handleDropEvent = (e) => {
+    if (!active) return;
     e.preventDefault();
     setIsOver(false);
     onDrop(side);
@@ -31,13 +34,15 @@ export default function DropZone({
   const sizeStyles = horizontal ? 'w-[120px] h-[60px]' : 'w-[60px] h-[120px]';
   const overStyles = isOver 
     ? 'bg-yellow-400 scale-110 shadow-[0_0_40px_rgba(250,204,21,0.6)]' 
-    : 'bg-white/5 border-4 border-dashed border-white/20';
+    : active 
+      ? 'bg-white/5 border-4 border-dashed border-white/20'
+      : 'bg-white/5 border-2 border-dashed border-white/5 opacity-40 grayscale pointer-events-none';
 
   return (
     <div 
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      onDrop={handleDropEvent}
+      onDragOver={active ? handleDragOver : undefined}
+      onDragLeave={active ? handleDragLeave : undefined}
+      onDrop={active ? handleDropEvent : undefined}
       className={`${baseStyles} ${sizeStyles} ${overStyles}`}
     >
       {/* Visual background layers */}

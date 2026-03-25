@@ -4,6 +4,7 @@ import { socket } from "../services/socket";
 import Piece from "./Piece";
 import SnakeBoard from "./SnakeBoard";
 import AvatarGuide from "./AvatarGuide";
+import ThemeSelector from "./ThemeSelector";
 
 import logoCampina from '../assets/logo-campina.png';
 import logoPrefeitura from '../assets/logo-prefeitura.png';
@@ -12,12 +13,13 @@ export default function GameContainer() {
   const { 
     room, players, gameState, myHand, board, currentTurn, 
     createRoom, joinRoom, leaveRoom, startGame, makeMove, passTurn, 
-    iWon, gameOverMsg, scores 
+    iWon, gameOverMsg, scores, currentTheme 
   } = useGame();
   
   const [roomIdInput, setRoomIdInput] = useState("");
   const [draggingPiece, setDraggingPiece] = useState(null);
   const [myId, setMyId] = useState(socket.id);
+  const [selectedTheme, setSelectedTheme] = useState('animais');
 
   useEffect(() => {
     const checkId = setInterval(() => {
@@ -27,6 +29,7 @@ export default function GameContainer() {
   }, [myId]);
 
   const isMyTurn = currentTurn === myId;
+  const isRoomOwner = players.length > 0 && players[0].id === myId;
 
   const handleDragStart = (pieceId) => {
     setDraggingPiece(pieceId);
@@ -37,6 +40,10 @@ export default function GameContainer() {
       makeMove(draggingPiece, side);
       setDraggingPiece(null);
     }
+  };
+
+  const handleStartGame = () => {
+    startGame(selectedTheme);
   };
 
   // 1. LOBBY - MAIN SCREEN
@@ -103,64 +110,80 @@ export default function GameContainer() {
     return (
       <div className="flex flex-col h-screen bg-[#009660] text-white font-sans p-4 sm:p-8 overflow-hidden relative">
         <header className="flex flex-col items-center flex-shrink-0 z-10 pt-4 sm:pt-0">
-          <div className="flex items-center gap-4 sm:gap-6 mb-4 sm:mb-6 bg-white px-5 py-2 sm:py-3 rounded-[2rem] shadow-lg border-4 border-emerald-900/10">
+          <div className="flex items-center gap-4 sm:gap-6 mb-4 bg-white px-5 py-2 sm:py-3 rounded-[2rem] shadow-lg border-4 border-emerald-900/10">
             <img src={logoCampina} alt="Seduc" className="h-4 sm:h-8 w-auto object-contain pointer-events-none" />
             <div className="w-px h-4 sm:h-6 bg-gray-200 self-center"></div>
             <img src={logoPrefeitura} alt="Prefeitura" className="h-4 sm:h-8 w-auto object-contain pointer-events-none" />
           </div>
-          <h1 className="text-3xl sm:text-5xl font-black drop-shadow-lg text-[#FFCE00] uppercase italic tracking-tighter text-center">
-            Aguardando amiguinhos...
+          <h1 className="text-3xl sm:text-4xl font-black drop-shadow-lg text-[#FFCE00] uppercase italic tracking-tighter text-center">
+            {isRoomOwner ? "Escolha a Matéria!" : "Aguardando amiguinhos..."}
           </h1>
         </header>
 
-        <div className="flex-1 flex flex-col items-center justify-center z-10 w-full overflow-y-auto scrollbar-hide py-6 h-full">
-           <div className="w-full max-w-lg flex flex-col items-center gap-6 sm:gap-8">
-              {/* Room Code Card - Adaptive */}
-              <div className="w-full max-w-sm bg-white/0 sm:bg-white sm:p-10 rounded-[3rem] sm:shadow-2xl text-center sm:border-b-[10px] sm:border-emerald-900/10">
-                <p className="text-xs text-white sm:text-emerald-900/40 mb-3 uppercase tracking-widest font-black leading-none opacity-80">Código da Sala:</p>
-                <div className="bg-white/10 sm:bg-emerald-50 p-5 sm:p-6 rounded-3xl border-2 sm:border-4 border-white/20 sm:border-emerald-100 backdrop-blur-sm sm:backdrop-blur-none transition-all">
-                   <p className="text-4xl sm:text-5xl font-mono font-black tracking-[0.2em] text-[#FFCE00] sm:text-[#009660] leading-none">{room}</p>
-                </div>
-              </div>
-
-              {/* Players List */}
-              <div className="flex flex-wrap justify-center gap-3 sm:gap-5 w-full">
-                {players.map((p, i) => (
-                  <div key={i} className={`px-5 sm:px-8 py-3 sm:py-4 rounded-[1.5rem] sm:rounded-[2rem] shadow-xl transition-all transform flex items-center gap-3 ${p.id === myId ? 'bg-[#FFCE00] text-[#009660] border-b-4 sm:border-b-8 border-yellow-600' : 'bg-white text-emerald-900 border-b-4 sm:border-b-8 border-gray-200'}`}>
-                    <span className="text-xl sm:text-2xl">{p.id === myId ? '🎓' : '🎒'}</span>
-                    <span className="font-black text-sm sm:text-lg truncate max-w-[100px] sm:max-w-[150px]">
-                      {p.id === myId ? 'VOCÊ' : `JOGADOR ${i+1}`}
-                    </span>
+        <div className="flex-1 flex flex-col items-center justify-start z-10 w-full overflow-y-auto scrollbar-hide py-6 h-full">
+           <div className="w-full max-w-lg flex flex-col items-center gap-6 sm:gap-4">
+              
+              {/* Theme Selector for Owner */}
+              {isRoomOwner ? (
+                <ThemeSelector selectedTheme={selectedTheme} onSelect={setSelectedTheme} />
+              ) : (
+                /* Room Code Card - Adaptive */
+                <div className="w-full max-w-sm bg-white/20 p-8 rounded-[3rem] shadow-2xl text-center border-2 border-white/30 backdrop-blur-sm">
+                  <p className="text-xs text-white/60 mb-3 uppercase tracking-widest font-black leading-none opacity-80">Código da Sala:</p>
+                  <div className="bg-emerald-50/10 p-5 rounded-3xl border-2 border-white/20">
+                    <p className="text-4xl sm:text-5xl font-mono font-black tracking-[0.2em] text-[#FFCE00] leading-none">{room}</p>
                   </div>
-                ))}
-              </div>
+                </div>
+              )}
 
               {/* Action Buttons */}
-              <div className="w-full max-w-sm flex flex-col gap-4">
+              <div className="w-full max-w-sm flex flex-col gap-4 mt-6">
                 {players.length >= 2 ? (
+                  isRoomOwner && (
                     <button 
-                      onClick={startGame} 
-                      className="bg-[#FFCE00] hover:bg-[#ffe050] text-[#009660] px-10 py-5 sm:px-12 sm:py-6 rounded-[2rem] sm:rounded-[3rem] font-black text-2xl sm:text-3xl shadow-[0_8px_0_#d1a900] animate-bounce transition-all active:scale-95 border-b-2 border-white/20 uppercase"
+                      onClick={handleStartGame} 
+                      className="bg-[#FFCE00] hover:bg-[#ffe050] text-[#009660] px-10 py-5 sm:px-12 sm:py-6 rounded-[2rem] sm:rounded-[3rem] font-black text-2xl sm:text-3xl shadow-[0_8px_0_#d1a900] animate-bounce-slow transition-all active:scale-95 border-b-2 border-white/20 uppercase"
                     >
                       JOGAR! 🚀
                     </button>
+                  )
                 ) : (
                     <div className="bg-black/20 p-4 sm:p-5 rounded-3xl border border-white/10">
                       <p className="text-white font-black text-sm sm:text-base uppercase tracking-widest animate-pulse italic text-center">Aguardando amiguinho...</p>
                     </div>
                 )}
 
+                {/* Info about Room Code if owner */}
+                {isRoomOwner && (
+                  <div className="bg-emerald-950/20 p-3 rounded-2xl border border-white/10 flex items-center justify-center gap-4">
+                    <span className="text-xs font-black uppercase opacity-60">Sala:</span>
+                    <span className="text-xl font-mono font-black text-[#FFCE00] tracking-widest">{room}</span>
+                  </div>
+                )}
+
                 <button 
                   onClick={leaveRoom}
-                  className="bg-white group hover:bg-[#FFCE00] px-6 py-3 sm:px-8 sm:py-4 rounded-full shadow-lg transition-all flex items-center justify-center gap-3 border-b-4 border-gray-200 hover:border-yellow-600 active:scale-95"
+                  className="bg-white/90 group hover:bg-[#FFCE00] px-6 py-3 sm:py-4 rounded-full shadow-lg transition-all flex items-center justify-center gap-3 border-b-4 border-gray-200 hover:border-yellow-600 active:scale-95"
                 >
                   <span className="text-lg sm:text-2xl group-hover:scale-125 transition-transform">🏠</span>
-                  <span className="text-[#009660] font-black text-sm sm:text-base uppercase tracking-tight font-sans">Voltar para o início</span>
+                  <span className="text-[#009660] font-black text-sm sm:text-base uppercase tracking-tight font-sans">Sair da Sala</span>
                 </button>
               </div>
 
-              {/* Fluid Avatar - Integrated in flow */}
-              <AvatarGuide gameState="waiting" className="mt-4 sm:mt-0" />
+              {/* Players List */}
+              <div className="flex flex-wrap justify-center gap-2 sm:gap-3 w-full mt-4">
+                {players.map((p, i) => (
+                  <div key={i} className={`px-4 sm:px-6 py-2 sm:py-3 rounded-[1.5rem] shadow-xl transition-all transform flex items-center gap-3 ${p.id === myId ? 'bg-[#FFCE00] text-[#009660] border-b-4 border-yellow-600' : 'bg-white text-emerald-900 border-b-4 border-gray-200'}`}>
+                    <span className="text-lg sm:text-xl">{p.id === myId ? '🎓' : '🎒'}</span>
+                    <span className="font-black text-xs sm:text-sm truncate max-w-[80px] sm:max-w-[120px]">
+                      {p.id === myId ? 'VOCÊ' : `JOGADOR ${i+1}`}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Fluid Avatar */}
+              <AvatarGuide gameState="waiting" className="mt-2" />
            </div>
         </div>
       </div>
@@ -212,13 +235,18 @@ export default function GameContainer() {
               <div className="text-lg sm:text-2xl font-black uppercase tracking-[0.2em] sm:tracking-[0.3em] brightness-90">
                 {isMyTurn ? "🚨 Sua Vez!" : "Esperando..."}
               </div>
+              {currentTheme && (
+                <div className="text-[10px] sm:text-xs font-bold uppercase tracking-widest opacity-60">
+                  Matéria: {currentTheme.name}
+                </div>
+              )}
            </div>
            
-           {isMyTurn && (
-             <button onClick={passTurn} className="bg-red-500 hover:bg-red-400 text-white font-black px-6 sm:px-10 py-2 sm:py-4 rounded-[1rem] sm:rounded-[1.5rem] shadow-[0_4px_0_#991b1b] sm:shadow-[0_8px_0_#991b1b] flex items-center gap-2 sm:gap-4 transition-all active:scale-95 active:shadow-none">
+           <div className={isMyTurn ? 'opacity-100' : 'invisible pointer-events-none'}>
+             <button onClick={isMyTurn ? passTurn : undefined} className="bg-red-500 hover:bg-red-400 text-white font-black px-6 sm:px-10 py-2 sm:py-4 rounded-[1rem] sm:rounded-[1.5rem] shadow-[0_4px_0_#991b1b] sm:shadow-[0_8px_0_#991b1b] flex items-center gap-2 sm:gap-4 transition-all active:scale-95 active:shadow-none">
                PASSAR ⏭️
              </button>
-           )}
+           </div>
         </footer>
 
         {/* Hand Area & Avatar */}

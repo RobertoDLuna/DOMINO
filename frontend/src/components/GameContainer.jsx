@@ -18,7 +18,31 @@ export default function GameContainer() {
   } = useGame();
   
   const [roomIdInput, setRoomIdInput] = useState("");
+  const [playerNameInput, setPlayerNameInput] = useState(() => localStorage.getItem('dominoPlayerName') || "");
   const [draggingPiece, setDraggingPiece] = useState(null);
+
+  const handleNameChange = (e) => {
+    const val = e.target.value.substring(0, 10);
+    setPlayerNameInput(val.toUpperCase());
+    localStorage.setItem('dominoPlayerName', val.toUpperCase());
+  };
+
+  const getFinalName = () => {
+    if (playerNameInput.trim()) return playerNameInput.trim();
+    const names = ["MESTRE", "LENDA", "NINJA", "HERÓI", "FOCA", "LEÃO"];
+    const rnd = names[Math.floor(Math.random() * names.length)];
+    setPlayerNameInput(rnd);
+    localStorage.setItem('dominoPlayerName', rnd);
+    return rnd;
+  };
+
+  const handleCreateRoom = () => {
+    createRoom(getFinalName());
+  };
+
+  const handleJoinRoom = () => {
+    joinRoom(roomIdInput, getFinalName());
+  };
   const [selectedTheme, setSelectedTheme] = useState('animais');
   const [timer, setTimer] = useState(30);
   const [showAvatar, setShowAvatar] = useState(false);
@@ -166,25 +190,36 @@ export default function GameContainer() {
         <div className="flex-1 flex flex-col items-center justify-center z-10 w-full overflow-y-auto scrollbar-hide py-8">
           <div className="w-full max-w-sm flex flex-col items-center gap-8">
             <div className="w-full bg-white/0 sm:bg-white sm:p-12 rounded-[3.5rem] sm:shadow-[0_25px_80px_rgba(0,0,0,0.3)] text-center sm:border-b-[12px] sm:border-emerald-900/10">
+              
+              <div className="mb-6 sm:mb-8">
+                <input 
+                  type="text" 
+                  placeholder="SEU NOME" 
+                  value={playerNameInput} 
+                  onChange={handleNameChange} 
+                  className="w-full bg-white border-4 border-[#009660]/20 p-4 sm:p-5 rounded-3xl focus:outline-none focus:border-[#009660] placeholder-gray-300 text-center text-xl sm:text-2xl font-black uppercase text-gray-700 transition-all shadow-inner" 
+                />
+              </div>
+
               <button 
-                onClick={createRoom} 
+                onClick={handleCreateRoom} 
                 className="w-full bg-[#FFCE00] hover:bg-[#ffe050] text-[#009660] font-black py-5 sm:py-6 rounded-3xl shadow-[0_8px_0_#d1a900] transition-all transform hover:scale-105 active:scale-95 mb-6 sm:mb-8 text-xl sm:text-2xl uppercase tracking-tight"
               >
                 Criar Sala 🏫
               </button>
               
-              <div className="flex flex-col gap-4 sm:gap-5">
+              <div className="flex flex-col gap-4 sm:gap-5 pt-4 sm:pt-6 border-t-2 border-dashed border-gray-200">
                 <div className="relative">
                   <input 
                     type="text" 
-                    placeholder="CÓDIGO" 
+                    placeholder="CÓDIGO DA SALA" 
                     value={roomIdInput} 
                     onChange={(e) => setRoomIdInput(e.target.value.toUpperCase())} 
                     className="w-full bg-emerald-50 border-4 border-emerald-100 p-5 sm:p-6 rounded-3xl focus:outline-none focus:border-[#009660] placeholder-emerald-900/30 text-center text-2xl sm:text-3xl font-black uppercase text-[#009660] transition-all" 
                   />
                 </div>
                 <button 
-                  onClick={() => joinRoom(roomIdInput)} 
+                  onClick={handleJoinRoom} 
                   className="w-full bg-[#009660] hover:bg-[#00a86b] text-white font-black py-5 sm:py-6 rounded-3xl shadow-[0_8px_0_#006d46] transition-all transform hover:scale-105 active:scale-95 text-xl sm:text-2xl uppercase tracking-tight border-b-2 border-emerald-400/20"
                 >
                   Entrar no Jogo 🧩
@@ -289,7 +324,7 @@ export default function GameContainer() {
                   <div key={i} className={`px-4 sm:px-6 py-2 sm:py-3 rounded-[1.5rem] shadow-xl transition-all transform flex items-center gap-3 ${p.id === myId ? 'bg-[#FFCE00] text-[#009660] border-b-4 border-yellow-600' : 'bg-white text-emerald-900 border-b-4 border-gray-200'}`}>
                     <span className="text-lg sm:text-xl">{p.id === myId ? '🎓' : '🎒'}</span>
                     <span className="font-black text-xs sm:text-sm truncate max-w-[80px] sm:max-w-[120px]">
-                      {p.id === myId ? 'VOCÊ' : `JOGADOR ${i+1}`}
+                      {p.name || `JOGADOR ${i+1}`}
                     </span>
                   </div>
                 ))}
@@ -317,7 +352,7 @@ export default function GameContainer() {
                   ${players.length > 2 ? 'scale-90 sm:scale-100' : ''}`}>
                   <span className="text-base sm:text-2xl">{p.id === myId ? '🔥' : ['👤', '🎒', '🎓', '🎒'][idx % 4]}</span>
                   <div className="flex flex-col leading-none">
-                    <span className="text-[7px] sm:text-[9px] font-black uppercase tracking-widest mb-0.5 opacity-60">{p.id === myId ? 'Você' : `Competidor ${idx + 1}`}</span>
+                    <span className="text-[7px] sm:text-[9px] font-black uppercase tracking-widest mb-0.5 opacity-60">{p.name || `Competidor ${idx + 1}`}</span>
                     <span className="text-sm sm:text-xl font-black">{scores[p.id] || 0} pts</span>
                   </div>
                 </div>

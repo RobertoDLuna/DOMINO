@@ -146,15 +146,15 @@ export const GameProvider = ({ children }) => {
     };
   }, []);
 
-  const createRoom = () => {
-    socket.emit('createRoom', { playerId });
+  const createRoom = (playerName) => {
+    socket.emit('createRoom', { playerId, playerName });
   };
 
-  const joinRoom = (roomId) => {
+  const joinRoom = (roomId, playerName) => {
     if (!roomId) return alert("Por favor, digite o código da sala.");
     const id = roomId.trim().toUpperCase();
     isManualJoinRef.current = true;
-    socket.emit('joinRoom', { roomId: id, playerId });
+    socket.emit('joinRoom', { roomId: id, playerId, playerName });
   };
 
   const startGame = (themeId) => {

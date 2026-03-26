@@ -12,17 +12,18 @@ module.exports = (io) => {
     /**
      * Create Room Handler
      */
-    socket.on("createRoom", async ({ playerId }) => {
+    socket.on("createRoom", async ({ playerId, playerName }) => {
       try {
         const roomId = GameService.generateRoomId();
         socket.join(roomId);
+        const nameToUse = playerName || 'JOGADOR';
         await RedisService.setRoom(roomId, { 
-          players: [{ id: socket.id, playerId }], 
+          players: [{ id: socket.id, playerId, name: nameToUse }], 
           status: 'lobby',
           maxPlayers: 2
         });
         socket.emit("roomCreated", { roomId });
-        io.to(roomId).emit("playerJoined", [{ id: socket.id, playerId }]);
+        io.to(roomId).emit("playerJoined", [{ id: socket.id, playerId, name: nameToUse }]);
         io.to(roomId).emit("roomUpdated", { maxPlayers: 2 });
         console.log(`🏠 Sala criada: ${roomId} por ${playerId}`);
       } catch (error) {
@@ -34,7 +35,7 @@ module.exports = (io) => {
     /**
      * Join Room Handler
      */
-    socket.on("joinRoom", async ({ roomId, playerId }) => {
+    socket.on("joinRoom", async ({ roomId, playerId, playerName }) => {
       try {
         const room = await RedisService.getRoom(roomId);
         if (room) {
@@ -59,7 +60,8 @@ module.exports = (io) => {
               if (room.currentTurn === oldSocketId) room.currentTurn = newSocketId;
             }
           } else if (room.status === 'lobby' && room.players.length < (room.maxPlayers || 2)) {
-            room.players.push({ id: socket.id, playerId });
+            const nameToUse = playerName || `JOGADOR ${room.players.length + 1}`;
+            room.players.push({ id: socket.id, playerId, name: nameToUse });
           } else if (room.status !== 'lobby') {
              return socket.emit("error", { message: "O jogo já começou." });
           } else {

@@ -305,57 +305,63 @@ export default function GameContainer() {
               <SnakeBoard 
                 board={board} 
                 isMyTurn={isMyTurn} 
-                onDrop={handleDrop} 
-                draggingPiece={draggingPiece}
-              />
-            </div>
+                        draggingPiece={draggingPiece}
+               />
+             </div>
         </main>
 
         {/* Action Bar */}
-        <footer className={`${isMyTurn ? 'bg-[#FFCE00] text-[#009660]' : 'bg-white text-emerald-900 opacity-90'} py-2 sm:py-3 px-6 sm:px-12 flex justify-between items-center shadow-[0_-10px_50px_rgba(0,0,0,0.1)] z-40 relative border-t-2 sm:border-t-4 border-black/5`}>
-           <div className="flex items-center gap-2 sm:gap-5">
-             <div className="hidden sm:flex items-center gap-3 sm:gap-5 bg-white/40 backdrop-blur-sm px-4 py-1.5 rounded-2xl border border-black/5">
-               <img src={logoCampina} alt="Seduc" className="h-4 sm:h-6 object-contain pointer-events-none drop-shadow-sm" />
-               <div className="w-px h-4 sm:h-5 bg-black/10 self-center"></div>
-               <img src={logoPrefeitura} alt="Prefeitura" className="h-4 sm:h-6 object-contain pointer-events-none drop-shadow-sm" />
+        <footer className={`${isMyTurn ? 'bg-[#FFCE00] text-[#009660]' : 'bg-white text-emerald-900 opacity-90'} py-3 px-6 sm:px-12 flex justify-between items-center shadow-[0_-10px_50px_rgba(0,0,0,0.1)] z-40 relative border-t-2 sm:border-t-4 border-black/10`}>
+           {/* Left Section: Logos & Sound */}
+           <div className="flex items-center gap-3 sm:gap-6">
+             <div className="flex items-center gap-3 sm:gap-5 bg-white px-4 py-2 sm:py-2.5 rounded-2xl shadow-sm border-2 border-emerald-900/5">
+               <img src={logoCampina} alt="Seduc" className="h-5 sm:h-7 object-contain pointer-events-none" />
+               <div className="w-px h-5 sm:h-6 bg-gray-200 self-center"></div>
+               <img src={logoPrefeitura} alt="Prefeitura" className="h-5 sm:h-7 object-contain pointer-events-none" />
              </div>
-             {/* Mute button */}
+             
+             {/* Mute button - More visible */}
              <button
                onClick={() => setIsMuted(SoundService.toggleMute())}
                title={isMuted ? 'Ativar sons' : 'Silenciar sons'}
-               className="bg-white/40 hover:bg-white/70 backdrop-blur-sm px-3 py-1.5 rounded-2xl border border-black/5 text-xl transition-all active:scale-90 select-none"
+               className="bg-white hover:bg-emerald-50 text-emerald-900 px-4 py-2 sm:py-2.5 rounded-2xl shadow-sm border-2 border-emerald-900/5 text-xl sm:text-2xl transition-all active:scale-90 flex items-center justify-center"
              >
                {isMuted ? '🔇' : '🔊'}
              </button>
            </div>
-           <div className="flex flex-col items-center flex-1">
-              <div className="text-lg sm:text-2xl font-black uppercase tracking-[0.2em] sm:tracking-[0.3em] brightness-90">
-                {isMyTurn ? "🚨 Sua Vez!" : "Esperando..."}
+           
+           {/* Center Section: Status */}
+           <div className="flex flex-col items-center flex-1 mx-2">
+              <div className="text-xl sm:text-3xl font-black uppercase tracking-tighter sm:tracking-tighter italic leading-none mb-1">
+                {isMyTurn ? "SUA VEZ!" : "ESPERANDO..."}
               </div>
               {currentTheme && (
-                <div className="text-[10px] sm:text-xs font-bold uppercase tracking-widest opacity-60">
-                  Matéria: {currentTheme?.name || 'Dominó'}
+                <div className="text-[10px] sm:text-xs font-black uppercase tracking-widest opacity-40 leading-none">
+                  {currentTheme?.name || 'Dominó'}
                 </div>
               )}
            </div>
-           
-           <div className={isMyTurn ? 'opacity-100 flex items-center gap-4' : 'invisible pointer-events-none'}>
+
+           {/* Right Section: Timer & Action */}
+           <div className={isMyTurn ? 'opacity-100 flex items-center gap-4 sm:gap-6' : 'invisible pointer-events-none'}>
               {isMyTurn && (
-                <div className="flex flex-col items-center">
-                  <div className="text-xs font-black opacity-50 uppercase">Tempo</div>
-                  <div className={`text-2xl font-black ${timer <= 10 ? 'text-red-600 animate-pulse font-black drop-shadow-sm' : 'text-[#009660]'}`}>
+                <div className="flex items-baseline gap-1.5 sm:gap-2 mr-1 sm:mr-2 leading-none">
+                  <span className="text-[10px] sm:text-xs font-black uppercase italic opacity-40">TEMPO</span>
+                  <span className={`text-xl sm:text-4xl font-black ${timer <= 10 ? 'text-red-600 animate-pulse' : 'text-[#009660]'}`}>
                     {timer}s
-                  </div>
+                  </span>
                 </div>
               )}
               <button 
                 onClick={() => { SoundService.playPass(); passTurn(); }} 
-                className={`${timer <= 10 ? 'animate-blink-hard' : 'bg-red-500'} hover:bg-red-400 text-white font-black px-6 sm:px-10 py-2 sm:py-4 rounded-[1rem] sm:rounded-[1.5rem] shadow-[0_4px_0_#991b1b] sm:shadow-[0_8px_0_#991b1b] flex items-center gap-2 sm:gap-4 transition-all active:scale-95 active:shadow-none`}
+                className={`${timer <= 10 ? 'animate-blink-hard' : 'bg-red-500'} hover:bg-red-400 text-white font-black px-6 sm:px-10 py-3 sm:py-4 rounded-2xl sm:rounded-3xl transition-all active:scale-95 flex items-center gap-2 h-fit`}
               >
-                PASSAR ⏭️
+                <span className="text-base sm:text-2xl uppercase tracking-tighter">PASSAR</span>
+                <span className="text-xl sm:text-3xl">⏭️</span>
               </button>
            </div>
         </footer>
+
 
         {/* Hand Area & Avatar */}
         <div className="bg-white/95 p-1.5 sm:p-3 shadow-[0_-10px_60px_rgba(0,0,0,0.05)] relative z-30 border-t border-emerald-100 flex flex-col sm:flex-row items-center justify-between gap-2 overflow-visible">

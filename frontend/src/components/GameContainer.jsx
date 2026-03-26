@@ -197,7 +197,7 @@ export default function GameContainer() {
                   placeholder="SEU NOME" 
                   value={playerNameInput} 
                   onChange={handleNameChange} 
-                  className="w-full bg-white border-4 border-[#009660]/20 p-4 sm:p-5 rounded-3xl focus:outline-none focus:border-[#009660] placeholder-gray-300 text-center text-xl sm:text-2xl font-black uppercase text-gray-700 transition-all shadow-inner" 
+                  className="w-full bg-emerald-50 border-4 border-emerald-100 p-4 sm:p-5 rounded-[2rem] focus:outline-none focus:border-[#009660] placeholder-emerald-900/30 text-center text-xl sm:text-2xl font-black uppercase text-[#009660] transition-all" 
                 />
               </div>
 
@@ -215,7 +215,7 @@ export default function GameContainer() {
                     placeholder="CÓDIGO DA SALA" 
                     value={roomIdInput} 
                     onChange={(e) => setRoomIdInput(e.target.value.toUpperCase())} 
-                    className="w-full bg-emerald-50 border-4 border-emerald-100 p-5 sm:p-6 rounded-3xl focus:outline-none focus:border-[#009660] placeholder-emerald-900/30 text-center text-2xl sm:text-3xl font-black uppercase text-[#009660] transition-all" 
+                    className="w-full bg-emerald-50 border-4 border-emerald-100 p-4 sm:p-5 rounded-[2rem] focus:outline-none focus:border-[#009660] placeholder-emerald-900/30 text-center text-xl sm:text-2xl font-black uppercase text-[#009660] transition-all" 
                   />
                 </div>
                 <button 

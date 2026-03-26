@@ -193,6 +193,20 @@ module.exports = (io) => {
         }
       } catch (e) { console.error(e); }
     });
+    
+    /**
+     * Terminate Game Handler (Force End)
+     */
+    socket.on("forceEndGame", async ({ room: roomId }) => {
+      try {
+        const room = await RedisService.getRoom(roomId);
+        if (room) {
+          io.to(roomId).emit("gameForcedEnd", { message: "A partida foi encerrada por um dos jogadores." });
+          await RedisService.deleteRoom(roomId);
+          console.log(`💀 Partida ${roomId} encerrada forçadamente.`);
+        }
+      } catch (e) { console.error(e); }
+    });
 
     socket.on("disconnect", async () => {
       try {

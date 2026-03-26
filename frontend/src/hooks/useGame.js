@@ -24,6 +24,7 @@ const useGame = () => {
         winner,
         scores,
         myId, // <--- PEGANDO DO CONTEXT
+        forceEndGame,
         isConnected
     } = useGameContext();
 
@@ -38,6 +39,7 @@ const useGame = () => {
         joinRoom,
         leaveRoom,
         passTurn,
+        forceEndGame,
         makeMove,
         startGame,
         setGameState,

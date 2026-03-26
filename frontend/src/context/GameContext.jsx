@@ -99,6 +99,22 @@ export const GameProvider = ({ children }) => {
       setGameState('finished');
     });
 
+    const handleForcedEnd = ({ message }) => {
+      console.warn('⚠️ Partida encerrada forçadamente:', message);
+      setRoom(null);
+      localStorage.removeItem('domino_current_room');
+      setPlayers([]);
+      setGameState('lobby');
+      setMyHand([]);
+      setBoard([]);
+      setWinner(null);
+      setGameOverMsg("");
+      setCurrentTheme(null);
+      if (message) alert(message);
+    };
+
+    socket.on('gameForcedEnd', handleForcedEnd);
+
     socket.on('error', ({ message }) => {
       console.error('❌ Erro do servidor:', message);
       
@@ -115,12 +131,12 @@ export const GameProvider = ({ children }) => {
     });
 
     return () => {
-      socket.off('connect');
-      socket.off('roomCreated');
-      socket.off('joinedSuccess');
-      socket.off('playerJoined');
-      socket.off('gameStarted');
       socket.off('error');
+      socket.off('gameOver');
+      socket.off('gameForcedEnd');
+      socket.off('updateBoard');
+      socket.off('updateHand');
+      socket.off('updateScores');
     };
   }, []);
 
@@ -162,6 +178,20 @@ export const GameProvider = ({ children }) => {
     socket.emit('makeMove', { pieceId, side, room });
   };
 
+  const forceEndGame = () => {
+    if (room) {
+      socket.emit('forceEndGame', { room });
+      // Reset local state immediately for the initiator
+      setRoom(null);
+      localStorage.removeItem('domino_current_room');
+      setPlayers([]);
+      setGameState('lobby');
+      setMyHand([]);
+      setBoard([]);
+      setCurrentTheme(null);
+    }
+  };
+
   const value = {
     room,
     players,
@@ -181,6 +211,7 @@ export const GameProvider = ({ children }) => {
     scores,
     currentTheme,
     setGameState,
+    forceEndGame,
     myId, // <--- EXPORTANDO ID
     playerId,
     isConnected,

@@ -13,7 +13,7 @@ import logoPrefeitura from '../assets/logo-prefeitura.png';
 export default function GameContainer() {
   const { 
     room, players, gameState, myHand, board, currentTurn, 
-    createRoom, joinRoom, leaveRoom, startGame, makeMove, passTurn, 
+    createRoom, joinRoom, leaveRoom, startGame, makeMove, passTurn, forceEndGame,
     iWon, gameOverMsg, scores, currentTheme, myId, isConnected
   } = useGame();
   
@@ -25,6 +25,7 @@ export default function GameContainer() {
   const [selectedPiece, setSelectedPiece] = useState(null);
   const [sideModal, setSideModal] = useState(null);
   const [isMuted, setIsMuted] = useState(() => SoundService.muted);
+  const [showEndConfirm, setShowEndConfirm] = useState(false);
 
   const isMyTurn = currentTurn === myId;
   const isRoomOwner = players.length > 0 && players[0].id === myId;
@@ -310,6 +311,19 @@ export default function GameContainer() {
              </div>
         </main>
 
+        {/* Top Floating Exit Button */}
+        {gameState === 'playing' && (
+          <div className="fixed top-4 right-4 z-[60]">
+            <button 
+              onClick={() => setShowEndConfirm(true)}
+              className="bg-red-500 hover:bg-red-600 text-white font-black px-4 sm:px-6 py-2 sm:py-3 rounded-2xl shadow-[0_4px_0_#991b1b] active:scale-95 active:shadow-none transition-all flex items-center gap-2 text-xs sm:text-sm uppercase tracking-wider"
+            >
+              <span>X</span>
+              <span className="hidden sm:inline">Finalizar Partida</span>
+            </button>
+          </div>
+        )}
+
         {/* Action Bar */}
         <footer className={`${isMyTurn ? 'bg-[#FFCE00] text-[#009660]' : 'bg-white text-emerald-900 opacity-90'} py-3 px-6 sm:px-12 flex justify-between items-center shadow-[0_-10px_50px_rgba(0,0,0,0.1)] z-40 relative border-t-2 sm:border-t-4 border-black/10`}>
            {/* Left Section: Logos & Sound */}
@@ -422,7 +436,7 @@ export default function GameContainer() {
                 >
                   <span className="text-3xl">⬅️</span>
                   <span>AQUI</span>
-                  <span className="text-xs opacity-70 font-medium">{sideModal.leftEnd}</span>
+                  <span className="text-3xl drop-shadow-sm mt-1">{sideModal.leftEnd}</span>
                 </button>
                 <button
                   onClick={() => handleSideChoice('right')}
@@ -430,7 +444,7 @@ export default function GameContainer() {
                 >
                   <span className="text-3xl">➡️</span>
                   <span>ALI</span>
-                  <span className="text-xs opacity-70 font-medium">{sideModal.rightEnd}</span>
+                  <span className="text-3xl drop-shadow-sm mt-1">{sideModal.rightEnd}</span>
                 </button>
               </div>
               <button onClick={() => { setSideModal(null); setSelectedPiece(null); }} className="text-gray-400 text-xs uppercase font-bold tracking-widest hover:text-red-400 transition-colors">Cancelar</button>
@@ -454,6 +468,32 @@ export default function GameContainer() {
         <p className="font-black uppercase tracking-widest opacity-80">Sincronizando partida...</p>
         <button onClick={leaveRoom} className="mt-4 underline opacity-50 text-xs">Voltar para o início</button>
       </div>
+      {/* Global Modals */}
+      {showEndConfirm && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowEndConfirm(false)}></div>
+          <div className="bg-white rounded-3xl p-8 max-w-sm w-full relative z-10 shadow-2xl border-4 border-red-500 animate-in zoom-in-95 duration-200">
+            <div className="text-4xl mb-4 text-center">🛑</div>
+            <h2 className="text-2xl font-black text-center text-gray-800 mb-2 italic">ENCERRAR JOGO?</h2>
+            <p className="text-gray-600 text-center font-bold mb-8">Tem certeza que deseja fechar a sala para todos os jogadores?</p>
+            
+            <div className="flex flex-col gap-3">
+              <button 
+                onClick={() => { forceEndGame(); setShowEndConfirm(false); }}
+                className="w-full bg-red-500 hover:bg-red-600 text-white font-black py-4 rounded-2xl shadow-[0_6px_0_#991b1b] active:scale-95 active:shadow-none transition-all uppercase tracking-wider"
+              >
+                Sim, encerrar tudo
+              </button>
+              <button 
+                onClick={() => setShowEndConfirm(false)}
+                className="w-full bg-gray-100 hover:bg-gray-200 text-gray-500 font-black py-4 rounded-2xl active:scale-95 transition-all uppercase tracking-wider"
+              >
+                Voltar ao jogo
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

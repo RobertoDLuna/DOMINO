@@ -51,7 +51,7 @@ export default function DropZone({
       
       <div className="flex flex-col items-center justify-center z-10 gap-1">
         {matchIcon && <span className="text-2xl drop-shadow-md animate-bounce">{matchIcon}</span>}
-        <span className={`text-[11px] font-black uppercase tracking-tighter drop-shadow-md brightness-150 ${horizontal ? '' : 'rotate-90'}`}>
+        <span className="text-[11px] font-black uppercase tracking-tighter drop-shadow-md brightness-150">
           {label === 'Cá' ? 'AQUI' : label === 'Lá' ? 'ALÍ' : label}
         </span>
       </div>

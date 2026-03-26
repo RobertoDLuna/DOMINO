@@ -307,10 +307,10 @@ export default function GameContainer() {
         <main className="flex-1 flex flex-col items-center justify-center bg-[#009660] relative px-4 shadow-inner border-b-[10px] sm:border-b-[20px] border-emerald-950/20 overflow-hidden">
            <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/felt.png')] pointer-events-none"></div>
            
-           {/* Scoreboard - Responsive for up to 4 players */}
-           <div className="absolute top-4 sm:top-6 left-0 right-0 flex flex-wrap justify-center sm:justify-start gap-2 sm:gap-6 z-40 px-4 sm:px-12">
+           {/* Scoreboard - Responsive for up to 4 players (Vertically Stacked) */}
+           <div className="absolute top-4 sm:top-6 left-4 sm:left-6 flex flex-col items-start gap-2 sm:gap-3 z-40">
              {players.map((p, idx) => (
-                <div key={p.id} className={`flex items-center gap-2 sm:gap-3 px-2 sm:px-4 py-1 sm:py-2 rounded-[1.2rem] sm:rounded-[1.5rem] border-b-[3px] sm:border-b-[5px] transition-all duration-500 transform
+                <div key={p.id} className={`flex items-center gap-2 sm:gap-3 px-3 sm:px-5 py-2 sm:py-3 rounded-[1.2rem] sm:rounded-[1.5rem] border-b-[3px] sm:border-b-[5px] transition-all duration-500 transform
                   ${currentTurn === p.id 
                     ? 'bg-[#FFCE00] border-yellow-700 text-[#009660] scale-105 shadow-[0_8px_25px_rgba(0,0,0,0.2)]' 
                     : 'bg-white/90 border-gray-300 text-emerald-900 opacity-80 shadow-md'}
@@ -328,7 +328,8 @@ export default function GameContainer() {
               <SnakeBoard 
                 board={board} 
                 isMyTurn={isMyTurn} 
-                        draggingPiece={draggingPiece}
+                draggingPiece={draggingPiece}
+                onDrop={handleDrop}
                />
              </div>
         </main>
@@ -478,6 +479,33 @@ export default function GameContainer() {
         <div className={`fixed top-24 right-4 sm:top-28 sm:right-8 z-[100] transition-all duration-700 transform ${showAvatar ? 'translate-y-0 opacity-100' : '-translate-y-20 opacity-0 pointer-events-none'}`}>
           <AvatarGuide gameState={gameState} myTurn={isMyTurn} isWinner={iWon} className="!max-w-[120px] sm:!max-w-[180px] drop-shadow-2xl" />
         </div>
+
+        {/* Global Modals */}
+        {showEndConfirm && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowEndConfirm(false)}></div>
+            <div className="bg-white rounded-3xl p-8 max-w-sm w-full relative z-10 shadow-2xl border-4 border-red-500 animate-in zoom-in-95 duration-200">
+              <div className="text-4xl mb-4 text-center">🛑</div>
+              <h2 className="text-2xl font-black text-center text-gray-800 mb-2 italic">ENCERRAR JOGO?</h2>
+              <p className="text-gray-600 text-center font-bold mb-8">Tem certeza que deseja fechar a sala para todos os jogadores?</p>
+              
+              <div className="flex flex-col gap-3">
+                <button 
+                  onClick={() => { forceEndGame(); setShowEndConfirm(false); }}
+                  className="w-full bg-red-500 hover:bg-red-600 text-white font-black py-4 rounded-2xl shadow-[0_6px_0_#991b1b] active:scale-95 active:shadow-none transition-all uppercase tracking-wider"
+                >
+                  Sim, encerrar tudo
+                </button>
+                <button 
+                  onClick={() => setShowEndConfirm(false)}
+                  className="w-full bg-gray-100 hover:bg-gray-200 text-gray-500 font-black py-4 rounded-2xl active:scale-95 transition-all uppercase tracking-wider"
+                >
+                  Voltar ao jogo
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -490,32 +518,6 @@ export default function GameContainer() {
         <p className="font-black uppercase tracking-widest opacity-80">Sincronizando partida...</p>
         <button onClick={leaveRoom} className="mt-4 underline opacity-50 text-xs">Voltar para o início</button>
       </div>
-      {/* Global Modals */}
-      {showEndConfirm && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowEndConfirm(false)}></div>
-          <div className="bg-white rounded-3xl p-8 max-w-sm w-full relative z-10 shadow-2xl border-4 border-red-500 animate-in zoom-in-95 duration-200">
-            <div className="text-4xl mb-4 text-center">🛑</div>
-            <h2 className="text-2xl font-black text-center text-gray-800 mb-2 italic">ENCERRAR JOGO?</h2>
-            <p className="text-gray-600 text-center font-bold mb-8">Tem certeza que deseja fechar a sala para todos os jogadores?</p>
-            
-            <div className="flex flex-col gap-3">
-              <button 
-                onClick={() => { forceEndGame(); setShowEndConfirm(false); }}
-                className="w-full bg-red-500 hover:bg-red-600 text-white font-black py-4 rounded-2xl shadow-[0_6px_0_#991b1b] active:scale-95 active:shadow-none transition-all uppercase tracking-wider"
-              >
-                Sim, encerrar tudo
-              </button>
-              <button 
-                onClick={() => setShowEndConfirm(false)}
-                className="w-full bg-gray-100 hover:bg-gray-200 text-gray-500 font-black py-4 rounded-2xl active:scale-95 transition-all uppercase tracking-wider"
-              >
-                Voltar ao jogo
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

@@ -290,7 +290,7 @@ export default function SnakeBoard({ board, isMyTurn, onDrop, draggingPiece }) {
               piece={pos} 
               horizontal={pos.horizontal} 
               reverse={pos.reverse}
-              className={`${draggingPiece === pos.id ? 'opacity-30 scale-90' : 'hover:z-50 shadow-2xl'}`}
+              className="hover:z-50 shadow-2xl"
             />
           </div>
         );

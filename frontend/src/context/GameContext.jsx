@@ -23,6 +23,7 @@ export const GameProvider = ({ children }) => {
   const [iWon, setIWon] = useState(false);
   const [scores, setScores] = useState({});
   const [currentTheme, setCurrentTheme] = useState(null);
+  const [maxPlayers, setMaxPlayers] = useState(2);
   const [isConnected, setIsConnected] = useState(socket.connected);
   const isManualJoinRef = useRef(false);
 
@@ -97,6 +98,11 @@ export const GameProvider = ({ children }) => {
       setIWon(iWon);
       setGameOverMsg(message);
       setGameState('finished');
+    });
+
+    socket.on('roomUpdated', ({ maxPlayers }) => {
+      console.log('📏 Sala atualizada:', { maxPlayers });
+      if (maxPlayers) setMaxPlayers(maxPlayers);
     });
 
     const handleForcedEnd = ({ message }) => {
@@ -192,6 +198,12 @@ export const GameProvider = ({ children }) => {
     }
   };
 
+  const updateMaxPlayers = (count) => {
+    if (room) {
+      socket.emit('updateMaxPlayers', { room, maxPlayers: count });
+    }
+  };
+
   const value = {
     room,
     players,
@@ -210,8 +222,10 @@ export const GameProvider = ({ children }) => {
     gameOverMsg,
     scores,
     currentTheme,
+    maxPlayers,
     setGameState,
     forceEndGame,
+    updateMaxPlayers,
     myId, // <--- EXPORTANDO ID
     playerId,
     isConnected,

@@ -18,10 +18,12 @@ module.exports = (io) => {
         socket.join(roomId);
         await RedisService.setRoom(roomId, { 
           players: [{ id: socket.id, playerId }], 
-          status: 'lobby' 
+          status: 'lobby',
+          maxPlayers: 2
         });
         socket.emit("roomCreated", { roomId });
         io.to(roomId).emit("playerJoined", [{ id: socket.id, playerId }]);
+        io.to(roomId).emit("roomUpdated", { maxPlayers: 2 });
         console.log(`🏠 Sala criada: ${roomId} por ${playerId}`);
       } catch (error) {
         console.error("❌ Erro ao criar sala:", error);
@@ -56,7 +58,7 @@ module.exports = (io) => {
               }
               if (room.currentTurn === oldSocketId) room.currentTurn = newSocketId;
             }
-          } else if (room.status === 'lobby' && room.players.length < 2) {
+          } else if (room.status === 'lobby' && room.players.length < (room.maxPlayers || 2)) {
             room.players.push({ id: socket.id, playerId });
           } else if (room.status !== 'lobby') {
              return socket.emit("error", { message: "O jogo já começou." });
@@ -66,6 +68,7 @@ module.exports = (io) => {
 
           await RedisService.setRoom(roomId, room);
           io.to(roomId).emit("playerJoined", room.players);
+          io.to(roomId).emit("roomUpdated", { maxPlayers: room.maxPlayers || 2 });
           socket.emit("joinedSuccess", { roomId, status: room.status });
 
           if (room.status === 'playing') {
@@ -99,7 +102,7 @@ module.exports = (io) => {
         const room = await RedisService.getRoom(roomId);
         if (!room) return;
 
-        if (room.players.length >= 2) {
+        if (room.players.length >= (room.maxPlayers || 2)) {
           const gameData = GameService.createGame(room.players, themeId);
           const updatedRoom = { ...room, ...gameData, status: 'playing' };
           await RedisService.setRoom(roomId, updatedRoom);
@@ -204,6 +207,21 @@ module.exports = (io) => {
           io.to(roomId).emit("gameForcedEnd", { message: "A partida foi encerrada por um dos jogadores." });
           await RedisService.deleteRoom(roomId);
           console.log(`💀 Partida ${roomId} encerrada forçadamente.`);
+        }
+      } catch (e) { console.error(e); }
+    });
+
+    /**
+     * Update Max Players Handler
+     */
+    socket.on("updateMaxPlayers", async ({ room: roomId, maxPlayers }) => {
+      try {
+        const room = await RedisService.getRoom(roomId);
+        if (room && room.players[0].id === socket.id && room.status === 'lobby') {
+          room.maxPlayers = maxPlayers;
+          await RedisService.setRoom(roomId, room);
+          io.to(roomId).emit("roomUpdated", { maxPlayers: room.maxPlayers });
+          console.log(`📏 Sala ${roomId} atualizada para ${maxPlayers} jogadores.`);
         }
       } catch (e) { console.error(e); }
     });

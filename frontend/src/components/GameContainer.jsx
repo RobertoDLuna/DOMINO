@@ -13,8 +13,8 @@ import logoPrefeitura from '../assets/logo-prefeitura.png';
 export default function GameContainer() {
   const { 
     room, players, gameState, myHand, board, currentTurn, 
-    createRoom, joinRoom, leaveRoom, startGame, makeMove, passTurn, forceEndGame,
-    iWon, gameOverMsg, scores, currentTheme, myId, isConnected
+    createRoom, joinRoom, leaveRoom, startGame, makeMove, passTurn, forceEndGame, updateMaxPlayers,
+    iWon, gameOverMsg, scores, currentTheme, maxPlayers, myId, isConnected
   } = useGame();
   
   const [roomIdInput, setRoomIdInput] = useState("");
@@ -207,9 +207,12 @@ export default function GameContainer() {
             <div className="w-px h-4 sm:h-6 bg-gray-200 self-center"></div>
             <img src={logoPrefeitura} alt="Prefeitura" className="h-4 sm:h-8 w-auto object-contain pointer-events-none" />
           </div>
-          <h1 className="text-3xl sm:text-4xl font-black drop-shadow-lg text-[#FFCE00] uppercase italic tracking-tighter text-center">
-            {isRoomOwner ? "Escolha a Matéria!" : "Aguardando amiguinhos..."}
+          <h1 className="text-3xl sm:text-4xl font-black drop-shadow-lg text-[#FFCE00] uppercase italic tracking-tighter text-center leading-none">
+            {isRoomOwner ? "Configure sua Sala!" : "Aguardando amiguinhos..."}
           </h1>
+          <div className="mt-2 bg-white/10 px-4 py-1 rounded-full border border-white/20">
+            <span className="text-xs font-black uppercase tracking-widest">{players.length} / {maxPlayers} JOGADORES</span>
+          </div>
         </header>
 
         <div className="flex-1 flex flex-col items-center justify-start z-10 w-full overflow-y-auto scrollbar-hide py-6 h-full">
@@ -217,7 +220,25 @@ export default function GameContainer() {
               
               {/* Theme Selector for Owner */}
               {isRoomOwner ? (
-                <ThemeSelector selectedTheme={selectedTheme} onSelect={setSelectedTheme} />
+                <div className="w-full flex flex-col gap-6">
+                  {/* Players Count Selector */}
+                  <div className="bg-white/10 p-4 rounded-[2rem] border border-white/20 backdrop-blur-sm">
+                    <p className="text-[10px] font-black uppercase tracking-widest mb-3 opacity-60 text-center">Capacidade da Sala</p>
+                    <div className="flex justify-center gap-4">
+                      {[2, 3, 4].map(num => (
+                        <button
+                          key={num}
+                          onClick={() => updateMaxPlayers(num)}
+                          className={`w-12 h-12 rounded-full font-black text-xl transition-all shadow-lg border-2 ${maxPlayers === num ? 'bg-[#FFCE00] text-[#009660] border-white scale-110' : 'bg-white/20 text-white border-transparent opacity-60 hover:opacity-100'}`}
+                        >
+                          {num}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <ThemeSelector selectedTheme={selectedTheme} onSelect={setSelectedTheme} />
+                </div>
               ) : (
                 /* Room Code Card - Adaptive */
                 <div className="w-full max-w-sm bg-white/20 p-8 rounded-[3rem] shadow-2xl text-center border-2 border-white/30 backdrop-blur-sm">
@@ -230,7 +251,7 @@ export default function GameContainer() {
 
               {/* Action Buttons */}
               <div className="w-full max-w-sm flex flex-col gap-4 mt-6">
-                {players.length >= 2 ? (
+                {players.length >= maxPlayers ? (
                   isRoomOwner && (
                     <button 
                       onClick={handleStartGame} 
@@ -241,7 +262,7 @@ export default function GameContainer() {
                   )
                 ) : (
                     <div className="bg-black/20 p-4 sm:p-5 rounded-3xl border border-white/10">
-                      <p className="text-white font-black text-sm sm:text-base uppercase tracking-widest animate-pulse italic text-center">Aguardando amiguinho...</p>
+                      <p className="text-white font-black text-sm sm:text-base uppercase tracking-widest animate-pulse italic text-center">Aguardando amiguinhos ({players.length}/{maxPlayers})</p>
                     </div>
                 )}
 
@@ -286,20 +307,21 @@ export default function GameContainer() {
         <main className="flex-1 flex flex-col items-center justify-center bg-[#009660] relative px-4 shadow-inner border-b-[10px] sm:border-b-[20px] border-emerald-950/20 overflow-hidden">
            <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/felt.png')] pointer-events-none"></div>
            
-           {/* Scoreboard */}
-           <div className="absolute top-4 sm:top-6 left-0 right-0 flex justify-start gap-3 sm:gap-6 z-40 px-6 sm:px-12">
+           {/* Scoreboard - Responsive for up to 4 players */}
+           <div className="absolute top-4 sm:top-6 left-0 right-0 flex flex-wrap justify-center sm:justify-start gap-2 sm:gap-6 z-40 px-4 sm:px-12">
              {players.map((p, idx) => (
-                <div key={p.id} className={`flex items-center gap-2 sm:gap-4 px-3 sm:px-5 py-1 sm:py-2 rounded-[1.2rem] sm:rounded-[1.5rem] border-b-[3px] sm:border-b-[5px] transition-all duration-500 transform
+                <div key={p.id} className={`flex items-center gap-2 sm:gap-3 px-2 sm:px-4 py-1 sm:py-2 rounded-[1.2rem] sm:rounded-[1.5rem] border-b-[3px] sm:border-b-[5px] transition-all duration-500 transform
                   ${currentTurn === p.id 
                     ? 'bg-[#FFCE00] border-yellow-700 text-[#009660] scale-105 shadow-[0_8px_25px_rgba(0,0,0,0.2)]' 
-                    : 'bg-white/90 border-gray-300 text-emerald-900 opacity-80'}`}>
-                  <span className="text-lg sm:text-2xl">{p.id === myId ? '🔥' : '👤'}</span>
+                    : 'bg-white/90 border-gray-300 text-emerald-900 opacity-80 shadow-md'}
+                  ${players.length > 2 ? 'scale-90 sm:scale-100' : ''}`}>
+                  <span className="text-base sm:text-2xl">{p.id === myId ? '🔥' : ['👤', '🎒', '🎓', '🎒'][idx % 4]}</span>
                   <div className="flex flex-col leading-none">
-                    <span className="text-[7px] sm:text-[9px] font-black uppercase tracking-widest mb-0.5 opacity-60">{p.id === myId ? 'Você' : `Competidor`}</span>
-                    <span className="text-base sm:text-xl font-black">{scores[p.id] || 0} pts</span>
+                    <span className="text-[7px] sm:text-[9px] font-black uppercase tracking-widest mb-0.5 opacity-60">{p.id === myId ? 'Você' : `Competidor ${idx + 1}`}</span>
+                    <span className="text-sm sm:text-xl font-black">{scores[p.id] || 0} pts</span>
                   </div>
                 </div>
-             ))}
+              ))}
            </div>
 
             <div className="z-10 w-full flex-1 overflow-hidden relative">

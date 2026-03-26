@@ -23,8 +23,11 @@ const useGame = () => {
         gameOverMsg,
         winner,
         scores,
+        currentTheme,
+        maxPlayers,
         myId, // <--- PEGANDO DO CONTEXT
         forceEndGame,
+        updateMaxPlayers,
         isConnected
     } = useGameContext();
 
@@ -40,6 +43,7 @@ const useGame = () => {
         leaveRoom,
         passTurn,
         forceEndGame,
+        updateMaxPlayers,
         makeMove,
         startGame,
         setGameState,
@@ -50,6 +54,8 @@ const useGame = () => {
         gameOverMsg,
         winner,
         scores,
+        currentTheme,
+        maxPlayers,
         myId, // <--- EXPORTANDO
         isConnected
     };

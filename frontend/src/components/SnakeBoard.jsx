@@ -13,6 +13,19 @@ const METRICS = {
 };
 
 /**
+ * Calculates the optimal number of pieces per row based on container width.
+ * This is the core of Option A - adaptive layout.
+ */
+function calcMaxPerRow(containerWidth) {
+  const { H_W, GAP, MARGIN } = METRICS;
+  const pieceSlot = H_W + GAP;
+  // Fit as many horizontal pieces as possible with comfortable margins
+  const maxFit = Math.floor((containerWidth - MARGIN * 2) / pieceSlot);
+  // Clamp between 3 (mobile min) and 8 (desktop max)
+  return Math.max(3, Math.min(8, maxFit));
+}
+
+/**
  * SnakeBoard component handles the adaptive "snake" layout for the dominoes.
  */
 export default function SnakeBoard({ board, isMyTurn, onDrop, draggingPiece }) {
@@ -23,7 +36,6 @@ export default function SnakeBoard({ board, isMyTurn, onDrop, draggingPiece }) {
     if (!containerRef.current) return;
     const observer = new ResizeObserver(entries => {
       for (let entry of entries) {
-        // Debounce or directly set state to track exact pixel space
         setContainerSize({
           width: entry.contentRect.width,
           height: entry.contentRect.height
@@ -35,6 +47,9 @@ export default function SnakeBoard({ board, isMyTurn, onDrop, draggingPiece }) {
   }, []);
 
   const { H_W, H_H, V_W, V_H, GAP, MARGIN } = METRICS;
+
+  // Dynamically calculate maxPerRow based on actual container width (Option A!)
+  const maxPerRow = calcMaxPerRow(containerSize.width);
 
   // ----------------------------------------------------------------
   // 1. DETERMINISTIC ITEM LIST
@@ -48,7 +63,6 @@ export default function SnakeBoard({ board, isMyTurn, onDrop, draggingPiece }) {
       ];
 
   const positions = [];
-  const maxPerRow = 6;
   
   let mode = 'RIGHT'; // 'RIGHT', 'LEFT', 'DOWN'
   let nextMode = 'LEFT';
@@ -86,26 +100,22 @@ export default function SnakeBoard({ board, isMyTurn, onDrop, draggingPiece }) {
 
     let posX = 0;
     let posY = 0;
-    let reverse = false;
 
     if (mode === 'RIGHT') {
       posX = cursorX;
-      posY = rowAxisY - h / 2;     // Alinha top/bottom!
+      posY = rowAxisY - h / 2;
       
       positions.push({ ...item, posX, posY, horizontal, reverse: false, isActive: isMyTurn });
       
       col++;
       cursorX += w + GAP;
       
-      // NATURAL ELBOW: Preditively turn if next piece is a normal piece, 
-      // allowing it to act as the vertical column bridge.
       const nextItem = layoutItems[index + 1];
       const nextIsDouble = nextItem && nextItem.type === 'piece' && String(nextItem.ladoA) === String(nextItem.ladoB);
       
       if (col >= maxPerRow - 1 && (!nextIsDouble || col >= maxPerRow + 1) && index < layoutItems.length - 1) {
         mode = 'DOWN';
         nextMode = 'LEFT';
-        // Define descending column axis perfectly aligned to the right/center
         if (isDouble) {
           colAxisX = posX + V_W / 2; 
         } else {
@@ -116,9 +126,8 @@ export default function SnakeBoard({ board, isMyTurn, onDrop, draggingPiece }) {
       }
     } 
     else if (mode === 'LEFT') {
-      // In LEFT mode, cursorX acts as the RIGHT limit of the piece
       posX = cursorX - w;
-      posY = rowAxisY - h / 2;     // Alinha top/bottom!
+      posY = rowAxisY - h / 2;
       
       positions.push({ ...item, posX, posY, horizontal, reverse: true, isActive: isMyTurn });
       
@@ -131,7 +140,6 @@ export default function SnakeBoard({ board, isMyTurn, onDrop, draggingPiece }) {
       if (col >= maxPerRow - 1 && (!nextIsDouble || col >= maxPerRow + 1) && index < layoutItems.length - 1) {
         mode = 'DOWN';
         nextMode = 'RIGHT';
-        // Define descending column axis perfectly aligned to the left/center
         if (isDouble) {
           colAxisX = posX + V_W / 2; 
         } else {
@@ -142,7 +150,7 @@ export default function SnakeBoard({ board, isMyTurn, onDrop, draggingPiece }) {
       }
     }
     else if (mode === 'DOWN') {
-      posX = colAxisX - w / 2;     // Alinha left/right!
+      posX = colAxisX - w / 2;
       posY = cursorY;
       
       positions.push({ ...item, posX, posY, horizontal, reverse: false, isActive: isMyTurn });
@@ -150,40 +158,33 @@ export default function SnakeBoard({ board, isMyTurn, onDrop, draggingPiece }) {
       downCount++;
       cursorY += h + GAP;
       
-      // Single piece down to transition rows
       if (downCount >= 1 && index < layoutItems.length - 1) {
         mode = nextMode;
         col = 0;
         
-        // Peek slightly ahead: If the first piece of the new row is a Double (carroça),
-        // it will render vertically (taller). We must push the row axis down to prevent
-        // its top edge from overlapping/amontoando with the piece we just placed.
         const firstRowItem = layoutItems[index + 1];
         const isFirstRowItemDouble = firstRowItem && firstRowItem.type === 'piece' && String(firstRowItem.ladoA) === String(firstRowItem.ladoB);
         
-        // Next row starts exactly below
         rowAxisY = cursorY + (isFirstRowItemDouble ? V_H / 2 : H_H / 2);
         
-        // Define start margin for the new row based on the corner piece
         if (nextMode === 'LEFT') {
           if (isDouble) {
-             cursorX = colAxisX;            // Busca o meio da carroça horizontal!
+             cursorX = colAxisX;
           } else {
-             cursorX = colAxisX + V_W / 2;  // Alinha com a borda direita da peça vertical
+             cursorX = colAxisX + V_W / 2;
           }
-        } else { // nextMode === 'RIGHT'
+        } else {
           if (isDouble) {
-             cursorX = colAxisX;            // Busca o meio da carroça horizontal!
+             cursorX = colAxisX;
           } else {
-             cursorX = colAxisX - V_W / 2;  // Alinha com a borda esquerda da peça vertical
+             cursorX = colAxisX - V_W / 2;
           }
         }
       }
     }
   });
 
-
-  // Calculate final bounding box for centering/scaling
+  // Calculate final bounding box
   let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
   positions.forEach(pos => {
     const pw = pos.horizontal ? H_W : V_W;
@@ -194,10 +195,13 @@ export default function SnakeBoard({ board, isMyTurn, onDrop, draggingPiece }) {
     maxY = Math.max(maxY, pos.posY + ph);
   });
 
-  const logicalWidth = Math.max((maxX - minX) + (MARGIN * 2), containerSize.width);
-  const logicalHeight = Math.max((maxY - minY) + (MARGIN * 2), containerSize.height);
+  const contentW = (maxX - minX) + MARGIN * 2;
+  const contentH = (maxY - minY) + MARGIN * 2;
 
-  // Normalize positions within logical container: Center the bounding box!
+  const logicalWidth = Math.max(contentW, containerSize.width);
+  const logicalHeight = Math.max(contentH, containerSize.height);
+
+  // Center the bounding box within the logical container
   const offsetX = (logicalWidth / 2) - ((minX + maxX) / 2);
   const offsetY = (logicalHeight / 2) - ((minY + maxY) / 2);
   
@@ -206,11 +210,10 @@ export default function SnakeBoard({ board, isMyTurn, onDrop, draggingPiece }) {
     pos.posY += offsetY;
   });
 
-  // Viewport Zoom Calculation (Camera effect)
-  const scaleX = (containerSize.width - 20) / logicalWidth; // Buffer for edges
-  const scaleY = (containerSize.height - 20) / logicalHeight;
-  // Slightly more aggressive scaling to keep things centered and visible
-  const boardScale = Math.min(scaleX, scaleY, 0.95); 
+  // Smart-fit scale: fit the content inside the visible viewport with padding
+  const scaleX = (containerSize.width - 16) / logicalWidth;
+  const scaleY = (containerSize.height - 16) / logicalHeight;
+  const boardScale = Math.min(scaleX, scaleY, 1.0); 
 
   return (
     <div ref={containerRef} className="w-full h-full relative overflow-hidden flex justify-center items-center">
@@ -236,7 +239,7 @@ export default function SnakeBoard({ board, isMyTurn, onDrop, draggingPiece }) {
       {/* Visual Path (Dashed Line) */}
       {board.length > 1 && (
         <svg className="absolute inset-0 pointer-events-none opacity-10 w-full h-full">
-          {positions.filter(p => !p.type).map((pos, i, arr) => {
+          {positions.filter(p => p.type === 'piece').map((pos, i, arr) => {
             if (i === 0) return null;
             const prev = arr[i-1];
             return (

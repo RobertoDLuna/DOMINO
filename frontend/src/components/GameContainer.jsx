@@ -22,6 +22,8 @@ export default function GameContainer() {
   const [selectedTheme, setSelectedTheme] = useState('animais');
   const [timer, setTimer] = useState(30);
   const [showAvatar, setShowAvatar] = useState(false);
+  const [selectedPiece, setSelectedPiece] = useState(null); // { id, ladoA, ladoB }
+  const [sideModal, setSideModal] = useState(null); // { pieceId, leftEnd, rightEnd }
 
   const isMyTurn = currentTurn === myId;
   const isRoomOwner = players.length > 0 && players[0].id === myId;
@@ -81,6 +83,52 @@ export default function GameContainer() {
     if (draggingPiece) {
       makeMove(draggingPiece, side);
       setDraggingPiece(null);
+    }
+  };
+
+  // Click-to-place logic
+  const handlePieceClick = (piece) => {
+    if (!isMyTurn) return;
+
+    // Deselect on second click
+    if (selectedPiece?.id === piece.id) {
+      setSelectedPiece(null);
+      return;
+    }
+
+    // First click on empty board: place directly
+    if (board.length === 0) {
+      makeMove(piece.id, 'right');
+      setSelectedPiece(null);
+      return;
+    }
+
+    const leftEnd = board[0]?.ladoA;
+    const rightEnd = board[board.length - 1]?.ladoB;
+    const fitsLeft = piece.ladoA === leftEnd || piece.ladoB === leftEnd;
+    const fitsRight = piece.ladoA === rightEnd || piece.ladoB === rightEnd;
+
+    if (fitsLeft && fitsRight) {
+      // Fits both sides - show modal
+      setSelectedPiece(piece);
+      setSideModal({ pieceId: piece.id, leftEnd, rightEnd });
+    } else if (fitsLeft) {
+      makeMove(piece.id, 'left');
+      setSelectedPiece(null);
+    } else if (fitsRight) {
+      makeMove(piece.id, 'right');
+      setSelectedPiece(null);
+    } else {
+      // Piece doesn't fit: just highlight it briefly
+      setSelectedPiece(null);
+    }
+  };
+
+  const handleSideChoice = (side) => {
+    if (sideModal) {
+      makeMove(sideModal.pieceId, side);
+      setSideModal(null);
+      setSelectedPiece(null);
     }
   };
 
@@ -306,8 +354,10 @@ export default function GameContainer() {
                    key={piece.id} 
                    piece={piece} 
                    draggable={isMyTurn}
+                   selected={selectedPiece?.id === piece.id}
                    onDragStart={() => handleDragStart(piece.id)}
-                   className={`${!isMyTurn ? 'opacity-30 grayscale scale-100 pointer-events-none' : 'hover:-translate-y-8 sm:hover:-translate-y-16 hover:scale-150 shadow-[0_25px_50px_rgba(0,150,96,0.2)] scale-110 sm:scale-140'}`}
+                   onClick={() => handlePieceClick(piece)}
+                   className={`${!isMyTurn ? 'opacity-30 grayscale scale-100 pointer-events-none' : 'scale-110 sm:scale-140'}`}
                 />
               ))}
             </div>
@@ -339,6 +389,35 @@ export default function GameContainer() {
                     <img src={logoPrefeitura} alt="Prefeitura" className="h-6 sm:h-10 object-contain pointer-events-none" />
                   </div>
             </section>
+          </div>
+        )}
+
+        {/* Side Choice Modal */}
+        {sideModal && (
+          <div className="absolute inset-0 z-[110] flex items-center justify-center backdrop-blur-sm bg-black/40" onClick={() => { setSideModal(null); setSelectedPiece(null); }}>
+            <div className="bg-white rounded-[2rem] shadow-[0_40px_80px_rgba(0,0,0,0.5)] p-6 sm:p-10 flex flex-col items-center gap-6 border-8 border-[#FFCE00] max-w-[320px] w-full mx-4" onClick={e => e.stopPropagation()}>
+              <h2 className="text-2xl font-black uppercase text-[#009660] text-center">Onde colocar?</h2>
+              <p className="text-sm text-gray-500 font-bold uppercase tracking-widest text-center">A peça encaixa nos dois lados!</p>
+              <div className="flex gap-4 w-full">
+                <button
+                  onClick={() => handleSideChoice('left')}
+                  className="flex-1 bg-[#009660] hover:bg-[#00a86b] text-white font-black py-5 rounded-2xl shadow-[0_6px_0_#006d46] text-xl transition-all active:scale-95 flex flex-col items-center gap-1"
+                >
+                  <span className="text-3xl">⬅️</span>
+                  <span>AQUI</span>
+                  <span className="text-xs opacity-70 font-medium">{sideModal.leftEnd}</span>
+                </button>
+                <button
+                  onClick={() => handleSideChoice('right')}
+                  className="flex-1 bg-[#FFCE00] hover:bg-[#ffe050] text-[#009660] font-black py-5 rounded-2xl shadow-[0_6px_0_#d1a900] text-xl transition-all active:scale-95 flex flex-col items-center gap-1"
+                >
+                  <span className="text-3xl">➡️</span>
+                  <span>ALI</span>
+                  <span className="text-xs opacity-70 font-medium">{sideModal.rightEnd}</span>
+                </button>
+              </div>
+              <button onClick={() => { setSideModal(null); setSelectedPiece(null); }} className="text-gray-400 text-xs uppercase font-bold tracking-widest hover:text-red-400 transition-colors">Cancelar</button>
+            </div>
           </div>
         )}
 

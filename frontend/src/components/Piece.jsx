@@ -1,21 +1,11 @@
 import React from "react";
 
-/**
- * Piece component for the Dominoes game.
- * 
- * @param {Object} props
- * @param {Object} props.piece - Piece data (ladoA, ladoB, id)
- * @param {boolean} props.draggable - Whether the piece can be dragged
- * @param {function} props.onDragStart - Drag start handler
- * @param {boolean} props.horizontal - Orientation
- * @param {boolean} props.reverse - Whether to swap ladoA and ladoB visuals
- * @param {string} props.className - Additional CSS classes
- * @param {Object} props.style - Inline styles
- */
 export default function Piece({ 
   piece, 
   draggable, 
   onDragStart, 
+  onClick,
+  selected = false,
   horizontal = false, 
   reverse = false, 
   className = "", 
@@ -24,16 +14,22 @@ export default function Piece({
   const iconA = reverse ? piece.ladoB : piece.ladoA;
   const iconB = reverse ? piece.ladoA : piece.ladoB;
 
-  const baseStyles = `bg-white rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,0.3)] border-b-8 border-gray-200 flex transition-all items-center justify-center overflow-hidden flex-shrink-0`;
+  const baseStyles = `bg-white rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,0.3)] border-b-8 flex transition-all items-center justify-center overflow-hidden flex-shrink-0`;
   const orientationStyles = horizontal ? 'flex-row w-[120px] h-[60px]' : 'flex-col w-[60px] h-[120px]';
-  const interactivityStyles = draggable ? 'cursor-grab active:cursor-grabbing hover:scale-105 hover:-translate-y-1' : 'cursor-default';
+  const selectedStyles = selected
+    ? 'border-[#FFCE00] border-b-8 scale-110 -translate-y-4 ring-4 ring-[#FFCE00] ring-offset-2 shadow-[0_20px_40px_rgba(255,206,0,0.5)] z-50'
+    : 'border-gray-200';
+  const interactivityStyles = (draggable || onClick) 
+    ? 'cursor-pointer active:scale-95' 
+    : 'cursor-default';
   
   return (
     <div 
       draggable={draggable}
       onDragStart={onDragStart}
+      onClick={onClick}
       style={style}
-      className={`${baseStyles} ${orientationStyles} ${interactivityStyles} ${className}`}
+      className={`${baseStyles} ${orientationStyles} ${selectedStyles} ${interactivityStyles} ${className}`}
     >
       <div className={`flex-1 flex items-center justify-center ${horizontal ? 'text-5xl' : 'text-4xl'} select-none w-full h-full text-center`}>
         {iconA}

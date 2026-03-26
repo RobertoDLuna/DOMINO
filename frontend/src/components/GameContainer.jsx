@@ -22,8 +22,9 @@ export default function GameContainer() {
   const [selectedTheme, setSelectedTheme] = useState('animais');
   const [timer, setTimer] = useState(30);
   const [showAvatar, setShowAvatar] = useState(false);
-  const [selectedPiece, setSelectedPiece] = useState(null); // { id, ladoA, ladoB }
-  const [sideModal, setSideModal] = useState(null); // { pieceId, leftEnd, rightEnd }
+  const [selectedPiece, setSelectedPiece] = useState(null);
+  const [sideModal, setSideModal] = useState(null);
+  const [isMuted, setIsMuted] = useState(() => SoundService.muted);
 
   const isMyTurn = currentTurn === myId;
   const isRoomOwner = players.length > 0 && players[0].id === myId;
@@ -312,10 +313,20 @@ export default function GameContainer() {
 
         {/* Action Bar */}
         <footer className={`${isMyTurn ? 'bg-[#FFCE00] text-[#009660]' : 'bg-white text-emerald-900 opacity-90'} py-2 sm:py-3 px-6 sm:px-12 flex justify-between items-center shadow-[0_-10px_50px_rgba(0,0,0,0.1)] z-40 relative border-t-2 sm:border-t-4 border-black/5`}>
-           <div className="hidden sm:flex items-center gap-3 sm:gap-5 bg-white/40 backdrop-blur-sm px-4 py-1.5 rounded-2xl border border-black/5">
-              <img src={logoCampina} alt="Seduc" className="h-4 sm:h-6 object-contain pointer-events-none drop-shadow-sm" />
-              <div className="w-px h-4 sm:h-5 bg-black/10 self-center"></div>
-              <img src={logoPrefeitura} alt="Prefeitura" className="h-4 sm:h-6 object-contain pointer-events-none drop-shadow-sm" />
+           <div className="flex items-center gap-2 sm:gap-5">
+             <div className="hidden sm:flex items-center gap-3 sm:gap-5 bg-white/40 backdrop-blur-sm px-4 py-1.5 rounded-2xl border border-black/5">
+               <img src={logoCampina} alt="Seduc" className="h-4 sm:h-6 object-contain pointer-events-none drop-shadow-sm" />
+               <div className="w-px h-4 sm:h-5 bg-black/10 self-center"></div>
+               <img src={logoPrefeitura} alt="Prefeitura" className="h-4 sm:h-6 object-contain pointer-events-none drop-shadow-sm" />
+             </div>
+             {/* Mute button */}
+             <button
+               onClick={() => setIsMuted(SoundService.toggleMute())}
+               title={isMuted ? 'Ativar sons' : 'Silenciar sons'}
+               className="bg-white/40 hover:bg-white/70 backdrop-blur-sm px-3 py-1.5 rounded-2xl border border-black/5 text-xl transition-all active:scale-90 select-none"
+             >
+               {isMuted ? '🔇' : '🔊'}
+             </button>
            </div>
            <div className="flex flex-col items-center flex-1">
               <div className="text-lg sm:text-2xl font-black uppercase tracking-[0.2em] sm:tracking-[0.3em] brightness-90">

@@ -9,7 +9,7 @@ const METRICS = {
   V_W: 60,
   V_H: 128, 
   GAP: 4,   
-  MARGIN: 40 
+  MARGIN: 20 
 };
 
 /**
@@ -194,22 +194,23 @@ export default function SnakeBoard({ board, isMyTurn, onDrop, draggingPiece }) {
     maxY = Math.max(maxY, pos.posY + ph);
   });
 
-  const logicalWidth = (maxX - minX) + (MARGIN * 2);
-  const logicalHeight = Math.max((maxY - minY) + (MARGIN * 2), 400);
+  const logicalWidth = Math.max((maxX - minX) + (MARGIN * 2), containerSize.width);
+  const logicalHeight = Math.max((maxY - minY) + (MARGIN * 2), containerSize.height);
 
-  // Normalize positions within logical container
-  const offsetX = MARGIN - minX;
-  const offsetY = MARGIN - minY;
+  // Normalize positions within logical container: Center the bounding box!
+  const offsetX = (logicalWidth / 2) - ((minX + maxX) / 2);
+  const offsetY = (logicalHeight / 2) - ((minY + maxY) / 2);
+  
   positions.forEach(pos => {
     pos.posX += offsetX;
     pos.posY += offsetY;
   });
 
   // Viewport Zoom Calculation (Camera effect)
-  // Fit logical bounding box into available screen space perfectly
-  const scaleX = containerSize.width / logicalWidth;
-  const scaleY = containerSize.height / logicalHeight;
-  const boardScale = Math.min(scaleX, scaleY, 1); // Never blow up piece size > 1x
+  const scaleX = (containerSize.width - 20) / logicalWidth; // Buffer for edges
+  const scaleY = (containerSize.height - 20) / logicalHeight;
+  // Slightly more aggressive scaling to keep things centered and visible
+  const boardScale = Math.min(scaleX, scaleY, 0.95); 
 
   return (
     <div ref={containerRef} className="w-full h-full relative overflow-hidden flex justify-center items-center">

@@ -22,7 +22,9 @@ const useGame = () => {
         iWon,
         gameOverMsg,
         winner,
-        scores
+        scores,
+        myId, // <--- PEGANDO DO CONTEXT
+        isConnected
     } = useGameContext();
 
     return {
@@ -45,7 +47,9 @@ const useGame = () => {
         iWon,
         gameOverMsg,
         winner,
-        scores
+        scores,
+        myId, // <--- EXPORTANDO
+        isConnected
     };
 };
 

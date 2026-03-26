@@ -5,6 +5,7 @@ import Piece from "./Piece";
 import SnakeBoard from "./SnakeBoard";
 import AvatarGuide from "./AvatarGuide";
 import ThemeSelector from "./ThemeSelector";
+import SoundService from "../services/SoundService";
 
 import logoCampina from '../assets/logo-campina.png';
 import logoPrefeitura from '../assets/logo-prefeitura.png';
@@ -13,23 +14,64 @@ export default function GameContainer() {
   const { 
     room, players, gameState, myHand, board, currentTurn, 
     createRoom, joinRoom, leaveRoom, startGame, makeMove, passTurn, 
-    iWon, gameOverMsg, scores, currentTheme 
+    iWon, gameOverMsg, scores, currentTheme, myId, isConnected
   } = useGame();
   
   const [roomIdInput, setRoomIdInput] = useState("");
   const [draggingPiece, setDraggingPiece] = useState(null);
-  const [myId, setMyId] = useState(socket.id);
   const [selectedTheme, setSelectedTheme] = useState('animais');
-
-  useEffect(() => {
-    const checkId = setInterval(() => {
-      if (socket.id && socket.id !== myId) setMyId(socket.id);
-    }, 500);
-    return () => clearInterval(checkId);
-  }, [myId]);
+  const [timer, setTimer] = useState(30);
+  const [showAvatar, setShowAvatar] = useState(false);
 
   const isMyTurn = currentTurn === myId;
   const isRoomOwner = players.length > 0 && players[0].id === myId;
+
+  // Auto-pass timer
+  useEffect(() => {
+    let interval;
+    if (gameState === "playing" && isMyTurn) {
+      setTimer(30);
+      interval = setInterval(() => {
+        setTimer(prev => {
+          if (prev <= 1) {
+            passTurn();
+            return 30;
+          }
+          if (prev <= 11) {
+            SoundService.playTick();
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [gameState, isMyTurn]);
+
+  // Avatar inactivity delay (3s)
+  useEffect(() => {
+    let timeout;
+    if (gameState === "playing") {
+      setShowAvatar(false);
+      timeout = setTimeout(() => {
+        setShowAvatar(true);
+      }, 3000);
+    }
+    return () => clearTimeout(timeout);
+  }, [gameState, currentTurn, board.length]);
+
+  // Sound triggers
+  useEffect(() => {
+    if (gameState === "playing" && board.length > 0) {
+      SoundService.playPlace();
+    }
+  }, [board.length]);
+
+  useEffect(() => {
+    if (gameState === "finished") {
+      if (iWon) SoundService.playWin();
+      else SoundService.playLose();
+    }
+  }, [gameState, iWon]);
 
   const handleDragStart = (pieceId) => {
     setDraggingPiece(pieceId);
@@ -64,7 +106,10 @@ export default function GameContainer() {
           <h1 className="text-5xl sm:text-8xl font-black drop-shadow-[0_5px_0_rgba(0,0,0,0.2)] text-center tracking-tighter italic uppercase text-[#FFCE00] mb-2 leading-none">
             EDU <span className="text-white block sm:inline">GAMES</span>
           </h1>
-          <p className="text-xs sm:text-sm text-white/80 font-bold uppercase tracking-[0.3em] bg-black/20 px-4 py-1 rounded-full">Campina Grande • Educação</p>
+          <p className="text-xs sm:text-sm text-white/50 font-bold uppercase tracking-[0.3em] bg-black/10 px-4 py-1 rounded-full flex items-center gap-2">
+            <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-emerald-400 animate-pulse' : 'bg-red-400'}`}></span>
+            {isConnected ? 'Servidor Conectado' : 'Conectando ao Servidor...'}
+          </p>
         </header>
         
         {/* Main Action Area */}
@@ -96,9 +141,6 @@ export default function GameContainer() {
                 </button>
               </div>
             </div>
-
-            {/* Fluid Avatar - Integrated in flow for mobile */}
-            <AvatarGuide gameState="lobby" className="sm:scale-90" />
           </div>
         </div>
       </div>
@@ -181,17 +223,13 @@ export default function GameContainer() {
                   </div>
                 ))}
               </div>
-
-              {/* Fluid Avatar */}
-              <AvatarGuide gameState="waiting" className="mt-2" />
            </div>
         </div>
       </div>
     );
   }
 
-  // 3. GAMEPLAY
-  if (gameState === "playing") {
+  if (gameState === "playing" || gameState === "finished") {
     return (
       <div className="h-screen bg-[#F0FDF4] flex flex-col font-sans overflow-hidden select-none relative">
         {/* Play Table */}
@@ -199,16 +237,16 @@ export default function GameContainer() {
            <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/felt.png')] pointer-events-none"></div>
            
            {/* Scoreboard */}
-           <div className="absolute top-4 sm:top-6 left-0 right-0 flex justify-center gap-3 sm:gap-6 z-40 px-6">
+           <div className="absolute top-4 sm:top-6 left-0 right-0 flex justify-start gap-3 sm:gap-6 z-40 px-6 sm:px-12">
              {players.map((p, idx) => (
-                <div key={p.id} className={`flex items-center gap-2 sm:gap-4 px-3 sm:px-6 py-1.5 sm:py-3 rounded-[1.5rem] sm:rounded-[2rem] border-b-[4px] sm:border-b-[6px] transition-all duration-500 transform
+                <div key={p.id} className={`flex items-center gap-2 sm:gap-4 px-3 sm:px-5 py-1 sm:py-2 rounded-[1.2rem] sm:rounded-[1.5rem] border-b-[3px] sm:border-b-[5px] transition-all duration-500 transform
                   ${currentTurn === p.id 
-                    ? 'bg-[#FFCE00] border-yellow-700 text-[#009660] scale-105 sm:scale-110 shadow-[0_10px_30px_rgba(0,0,0,0.3)]' 
+                    ? 'bg-[#FFCE00] border-yellow-700 text-[#009660] scale-105 shadow-[0_8px_25px_rgba(0,0,0,0.2)]' 
                     : 'bg-white/90 border-gray-300 text-emerald-900 opacity-80'}`}>
-                  <span className="text-xl sm:text-3xl">{p.id === myId ? '🔥' : '👤'}</span>
+                  <span className="text-lg sm:text-2xl">{p.id === myId ? '🔥' : '👤'}</span>
                   <div className="flex flex-col leading-none">
-                    <span className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest mb-1 opacity-60">{p.id === myId ? 'Você' : `Competidor`}</span>
-                    <span className="text-lg sm:text-2xl font-black">{scores[p.id] || 0} pts</span>
+                    <span className="text-[7px] sm:text-[9px] font-black uppercase tracking-widest mb-0.5 opacity-60">{p.id === myId ? 'Você' : `Competidor`}</span>
+                    <span className="text-base sm:text-xl font-black">{scores[p.id] || 0} pts</span>
                   </div>
                 </div>
              ))}
@@ -225,11 +263,11 @@ export default function GameContainer() {
         </main>
 
         {/* Action Bar */}
-        <footer className={`${isMyTurn ? 'bg-[#FFCE00] text-[#009660]' : 'bg-white text-emerald-900 opacity-90'} py-3 sm:py-4 px-6 sm:px-12 flex justify-between items-center shadow-[0_-10px_50px_rgba(0,0,0,0.1)] z-40 relative border-t-2 sm:border-t-4 border-black/5`}>
-           <div className="hidden sm:flex items-center gap-3 sm:gap-5 bg-white/40 backdrop-blur-sm px-4 py-2 rounded-2xl border border-black/5">
-             <img src={logoCampina} alt="Seduc" className="h-5 sm:h-7 object-contain pointer-events-none drop-shadow-sm" />
-             <div className="w-px h-5 sm:h-6 bg-black/10 self-center"></div>
-             <img src={logoPrefeitura} alt="Prefeitura" className="h-5 sm:h-7 object-contain pointer-events-none drop-shadow-sm" />
+        <footer className={`${isMyTurn ? 'bg-[#FFCE00] text-[#009660]' : 'bg-white text-emerald-900 opacity-90'} py-2 sm:py-3 px-6 sm:px-12 flex justify-between items-center shadow-[0_-10px_50px_rgba(0,0,0,0.1)] z-40 relative border-t-2 sm:border-t-4 border-black/5`}>
+           <div className="hidden sm:flex items-center gap-3 sm:gap-5 bg-white/40 backdrop-blur-sm px-4 py-1.5 rounded-2xl border border-black/5">
+              <img src={logoCampina} alt="Seduc" className="h-4 sm:h-6 object-contain pointer-events-none drop-shadow-sm" />
+              <div className="w-px h-4 sm:h-5 bg-black/10 self-center"></div>
+              <img src={logoPrefeitura} alt="Prefeitura" className="h-4 sm:h-6 object-contain pointer-events-none drop-shadow-sm" />
            </div>
            <div className="flex flex-col items-center flex-1">
               <div className="text-lg sm:text-2xl font-black uppercase tracking-[0.2em] sm:tracking-[0.3em] brightness-90">
@@ -237,99 +275,89 @@ export default function GameContainer() {
               </div>
               {currentTheme && (
                 <div className="text-[10px] sm:text-xs font-bold uppercase tracking-widest opacity-60">
-                  Matéria: {currentTheme.name}
+                  Matéria: {currentTheme?.name || 'Dominó'}
                 </div>
               )}
            </div>
            
-           <div className={isMyTurn ? 'opacity-100' : 'invisible pointer-events-none'}>
-             <button onClick={isMyTurn ? passTurn : undefined} className="bg-red-500 hover:bg-red-400 text-white font-black px-6 sm:px-10 py-2 sm:py-4 rounded-[1rem] sm:rounded-[1.5rem] shadow-[0_4px_0_#991b1b] sm:shadow-[0_8px_0_#991b1b] flex items-center gap-2 sm:gap-4 transition-all active:scale-95 active:shadow-none">
-               PASSAR ⏭️
-             </button>
+           <div className={isMyTurn ? 'opacity-100 flex items-center gap-4' : 'invisible pointer-events-none'}>
+              {isMyTurn && (
+                <div className="flex flex-col items-center">
+                  <div className="text-xs font-black opacity-50 uppercase">Tempo</div>
+                  <div className={`text-2xl font-black ${timer <= 10 ? 'text-red-600 animate-pulse font-black drop-shadow-sm' : 'text-[#009660]'}`}>
+                    {timer}s
+                  </div>
+                </div>
+              )}
+              <button 
+                onClick={() => { SoundService.playPass(); passTurn(); }} 
+                className={`${timer <= 10 ? 'animate-blink-hard' : 'bg-red-500'} hover:bg-red-400 text-white font-black px-6 sm:px-10 py-2 sm:py-4 rounded-[1rem] sm:rounded-[1.5rem] shadow-[0_4px_0_#991b1b] sm:shadow-[0_8px_0_#991b1b] flex items-center gap-2 sm:gap-4 transition-all active:scale-95 active:shadow-none`}
+              >
+                PASSAR ⏭️
+              </button>
            </div>
         </footer>
 
         {/* Hand Area & Avatar */}
-        <div className="bg-white/95 p-3 sm:p-6 shadow-[0_-10px_60px_rgba(0,0,0,0.05)] relative z-30 border-t border-emerald-100 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex-1 flex justify-center gap-3 sm:gap-6 overflow-x-auto py-2 sm:py-4 scrollbar-hide max-w-[95vw] sm:max-w-none mx-auto min-h-[80px]">
+        <div className="bg-white/95 p-1.5 sm:p-3 shadow-[0_-10px_60px_rgba(0,0,0,0.05)] relative z-30 border-t border-emerald-100 flex flex-col sm:flex-row items-center justify-between gap-2 overflow-visible">
+            <div className="flex-1 flex justify-center gap-4 sm:gap-8 overflow-x-auto py-4 sm:py-8 scrollbar-hide max-w-[95vw] sm:max-w-none mx-auto min-h-[100px] items-center">
               {myHand.map((piece) => (
                 <Piece 
                    key={piece.id} 
                    piece={piece} 
                    draggable={isMyTurn}
                    onDragStart={() => handleDragStart(piece.id)}
-                   className={`${!isMyTurn ? 'opacity-30 grayscale scale-90 pointer-events-none' : 'hover:-translate-y-6 sm:hover:-translate-y-12 hover:scale-110 shadow-[0_20px_40px_rgba(0,150,96,0.15)] scale-90 sm:scale-100'}`}
+                   className={`${!isMyTurn ? 'opacity-30 grayscale scale-100 pointer-events-none' : 'hover:-translate-y-8 sm:hover:-translate-y-16 hover:scale-150 shadow-[0_25px_50px_rgba(0,150,96,0.2)] scale-110 sm:scale-140'}`}
                 />
               ))}
             </div>
+        </div>
 
-            {/* Avatar - Fluidly integrated next to or below hand */}
-            <div className="flex-shrink-0 origin-bottom sm:origin-bottom-right">
-              <AvatarGuide gameState="playing" myTurn={isMyTurn} className="!max-w-[180px] sm:!max-w-[300px]" />
-            </div>
+        {/* Game Over Overlay */}
+        {gameState === "finished" && (
+          <div className={`absolute inset-0 z-[100] flex flex-col items-center justify-center p-4 sm:p-8 backdrop-blur-sm transition-all duration-1000 ${iWon ? 'bg-[#FFCE00]/40' : 'bg-[#009660]/40'}`}>
+            <section className={`p-6 sm:p-10 rounded-[3rem] flex flex-col items-center text-center max-w-lg w-full shadow-[0_40px_100px_rgba(0,0,0,0.4)] transform transition-all animate-in zoom-in duration-700 border-[10px] sm:border-[12px] bg-white ${iWon ? 'border-[#FFCE00]' : 'border-[#009660]'}`}>
+                  <h1 className="text-base sm:text-xl font-black mb-1 sm:mb-2 uppercase tracking-widest text-[#009660] opacity-50">Fim de Jogo</h1>
+                  
+                  <h2 className={`whitespace-nowrap font-black mb-3 sm:mb-5 uppercase italic tracking-tighter leading-none ${iWon ? 'text-5xl sm:text-7xl text-[#009660]' : 'text-4xl sm:text-6xl text-red-500'}`}>
+                    {iWon ? 'VITÓRIA!' : 'FOI QUASE!'}
+                  </h2>
+                  
+                  <div className={`text-base sm:text-lg font-black mb-6 sm:mb-8 p-4 rounded-[1.5rem] shadow-inner ${iWon ? 'bg-emerald-50 text-[#009660]' : 'bg-red-50 text-red-900'}`}>
+                    {gameOverMsg}
+                  </div>
+        
+                  <button 
+                    onClick={leaveRoom}
+                    className={`w-full group font-black px-10 py-5 sm:px-12 sm:py-6 rounded-[2rem] text-2xl sm:text-3xl transition-all transform hover:scale-105 active:scale-95 shadow-xl flex items-center justify-center gap-4 ${iWon ? 'bg-[#009660] text-white shadow-[#009660]/30' : 'bg-[#FFCE00] text-[#009660] shadow-[#FFCE00]/30'}`}
+                  >
+                    <span className="group-hover:rotate-12 transition-transform">🏠</span> NOVO JOGO
+                  </button>
+
+                  <div className="flex items-center justify-center gap-6 mt-8 pt-6 w-full border-t-4 border-dashed border-gray-100">
+                    <img src={logoCampina} alt="Seduc" className="h-6 sm:h-10 object-contain pointer-events-none" />
+                    <img src={logoPrefeitura} alt="Prefeitura" className="h-6 sm:h-10 object-contain pointer-events-none" />
+                  </div>
+            </section>
+          </div>
+        )}
+
+        {/* Global Floating Avatar */}
+        <div className={`fixed top-24 right-4 sm:top-28 sm:right-8 z-[100] transition-all duration-700 transform ${showAvatar ? 'translate-y-0 opacity-100' : '-translate-y-20 opacity-0 pointer-events-none'}`}>
+          <AvatarGuide gameState={gameState} myTurn={isMyTurn} isWinner={iWon} className="!max-w-[120px] sm:!max-w-[180px] drop-shadow-2xl" />
         </div>
       </div>
     );
   }
 
-  // 4. GAME OVER
-  if (gameState === "finished") {
-    return (
-      <div className={`h-screen flex flex-col items-center justify-center p-4 sm:p-8 transition-all duration-1000 overflow-hidden ${iWon ? 'bg-[#FFCE00]' : 'bg-[#009660]'}`}>
-         {iWon ? (
-           <div className="absolute inset-0 pointer-events-none overflow-hidden z-20">
-              {[...Array(20)].map((_, i) => (
-                <div key={`gem-${i}`} className="absolute text-5xl animate-bounce" style={{ left: `${Math.random()*100}%`, top: `${Math.random()*100}%`, animationDelay: `${Math.random()*3}s` }}>💎</div>
-              ))}
-              {[...Array(20)].map((_, i) => (
-                <div key={`star-${i}`} className="absolute text-5xl animate-pulse" style={{ left: `${Math.random()*100}%`, top: `${Math.random()*100}%`, animationDelay: `${Math.random()*2}s` }}>⭐</div>
-              ))}
-           </div>
-         ) : (
-           <div className="absolute inset-0 pointer-events-none overflow-hidden z-20 opacity-30">
-              {[...Array(15)].map((_, i) => (
-                <div key={`puzzle-${i}`} className="absolute text-5xl animate-pulse" style={{ left: `${Math.random()*100}%`, top: `${Math.random()*100}%`, animationDelay: `${Math.random()*4}s`, transform: `rotate(${Math.random()*360}deg)` }}>🧩</div>
-              ))}
-              {[...Array(15)].map((_, i) => (
-                <div key={`bulb-${i}`} className="absolute text-4xl animate-bounce flex items-center justify-center filter grayscale contrast-200" style={{ left: `${Math.random()*100}%`, top: `${Math.random()*100}%`, animationDelay: `${Math.random()*3}s` }}>💡</div>
-              ))}
-              {[...Array(10)].map((_, i) => (
-                <div key={`book-${i}`} className="absolute text-4xl animate-pulse" style={{ left: `${Math.random()*100}%`, top: `${Math.random()*100}%`, animationDelay: `${Math.random()*5}s`, transform: `rotate(${Math.random()*45}deg)` }}>📚</div>
-              ))}
-           </div>
-         )}
-
-         <div className="scale-75 sm:scale-100 flex flex-col items-center gap-4 sm:gap-6 z-30 max-h-[90vh] sm:max-h-none justify-center">
-           <section className={`p-6 sm:p-12 md:p-16 rounded-[3rem] sm:rounded-[4rem] flex flex-col items-center text-center max-w-xl w-full shadow-[0_40px_100px_rgba(0,0,0,0.3)] transform transition-all animate-in zoom-in duration-700 border-[10px] sm:border-[16px] backdrop-blur-md bg-white ${iWon ? 'border-[#FFCE00]' : 'border-[#009660]'}`}>
-              <h1 className="text-lg sm:text-2xl font-black mb-2 sm:mb-4 uppercase tracking-widest text-[#009660] opacity-50">Fim de Jogo</h1>
-              
-              <h2 className={`whitespace-nowrap font-black mb-4 sm:mb-6 uppercase italic tracking-tighter leading-none ${iWon ? 'text-6xl sm:text-8xl text-[#009660]' : 'text-5xl sm:text-7xl text-red-500'}`}>
-                 {iWon ? 'VITÓRIA!' : 'FOI QUASE!'}
-              </h2>
-              
-              <div className={`text-lg sm:text-xl font-black mb-6 sm:mb-8 p-4 sm:p-6 rounded-[1.5rem] sm:rounded-[2rem] shadow-inner ${iWon ? 'bg-emerald-50 text-[#009660]' : 'bg-red-50 text-red-900'}`}>
-                 {gameOverMsg}
-              </div>
-   
-              <button 
-                 onClick={leaveRoom}
-                 className={`w-full group font-black px-12 py-6 sm:px-16 sm:py-8 rounded-[2.5rem] sm:rounded-[3rem] text-3xl sm:text-4xl transition-all transform hover:scale-105 active:scale-95 shadow-2xl flex items-center justify-center gap-4 sm:gap-6 ${iWon ? 'bg-[#009660] text-white shadow-[#009660]/30' : 'bg-[#FFCE00] text-[#009660] shadow-[#FFCE00]/30'}`}
-              >
-                 <span className="group-hover:rotate-12 transition-transform">🏠</span> NOVO JOGO
-              </button>
-
-              <div className="flex items-center justify-center gap-6 sm:gap-8 mt-8 sm:mt-12 pt-6 sm:pt-8 w-full border-t-4 border-dashed border-gray-200/50">
-                 <img src={logoCampina} alt="Seduc" className="h-8 sm:h-12 w-auto object-contain pointer-events-none drop-shadow-sm" />
-                 <img src={logoPrefeitura} alt="Prefeitura" className="h-8 sm:h-12 w-auto object-contain pointer-events-none drop-shadow-sm" />
-              </div>
-           </section>
-
-
-           <AvatarGuide gameState="finished" isWinner={iWon} />
-         </div>
+  // 4. FALLBACK / LOADING
+  return (
+    <div className="h-screen bg-[#009660] flex items-center justify-center text-white p-8 text-center">
+      <div className="flex flex-col items-center gap-4">
+        <div className="w-12 h-12 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
+        <p className="font-black uppercase tracking-widest opacity-80">Sincronizando partida...</p>
+        <button onClick={leaveRoom} className="mt-4 underline opacity-50 text-xs">Voltar para o início</button>
       </div>
-    );
-  }
-
-  return null;
+    </div>
+  );
 }

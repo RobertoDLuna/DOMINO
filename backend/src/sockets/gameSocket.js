@@ -1,10 +1,9 @@
-const rooms = new Map();
+const RedisService = require("../services/RedisService");
 const ScoringService = require("../services/ScoringService");
 const GameService = require("../services/GameService");
 
 /**
  * Socket.io Controller for Domino Game.
- * Handles event routing and session management.
  */
 module.exports = (io) => {
   io.on("connection", (socket) => {
@@ -13,173 +12,197 @@ module.exports = (io) => {
     /**
      * Create Room Handler
      */
-    socket.on("createRoom", () => {
-      const roomId = GameService.generateRoomId();
-      socket.join(roomId);
-      rooms.set(roomId, { players: [socket.id], status: 'lobby' });
-      socket.emit("roomCreated", { roomId });
-      io.to(roomId).emit("playerJoined", [{ id: socket.id }]);
-      console.log(`🏠 Sala criada: ${roomId} por ${socket.id}`);
+    socket.on("createRoom", async ({ playerId }) => {
+      try {
+        const roomId = GameService.generateRoomId();
+        socket.join(roomId);
+        await RedisService.setRoom(roomId, { 
+          players: [{ id: socket.id, playerId }], 
+          status: 'lobby' 
+        });
+        socket.emit("roomCreated", { roomId });
+        io.to(roomId).emit("playerJoined", [{ id: socket.id, playerId }]);
+        console.log(`🏠 Sala criada: ${roomId} por ${playerId}`);
+      } catch (error) {
+        console.error("❌ Erro ao criar sala:", error);
+        socket.emit("error", { message: "Erro ao criar sala no servidor." });
+      }
     });
 
     /**
      * Join Room Handler
      */
-    socket.on("joinRoom", ({ roomId }) => {
-      const room = rooms.get(roomId);
-      if (room) {
-        socket.join(roomId);
-        if (!room.players.includes(socket.id)) {
-          room.players.push(socket.id);
+    socket.on("joinRoom", async ({ roomId, playerId }) => {
+      try {
+        const room = await RedisService.getRoom(roomId);
+        if (room) {
+          socket.join(roomId);
+          
+          const existingPlayerIdx = room.players.findIndex(p => p.playerId === playerId);
+          
+          if (existingPlayerIdx !== -1) {
+            const oldSocketId = room.players[existingPlayerIdx].id;
+            const newSocketId = socket.id;
+            room.players[existingPlayerIdx].id = newSocketId;
+            
+            if (room.status === 'playing') {
+              if (room.hands && room.hands[oldSocketId]) {
+                room.hands[newSocketId] = room.hands[oldSocketId];
+                delete room.hands[oldSocketId];
+              }
+              if (room.scores && room.scores[oldSocketId] !== undefined) {
+                room.scores[newSocketId] = room.scores[oldSocketId];
+                delete room.scores[oldSocketId];
+              }
+              if (room.currentTurn === oldSocketId) room.currentTurn = newSocketId;
+            }
+          } else if (room.status === 'lobby' && room.players.length < 2) {
+            room.players.push({ id: socket.id, playerId });
+          } else if (room.status !== 'lobby') {
+             return socket.emit("error", { message: "O jogo já começou." });
+          } else {
+             return socket.emit("error", { message: "Sala cheia." });
+          }
+
+          await RedisService.setRoom(roomId, room);
+          io.to(roomId).emit("playerJoined", room.players);
+          socket.emit("joinedSuccess", { roomId, status: room.status });
+
+          if (room.status === 'playing') {
+            // Sincronizar turno com todos da sala (importante para atualizar IDs de socket)
+            io.to(roomId).emit("updateBoard", { 
+              board: room.board, 
+              currentTurn: room.currentTurn 
+            });
+
+            socket.emit("gameStarted", {
+              hand: room.hands[socket.id],
+              currentTurn: room.currentTurn,
+              board: room.board,
+              scores: room.scores,
+              theme: room.theme
+            });
+          }
+        } else {
+          socket.emit("error", { message: "Sala não encontrada." });
         }
-        const playerList = room.players.map(id => ({ id }));
-        io.to(roomId).emit("playerJoined", playerList);
-        socket.emit("joinedSuccess", { roomId });
-        console.log(`🤝 ${socket.id} entrou na sala ${roomId}`);
-      } else {
-        socket.emit("error", { message: "Sala não encontrada." });
+      } catch (error) {
+        console.error("❌ Erro ao entrar na sala:", error);
       }
     });
 
     /**
      * Start Game Handler
      */
-    socket.on("startGame", ({ room: roomId, themeId }) => {
-      const room = rooms.get(roomId);
-      if (!room) return;
+    socket.on("startGame", async ({ room: roomId, themeId }) => {
+      try {
+        const room = await RedisService.getRoom(roomId);
+        if (!room) return;
 
-      const activeSocketIds = Array.from(io.sockets.adapter.rooms.get(roomId) || []);
-      
-      if (activeSocketIds.length >= 2) {
-        const gameData = GameService.createGame(activeSocketIds, themeId);
-        rooms.set(roomId, { ...room, players: activeSocketIds, ...gameData, status: 'playing' });
+        if (room.players.length >= 2) {
+          const gameData = GameService.createGame(room.players, themeId);
+          const updatedRoom = { ...room, ...gameData, status: 'playing' };
+          await RedisService.setRoom(roomId, updatedRoom);
 
-        activeSocketIds.forEach(pId => {
-          io.to(pId).emit("gameStarted", {
-            hand: gameData.hands[pId],
-            currentTurn: gameData.currentTurn,
-            board: gameData.board,
-            scores: gameData.scores,
-            theme: gameData.theme
+          const socketIds = room.players.map(p => p.id);
+          socketIds.forEach(pId => {
+            io.to(pId).emit("gameStarted", {
+              hand: updatedRoom.hands[pId],
+              currentTurn: updatedRoom.currentTurn,
+              board: updatedRoom.board,
+              scores: updatedRoom.scores,
+              theme: updatedRoom.theme
+            });
           });
-        });
-        console.log(`🚀 Jogo iniciado na sala ${roomId} com o tema ${gameData.theme.name}`);
+        }
+      } catch (error) {
+        console.error("❌ Erro ao iniciar jogo:", error);
       }
     });
 
     /**
-     * Helper to handle turn transitions and deadlock checks
+     * Helper to handle turn transitions
      */
-    const finalizeTurn = (game, roomId, socketId) => {
-      const currentIdx = game.players.indexOf(socketId);
-      game.currentTurn = game.players[(currentIdx + 1) % game.players.length];
+    const finalizeTurn = async (game, roomId) => {
+      try {
+        const playerIds = game.players.map(p => p.id);
+        const currentIdx = playerIds.indexOf(game.currentTurn);
+        game.currentTurn = playerIds[(currentIdx + 1) % playerIds.length];
 
-      if (GameService.checkDeadlock(game)) {
-        console.log(`🏳️ Deadlock na sala ${roomId}`);
-        const winnerId = GameService.getWinnerOnDeadlock(game);
-
-        // Trancamento Rule: +1 point for winner
-        const trancamentoWinnerId = ScoringService.getTrancamentoWinner(game);
-        if (trancamentoWinnerId) {
-          const deadlockPoints = ScoringService.calculateDeadlockScore();
-          game.scores[trancamentoWinnerId] += deadlockPoints;
-          io.to(roomId).emit("updateScores", game.scores);
-        }
-        
-        game.players.forEach(pId => {
-          const won = pId === winnerId;
-          io.to(pId).emit("gameOver", { 
-            iWon: won, 
-            message: won 
-              ? `🏆 Você venceu! Ganhou 1 ponto de trancamento.` 
-              : "🏳️ Jogo travado! O outro jogador tinha menos peças." 
+        if (GameService.checkDeadlock(game)) {
+          const winnerId = GameService.getWinnerOnDeadlock(game);
+          const trancamentoWinnerId = ScoringService.getTrancamentoWinner(game);
+          if (trancamentoWinnerId) game.scores[trancamentoWinnerId] += 1;
+          
+          playerIds.forEach(pId => {
+            io.to(pId).emit("gameOver", { iWon: pId === winnerId, message: "Fim de jogo!" });
           });
-        });
-      } else {
-        io.to(roomId).emit("updateBoard", { board: game.board, currentTurn: game.currentTurn });
-      }
+          game.status = 'finished';
+        } else {
+          io.to(roomId).emit("updateBoard", { board: game.board, currentTurn: game.currentTurn });
+        }
+        await RedisService.setRoom(roomId, game);
+      } catch (e) { console.error(e); }
     };
 
     /**
      * Move Execution Handler
      */
-    socket.on("makeMove", ({ pieceId, side, room: roomId }) => {
-      const game = rooms.get(roomId);
-      if (!game || game.currentTurn !== socket.id) {
-        console.warn(`🛑 Tentativa inválida: Sala ${roomId}, Socket: ${socket.id}`);
-        return;
-      }
+    socket.on("makeMove", async ({ pieceId, side, room: roomId }) => {
+      try {
+        const game = await RedisService.getRoom(roomId);
+        if (!game || game.currentTurn !== socket.id) return;
 
-      const moveResult = GameService.processMove(game, socket.id, pieceId, side);
-
-      if (moveResult.canPlay) {
-        console.log(`✅ Jogada válida de ${socket.id} na sala ${roomId}`);
-        
-        socket.emit("updateHand", game.hands[socket.id]);
-
-        if (moveResult.isOver) {
-           const piece = game.board[side === 'left' ? 0 : game.board.length - 1]; // Last played piece
-           const winPoints = ScoringService.calculateWinScore(piece);
-           game.scores[socket.id] += winPoints;
-           io.to(roomId).emit("updateScores", game.scores);
-
-           socket.emit("gameOver", { iWon: true, message: `🏆 Parabéns! Você bateu e ganhou mais ${winPoints} pontos!` });
-           socket.to(roomId).emit("gameOver", { iWon: false, message: "😿 Alguém venceu! Ele jogou todas as peças." });
-           return;
+        const moveResult = GameService.processMove(game, socket.id, pieceId, side);
+        if (moveResult.canPlay) {
+          socket.emit("updateHand", game.hands[socket.id]);
+          if (moveResult.isOver) {
+             game.scores[socket.id] += 3;
+             io.to(roomId).emit("updateScores", game.scores);
+             io.to(roomId).emit("updateBoard", { board: game.board, currentTurn: null });
+             socket.to(roomId).emit("gameOver", { iWon: false, message: "Fim de jogo!" });
+             socket.emit("gameOver", { iWon: true, message: "Parabéns! Você venceu!" });
+             game.status = 'finished';
+             await RedisService.setRoom(roomId, game);
+             return;
+          }
+          await finalizeTurn(game, roomId);
         }
-
-        finalizeTurn(game, roomId, socket.id);
-      }
+      } catch (error) { console.error(error); }
     });
 
-    /**
-     * Pass Turn Handler
-     */
-    socket.on("passTurn", ({ room: roomId }) => {
-      const game = rooms.get(roomId);
-      if (!game || game.currentTurn !== socket.id) return;
-      
-      console.log(`⏭️ Turno passado por ${socket.id} na sala ${roomId}`);
-      finalizeTurn(game, roomId, socket.id);
+    socket.on("passTurn", async ({ room: roomId }) => {
+      try {
+        const game = await RedisService.getRoom(roomId);
+        if (!game || game.currentTurn !== socket.id) return;
+        await finalizeTurn(game, roomId);
+      } catch (e) { console.error(e); }
     });
 
-    /**
-     * Leave Room Handler
-     */
-    socket.on("leaveRoom", ({ roomId }) => {
-      const room = rooms.get(roomId);
-      if (room) {
-        socket.leave(roomId);
-        room.players = room.players.filter(id => id !== socket.id);
-        
-        if (room.players.length === 0) {
-          rooms.delete(roomId);
-          console.log(`🗑️ Sala ${roomId} excluída (vazia)`);
-        } else {
-          const playerList = room.players.map(id => ({ id }));
-          io.to(roomId).emit("playerJoined", playerList);
-          console.log(`🚪 ${socket.id} saiu da sala ${roomId}`);
-        }
-      }
-    });
-
-    /**
-     * Disconnect Handler
-     */
-    socket.on("disconnect", () => {
-      // Remover de todas as salas onde o usuário estava
-      rooms.forEach((room, roomId) => {
-        if (room.players.includes(socket.id)) {
-          room.players = room.players.filter(id => id !== socket.id);
-          if (room.players.length === 0) {
-            rooms.delete(roomId);
-          } else {
-            const playerList = room.players.map(id => ({ id }));
-            io.to(roomId).emit("playerJoined", playerList);
+    socket.on("leaveRoom", async ({ roomId }) => {
+      try {
+        const room = await RedisService.getRoom(roomId);
+        if (room) {
+          socket.leave(roomId);
+          room.players = room.players.filter(p => p.id !== socket.id);
+          if (room.players.length === 0) await RedisService.deleteRoom(roomId);
+          else {
+            io.to(roomId).emit("playerJoined", room.players);
+            await RedisService.setRoom(roomId, room);
           }
         }
-      });
-      console.log(`👋 Usuário desconectado: ${socket.id}`);
+      } catch (e) { console.error(e); }
+    });
+
+    socket.on("disconnect", async () => {
+      try {
+        const allRooms = await RedisService.getAllRooms();
+        for (const roomId in allRooms) {
+          const room = allRooms[roomId];
+          const player = room.players.find(p => p.id === socket.id);
+          if (player) console.log(`🔌 ${player.playerId} desconectado temporariamente.`);
+        }
+      } catch (e) { console.warn("Erro no disconnect async:", e.message); }
     });
   });
 };

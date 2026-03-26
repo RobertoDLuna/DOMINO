@@ -37,17 +37,20 @@ class GameService {
 
     const playerHands = {};
     const playerScores = {};
-    players.forEach((pId) => {
+    players.forEach((p) => {
+      const pId = typeof p === 'string' ? p : p.id;
       playerHands[pId] = pieces.splice(0, 7);
       playerScores[pId] = 0;
     });
+
+    const firstPlayerId = typeof players[0] === 'string' ? players[0] : players[0].id;
 
     return {
       board: [],
       hands: playerHands,
       scores: playerScores,
       pile: pieces,
-      currentTurn: players[0],
+      currentTurn: firstPlayerId,
       players: players,
       theme: theme, // Store theme for UI info
       status: 'playing'
@@ -63,7 +66,8 @@ class GameService {
     const leftEnd = game.board[0].ladoA;
     const rightEnd = game.board[game.board.length - 1].ladoB;
     
-    for (const pId of game.players) {
+    for (const p of game.players) {
+      const pId = typeof p === 'string' ? p : p.id;
       const hand = game.hands[pId];
       if (!hand) continue;
       
@@ -82,10 +86,11 @@ class GameService {
    * Determines the winner when a deadlock occurs (player with fewer pieces).
    */
   getWinnerOnDeadlock(game) {
-    let winner = game.players[0];
+    let winner = typeof game.players[0] === 'string' ? game.players[0] : game.players[0].id;
     let minPieces = game.hands[winner] ? game.hands[winner].length : 999;
 
-    game.players.forEach(pId => {
+    game.players.forEach(p => {
+      const pId = typeof p === 'string' ? p : p.id;
       const handLen = game.hands[pId] ? game.hands[pId].length : 999;
       if (handLen < minPieces) {
         minPieces = handLen;

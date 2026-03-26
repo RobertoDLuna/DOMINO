@@ -14,6 +14,22 @@ const AvatarGuide = ({ gameState, myTurn, isWinner, className = "" }) => {
   const [expression, setExpression] = useState(waving);
   const [message, setMessage] = useState("Olá! Vamos aprender a jogar dominó?");
 
+  const winMessages = [
+    "SENSACIONAL! Você é fera no Dominó! Campeão!",
+    "Uau! Alguém avisa o comitê olímpico que temos um mestre aqui!",
+    "Vitória merecida! Seu cérebro está tinindo hoje!",
+    "DOMINOU TUDO! Literalmente. Parabéns!",
+    "Sabia que você conseguiria! Inteligência pura!"
+  ];
+
+  const loseMessages = [
+    "Foi quase! Mas o importante é que seu cérebro treinou bastante!",
+    "Não chore pelo dominó caído. Na próxima você amassa!",
+    "O adversário teve sorte, mas sua estratégia foi de mestre!",
+    "Perder faz parte do aprendizado. Vamos tentar de novo?",
+    "Até os melhores mestres têm seus dias de aprendizado. Próxima rodada?"
+  ];
+
   useEffect(() => {
     switch (gameState) {
       case 'lobby':
@@ -36,10 +52,10 @@ const AvatarGuide = ({ gameState, myTurn, isWinner, className = "" }) => {
       case 'finished':
         if (isWinner) {
           setExpression(celebrating);
-          setMessage("SENSACIONAL! Você é fera no Dominó! Campeão!");
+          setMessage(winMessages[Math.floor(Math.random() * winMessages.length)]);
         } else {
           setExpression(smiling);
-          setMessage("Foi quase! Você jogou muito bem. Vamos mais uma?");
+          setMessage(loseMessages[Math.floor(Math.random() * loseMessages.length)]);
         }
         break;
       default:
@@ -49,12 +65,12 @@ const AvatarGuide = ({ gameState, myTurn, isWinner, className = "" }) => {
   }, [gameState, myTurn, isWinner]);
 
   return (
-    <div className={`relative z-10 flex flex-col items-center sm:items-end gap-2 max-w-[280px] sm:max-w-[400px] pointer-events-none transition-all duration-700 ${className}`}>
+    <div className={`relative z-10 flex flex-col items-center sm:items-end gap-1 max-w-[200px] sm:max-w-[300px] pointer-events-none transition-all duration-700 ${className}`}>
       {/* Speech Bubble */}
-      <div className="relative bg-white text-emerald-900 font-black p-3 sm:p-5 rounded-[1.5rem] rounded-bl-[0.2rem] sm:rounded-bl-[1.5rem] sm:rounded-br-[0.2rem] shadow-[0_15px_40px_rgba(0,0,0,0.15)] border-2 border-emerald-50 mb-1 animate-bounce-slow">
-        <p className="text-xs sm:text-lg leading-snug sm:leading-tight">{message}</p>
+      <div className="relative bg-white text-emerald-900 font-black p-2 sm:p-4 rounded-[1.2rem] rounded-bl-[0.2rem] sm:rounded-bl-[1.2rem] sm:rounded-br-[0.2rem] shadow-[0_10px_30px_rgba(0,0,0,0.1)] border-2 border-emerald-50 mb-1 animate-bounce-slow">
+        <p className="text-[10px] sm:text-base leading-snug sm:leading-tight">{message}</p>
         {/* Bubble Tail */}
-        <div className="absolute -bottom-2 sm:-bottom-2 left-6 sm:left-auto sm:right-6 w-4 h-4 bg-white border-r-2 border-b-2 border-emerald-50 rotate-45 transform"></div>
+        <div className="absolute -bottom-2 sm:-bottom-2 left-6 sm:left-auto sm:right-6 w-3 h-3 bg-white border-r-2 border-b-2 border-emerald-50 rotate-45 transform"></div>
       </div>
 
       {/* Avatar Image container with circular background */}
@@ -68,7 +84,7 @@ const AvatarGuide = ({ gameState, myTurn, isWinner, className = "" }) => {
          <img 
            src={expression} 
            alt="Avatar" 
-           className="w-24 h-24 sm:w-48 sm:h-48 object-contain drop-shadow-[0_10px_20px_rgba(0,0,0,0.1)] rounded-full"
+           className="w-20 h-20 sm:w-40 sm:h-40 object-contain drop-shadow-[0_10px_20px_rgba(0,0,0,0.1)] rounded-full"
          />
       </div>
     </div>

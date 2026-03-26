@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useRef } from "react";
 import { socket } from "../services/socket";
 
 const GameContext = createContext();
@@ -11,12 +11,20 @@ export const GameProvider = ({ children }) => {
   const [board, setBoard] = useState([]);
   const [currentTurn, setCurrentTurn] = useState(null);
   const [myId, setMyId] = useState(null);
+  const [playerId, setPlayerId] = useState(() => {
+    const saved = localStorage.getItem('domino_player_id');
+    const id = saved || Math.random().toString(36).substring(2, 15);
+    if (!saved) localStorage.setItem('domino_player_id', id);
+    return id;
+  });
 
   const [winner, setWinner] = useState(null);
   const [gameOverMsg, setGameOverMsg] = useState("");
   const [iWon, setIWon] = useState(false);
   const [scores, setScores] = useState({});
   const [currentTheme, setCurrentTheme] = useState(null);
+  const [isConnected, setIsConnected] = useState(socket.connected);
+  const isManualJoinRef = useRef(false);
 
   useEffect(() => {
     // Se já estiver conectado, pega o ID imediatamente
@@ -27,16 +35,30 @@ export const GameProvider = ({ children }) => {
 
     socket.on('connect', () => {
       console.log('🔗 Conectado ao servidor!', socket.id);
+      setIsConnected(true);
       setMyId(socket.id);
+      
+      const savedRoom = localStorage.getItem('domino_current_room');
+      if (savedRoom) {
+        console.log('🔄 Tentando reconectar à sala:', savedRoom);
+        socket.emit('joinRoom', { roomId: savedRoom, playerId });
+      }
+    });
+
+    socket.on('disconnect', () => {
+      console.warn('❌ Socket desconectado!');
+      setIsConnected(false);
     });
 
     socket.on('roomCreated', ({ roomId }) => {
-      console.log('🏠 Sala criada:', roomId);
+      console.log('✅ Sala criada no servidor:', roomId);
       setRoom(roomId);
+      localStorage.setItem('domino_current_room', roomId);
     });
 
-    socket.on('joinedSuccess', ({ roomId }) => {
+    socket.on('joinedSuccess', ({ roomId, status }) => {
       setRoom(roomId);
+      localStorage.setItem('domino_current_room', roomId);
     });
 
     socket.on('playerJoined', (updatedPlayers) => {
@@ -78,7 +100,18 @@ export const GameProvider = ({ children }) => {
     });
 
     socket.on('error', ({ message }) => {
-      alert(message);
+      console.error('❌ Erro do servidor:', message);
+      
+      if (message === "Sala não encontrada.") {
+        if (isManualJoinRef.current) alert(message);
+        console.warn('🧹 Limpando sala inválida do cache.');
+        setRoom(null);
+        localStorage.removeItem('domino_current_room');
+      } else {
+        alert(message);
+      }
+      
+      isManualJoinRef.current = false;
     });
 
     return () => {
@@ -92,12 +125,14 @@ export const GameProvider = ({ children }) => {
   }, []);
 
   const createRoom = () => {
-    socket.emit('createRoom');
+    socket.emit('createRoom', { playerId });
   };
 
   const joinRoom = (roomId) => {
     if (!roomId) return alert("Por favor, digite o código da sala.");
-    socket.emit('joinRoom', { roomId: roomId.trim().toUpperCase() });
+    const id = roomId.trim().toUpperCase();
+    isManualJoinRef.current = true;
+    socket.emit('joinRoom', { roomId: id, playerId });
   };
 
   const startGame = (themeId) => {
@@ -108,6 +143,7 @@ export const GameProvider = ({ children }) => {
     if (room) {
       socket.emit('leaveRoom', { roomId: room });
       setRoom(null);
+      localStorage.removeItem('domino_current_room');
       setPlayers([]);
       setGameState('lobby');
       setMyHand([]);
@@ -145,6 +181,9 @@ export const GameProvider = ({ children }) => {
     scores,
     currentTheme,
     setGameState,
+    myId, // <--- EXPORTANDO ID
+    playerId,
+    isConnected,
   };
 
   return <GameContext.Provider value={value}>{children}</GameContext.Provider>;

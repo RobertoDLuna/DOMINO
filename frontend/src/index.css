@@ -59,3 +59,12 @@ body {
 .animate-bounce-slow {
   animation: bounce-slow 3s infinite;
 }
+
+@keyframes blink-hard {
+  0%, 100% { background-color: #ef4444; transform: scale(1.05); }
+  50% { background-color: #b91c1c; transform: scale(1); }
+}
+
+.animate-blink-hard {
+  animation: blink-hard 0.6s infinite;
+}

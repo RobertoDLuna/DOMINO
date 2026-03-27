@@ -203,7 +203,7 @@ export default function GameContainer() {
 
               <button 
                 onClick={handleCreateRoom} 
-                className="w-full bg-[#FFCE00] hover:bg-[#ffe050] text-[#009660] font-black py-5 sm:py-6 rounded-3xl shadow-[0_8px_0_#d1a900] transition-all transform hover:scale-105 active:scale-95 mb-6 sm:mb-8 text-xl sm:text-2xl uppercase tracking-tight"
+                className="w-full bg-[#FFCE00] hover:bg-[#ffe050] text-[#009660] font-black py-5 sm:py-6 rounded-3xl shadow-[0_8px_0_#d1a900] transition-all transform hover:scale-105 active:translate-y-1 active:shadow-[0_4px_0_#d1a900] mb-6 sm:mb-8 text-xl sm:text-2xl uppercase tracking-tight"
               >
                 Criar Sala 🏫
               </button>
@@ -220,7 +220,7 @@ export default function GameContainer() {
                 </div>
                 <button 
                   onClick={handleJoinRoom} 
-                  className="w-full bg-[#009660] hover:bg-[#00a86b] text-white font-black py-5 sm:py-6 rounded-3xl shadow-[0_8px_0_#006d46] transition-all transform hover:scale-105 active:scale-95 text-xl sm:text-2xl uppercase tracking-tight border-b-2 border-emerald-400/20"
+                  className="w-full bg-[#009660] hover:bg-[#00a86b] text-white font-black py-5 sm:py-6 rounded-3xl shadow-[0_8px_0_#006d46] transition-all transform hover:scale-105 active:translate-y-1 active:shadow-[0_4px_0_#006d46] text-xl sm:text-2xl uppercase tracking-tight border-b-2 border-emerald-400/20"
                 >
                   Entrar no Jogo 🧩
                 </button>
@@ -290,7 +290,7 @@ export default function GameContainer() {
                   isRoomOwner && (
                     <button 
                       onClick={handleStartGame} 
-                      className="bg-[#FFCE00] hover:bg-[#ffe050] text-[#009660] px-10 py-5 sm:px-12 sm:py-6 rounded-[2rem] sm:rounded-[3rem] font-black text-2xl sm:text-3xl shadow-[0_8px_0_#d1a900] animate-bounce-slow transition-all active:scale-95 border-b-2 border-white/20 uppercase"
+                      className="bg-[#FFCE00] hover:bg-[#ffe050] text-[#009660] px-10 py-5 sm:px-12 sm:py-6 rounded-[2rem] sm:rounded-[3rem] font-black text-2xl sm:text-3xl shadow-[0_8px_0_#d1a900] animate-bounce-slow transition-all active:translate-y-1 active:shadow-[0_4px_0_#d1a900] border-b-2 border-white/20 uppercase"
                     >
                       JOGAR! 🚀
                     </button>
@@ -374,7 +374,7 @@ export default function GameContainer() {
           <div className="fixed top-4 right-4 z-[60]">
             <button 
               onClick={() => setShowEndConfirm(true)}
-              className="bg-red-500 hover:bg-red-600 text-white font-black px-4 sm:px-6 py-2 sm:py-3 rounded-2xl shadow-[0_4px_0_#991b1b] active:scale-95 active:shadow-none transition-all flex items-center gap-2 text-xs sm:text-sm uppercase tracking-wider"
+              className="bg-red-500 hover:bg-red-600 text-white font-black px-4 sm:px-6 py-2 sm:py-3 rounded-2xl shadow-[0_4px_0_#991b1b] active:translate-y-0.5 active:shadow-none transition-all flex items-center gap-2 text-xs sm:text-sm uppercase tracking-wider transform -translate-y-0.5"
             >
               <span>X</span>
               <span className="hidden sm:inline">Finalizar Partida</span>
@@ -426,7 +426,7 @@ export default function GameContainer() {
               )}
               <button 
                 onClick={() => { SoundService.playPass(); passTurn(); }} 
-                className={`${timer <= 10 ? 'animate-blink-hard' : 'bg-red-500'} hover:bg-red-400 text-white font-black px-6 sm:px-10 py-3 sm:py-4 rounded-2xl sm:rounded-3xl transition-all active:scale-95 flex items-center gap-2 h-fit`}
+                className={`${timer <= 10 ? 'animate-blink-hard' : 'bg-red-500 shadow-[0_6px_0_#991b1b]'} hover:bg-red-600 text-white font-black px-6 sm:px-10 py-3 sm:py-4 rounded-2xl sm:rounded-3xl transition-all active:translate-y-[4px] active:shadow-none flex items-center gap-2 h-fit transform -translate-y-[3px]`}
               >
                 <span className="text-base sm:text-2xl uppercase tracking-tighter">PASSAR</span>
                 <span className="text-xl sm:text-3xl">⏭️</span>
@@ -468,7 +468,7 @@ export default function GameContainer() {
         
                   <button 
                     onClick={leaveRoom}
-                    className={`w-full group font-black px-10 py-5 sm:px-12 sm:py-6 rounded-[2rem] text-2xl sm:text-3xl transition-all transform hover:scale-105 active:scale-95 shadow-xl flex items-center justify-center gap-4 ${iWon ? 'bg-[#009660] text-white shadow-[#009660]/30' : 'bg-[#FFCE00] text-[#009660] shadow-[#FFCE00]/30'}`}
+                    className={`w-full group font-black px-10 py-5 sm:px-12 sm:py-6 rounded-[2rem] text-2xl sm:text-3xl transition-all transform hover:scale-105 active:translate-y-1 active:shadow-none shadow-xl flex items-center justify-center gap-4 ${iWon ? 'bg-[#009660] text-white shadow-[0_8px_0_#004d32]' : 'bg-[#FFCE00] text-[#009660] shadow-[0_8px_0_#d1a900]'}`}
                   >
                     <span className="group-hover:rotate-12 transition-transform">🏠</span> NOVO JOGO
                   </button>
@@ -490,7 +490,7 @@ export default function GameContainer() {
               <div className="flex gap-4 w-full">
                 <button
                   onClick={() => handleSideChoice('left')}
-                  className="flex-1 bg-[#009660] hover:bg-[#00a86b] text-white font-black py-5 rounded-2xl shadow-[0_6px_0_#006d46] text-xl transition-all active:scale-95 flex flex-col items-center gap-1"
+                  className="flex-1 bg-[#009660] hover:bg-[#00a86b] text-white font-black py-5 rounded-2xl shadow-[0_6px_0_#006d46] text-xl transition-all active:translate-y-1 active:shadow-none flex flex-col items-center gap-1"
                 >
                   <span className="text-3xl">⬅️</span>
                   <span>AQUI</span>
@@ -498,7 +498,7 @@ export default function GameContainer() {
                 </button>
                 <button
                   onClick={() => handleSideChoice('right')}
-                  className="flex-1 bg-[#FFCE00] hover:bg-[#ffe050] text-[#009660] font-black py-5 rounded-2xl shadow-[0_6px_0_#d1a900] text-xl transition-all active:scale-95 flex flex-col items-center gap-1"
+                  className="flex-1 bg-[#FFCE00] hover:bg-[#ffe050] text-[#009660] font-black py-5 rounded-2xl shadow-[0_6px_0_#d1a900] text-xl transition-all active:translate-y-1 active:shadow-none flex flex-col items-center gap-1"
                 >
                   <span className="text-3xl">➡️</span>
                   <span>ALI</span>

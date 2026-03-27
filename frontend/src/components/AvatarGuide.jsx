@@ -65,7 +65,7 @@ const AvatarGuide = ({ gameState, myTurn, isWinner, className = "" }) => {
   }, [gameState, myTurn, isWinner]);
 
   return (
-    <div className={`relative z-10 flex flex-col items-center sm:items-end gap-1 max-w-[200px] sm:max-w-[300px] pointer-events-none transition-all duration-700 ${className}`}>
+    <div className={`relative z-10 flex flex-col items-start sm:items-end gap-1 max-w-[200px] sm:max-w-[300px] pointer-events-none transition-all duration-700 ${className}`}>
       {/* Speech Bubble */}
       <div className="relative bg-white text-emerald-900 font-black p-2 sm:p-4 rounded-[1.2rem] rounded-bl-[0.2rem] sm:rounded-bl-[1.2rem] sm:rounded-br-[0.2rem] shadow-[0_10px_30px_rgba(0,0,0,0.1)] border-2 border-emerald-50 mb-1 animate-bounce-slow">
         <p className="text-[10px] sm:text-base leading-snug sm:leading-tight">{message}</p>

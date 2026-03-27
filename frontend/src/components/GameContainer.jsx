@@ -343,7 +343,7 @@ export default function GameContainer() {
            <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/felt.png')] pointer-events-none"></div>
            
            {/* Scoreboard - Responsive for up to 4 players (Vertically Stacked) */}
-           <div className="absolute top-4 sm:top-6 left-4 sm:left-6 flex flex-col items-start gap-2 sm:gap-3 z-40">
+           <div className="absolute top-4 sm:top-6 left-4 sm:left-6 flex flex-col items-start gap-2 sm:gap-3 z-[100]">
              {players.map((p, idx) => (
                 <div key={p.id} className={`flex items-center gap-2 sm:gap-3 px-3 sm:px-5 py-2 sm:py-3 rounded-[1.2rem] sm:rounded-[1.5rem] border-b-[3px] sm:border-b-[5px] transition-all duration-500 transform
                   ${currentTurn === p.id 
@@ -357,6 +357,11 @@ export default function GameContainer() {
                   </div>
                 </div>
               ))}
+              
+              {/* Avatar on Mobile: positioned below scores for better space management */}
+              <div className={`sm:hidden transition-all duration-700 transform ${showAvatar ? 'translate-y-0 opacity-100' : '-translate-y-10 opacity-0 pointer-events-none'}`}>
+                 <AvatarGuide gameState={gameState} myTurn={isMyTurn} isWinner={iWon} className="!items-start !max-w-[140px]" />
+              </div>
            </div>
 
             <div className="z-10 w-full flex-1 overflow-hidden relative">
@@ -437,7 +442,7 @@ export default function GameContainer() {
 
         {/* Hand Area & Avatar */}
         <div className="bg-white/95 p-1.5 sm:p-3 shadow-[0_-10px_60px_rgba(0,0,0,0.05)] relative z-30 border-t border-emerald-100 flex flex-col sm:flex-row items-center justify-between gap-2 overflow-visible">
-            <div className="flex-1 flex justify-center gap-4 sm:gap-8 overflow-x-auto py-4 sm:py-8 scrollbar-hide max-w-[95vw] sm:max-w-none mx-auto min-h-[100px] items-center">
+            <div className="flex-1 flex justify-start sm:justify-center gap-12 sm:gap-16 overflow-x-auto py-8 sm:py-12 scrollbar-hide w-full max-w-[100vw] sm:max-w-none mx-auto min-h-[160px] sm:min-h-[220px] items-center px-10">
               {myHand.map((piece) => (
                 <Piece 
                    key={piece.id} 
@@ -510,8 +515,8 @@ export default function GameContainer() {
           </div>
         )}
 
-        {/* Global Floating Avatar */}
-        <div className={`fixed top-24 right-4 sm:top-28 sm:right-8 z-[100] transition-all duration-700 transform ${showAvatar ? 'translate-y-0 opacity-100' : '-translate-y-20 opacity-0 pointer-events-none'}`}>
+        {/* Global Floating Avatar - Desktop Only (Fixed right) */}
+        <div className={`hidden sm:block fixed top-28 sm:right-8 z-[100] transition-all duration-700 transform ${showAvatar ? 'translate-y-0 opacity-100' : '-translate-y-20 opacity-0 pointer-events-none'}`}>
           <AvatarGuide gameState={gameState} myTurn={isMyTurn} isWinner={iWon} className="!max-w-[120px] sm:!max-w-[180px] drop-shadow-2xl" />
         </div>
 

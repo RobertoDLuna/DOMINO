@@ -176,6 +176,12 @@ export const GameProvider = ({ children }) => {
     }
   };
 
+  const playAgain = () => {
+    if (room) {
+      socket.emit('playAgain', { room });
+    }
+  };
+
   const passTurn = () => {
     socket.emit('passTurn', { room });
   };
@@ -225,6 +231,7 @@ export const GameProvider = ({ children }) => {
     maxPlayers,
     setGameState,
     forceEndGame,
+    playAgain,
     updateMaxPlayers,
     myId, // <--- EXPORTANDO ID
     playerId,

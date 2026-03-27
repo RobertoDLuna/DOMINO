@@ -27,6 +27,7 @@ const useGame = () => {
         maxPlayers,
         myId, // <--- PEGANDO DO CONTEXT
         forceEndGame,
+        playAgain,
         updateMaxPlayers,
         isConnected
     } = useGameContext();
@@ -43,6 +44,7 @@ const useGame = () => {
         leaveRoom,
         passTurn,
         forceEndGame,
+        playAgain,
         updateMaxPlayers,
         makeMove,
         startGame,

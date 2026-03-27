@@ -68,3 +68,33 @@ body {
 .animate-blink-hard {
   animation: blink-hard 0.6s infinite;
 }
+
+/* Animations for Game Over effects */
+@keyframes confetti-fall {
+  0% { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+}
+
+@keyframes rain-fall {
+  0% { transform: translateY(-20px); opacity: 0.6; }
+  100% { transform: translateY(100vh); opacity: 0.2; }
+}
+
+.confetti {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  animation: confetti-fall 4s linear forwards;
+  z-index: 101;
+}
+
+.rain {
+  position: absolute;
+  width: 2px;
+  height: 20px;
+  background: #cbd5e1;
+  border-radius: 1px;
+  animation: rain-fall 1.5s linear infinite;
+  z-index: 101;
+}

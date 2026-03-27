@@ -101,10 +101,21 @@ module.exports = (io) => {
      */
     socket.on("startGame", async ({ room: roomId, themeId }) => {
       try {
-        const room = await RedisService.getRoom(roomId);
+        let room = await RedisService.getRoom(roomId);
         if (!room) return;
 
-        if (room.players.length >= (room.maxPlayers || 2)) {
+        // Se estiver reiniciando de um jogo finalizado, filtra apenas os que clicaram em "Jogar de Novo"
+        if (room.status === 'finished') {
+          const readyPlayers = room.players.filter(p => p.ready);
+          if (readyPlayers.length < 2) return; // Mínimo 2 para jogar domínó
+
+          room.players = readyPlayers;
+          room.maxPlayers = readyPlayers.length;
+          // Limpa o estado pronto para o próximo jogo
+          room.players.forEach(p => delete p.ready);
+        }
+
+        if (room.players.length >= 2) {
           const gameData = GameService.createGame(room.players, themeId);
           const updatedRoom = { ...room, ...gameData, status: 'playing' };
           await RedisService.setRoom(roomId, updatedRoom);
@@ -119,10 +130,31 @@ module.exports = (io) => {
               theme: updatedRoom.theme
             });
           });
+
+          // Notifica os que ficaram de fora (se houver) que a sala foi reiniciada sem eles
+          socket.to(roomId).emit("roomUpdated", { maxPlayers: room.maxPlayers });
         }
       } catch (error) {
         console.error("❌ Erro ao iniciar jogo:", error);
       }
+    });
+
+    /**
+     * Play Again Vote Handler
+     */
+    socket.on("playAgain", async ({ room: roomId }) => {
+      try {
+        const room = await RedisService.getRoom(roomId);
+        if (room && room.status === 'finished') {
+          const playerIdx = room.players.findIndex(p => p.id === socket.id);
+          if (playerIdx !== -1) {
+            room.players[playerIdx].ready = true;
+            await RedisService.setRoom(roomId, room);
+            io.to(roomId).emit("playerJoined", room.players);
+            console.log(`✅ Jogador ${socket.id} pronto para jogar de novo na sala ${roomId}`);
+          }
+        }
+      } catch (e) { console.error(e); }
     });
 
     /**
@@ -189,6 +221,13 @@ module.exports = (io) => {
         const room = await RedisService.getRoom(roomId);
         if (room) {
           socket.leave(roomId);
+          // P1: Se o dono da sala sair (primeiro da lista), a sala deve ser encerrada para todos
+          if (room.players.length > 0 && room.players[0].id === socket.id) {
+             io.to(roomId).emit("gameForcedEnd", { message: "O dono da sala saiu e a sala foi encerrada." });
+             await RedisService.deleteRoom(roomId);
+             return;
+          }
+
           room.players = room.players.filter(p => p.id !== socket.id);
           if (room.players.length === 0) await RedisService.deleteRoom(roomId);
           else {

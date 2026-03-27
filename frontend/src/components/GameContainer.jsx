@@ -14,7 +14,7 @@ export default function GameContainer() {
   const { 
     room, players, gameState, myHand, board, currentTurn, 
     createRoom, joinRoom, leaveRoom, startGame, makeMove, passTurn, forceEndGame, updateMaxPlayers, playAgain,
-    iWon, gameOverMsg, scores, currentTheme, maxPlayers, myId, isConnected
+    iWon, gameOverMsg, scores, currentTheme, maxPlayers, myId, playerId, isConnected
   } = useGame();
 
   // Cálculo do vencedor (global para uso em overlays)
@@ -398,12 +398,12 @@ export default function GameContainer() {
                     <div className={`text-base sm:text-lg font-black mb-6 sm:mb-8 p-4 rounded-[1.5rem] shadow-inner ${iWon ? 'bg-emerald-50 text-[#009660]' : 'bg-red-50 text-red-900'}`}>{gameOverMsg}</div>
                     <div className="flex flex-col gap-4 w-full">
                       {/* Status de quem está pronto */}
-                      {players.length > 1 && (
-                        <div className="bg-emerald-50 p-3 rounded-2xl border-2 border-emerald-100 mb-2">
-                          <p className="text-[10px] font-black uppercase text-emerald-800 opacity-60 mb-2 tracking-widest">Quem vai jogar de novo? ({players.filter(p => p.ready).length}/{players.length})</p>
-                          <div className="flex flex-wrap justify-center gap-2">
+                      {players.length > 0 && (
+                        <div className="bg-emerald-50 p-2 sm:p-3 rounded-2xl border-2 border-emerald-100 flex flex-col items-center">
+                          <p className="text-[9px] sm:text-[10px] font-black uppercase text-emerald-800 opacity-60 mb-2 tracking-widest">Jogadores Prontos ({players.filter(p => p.ready).length}/{players.length})</p>
+                          <div className="flex flex-wrap justify-center gap-1.5 sm:gap-2">
                             {players.map(p => (
-                              <span key={p.id} className={`px-3 py-1 rounded-full text-[10px] font-black uppercase transition-all ${p.ready ? 'bg-emerald-500 text-white shadow-sm' : 'bg-gray-200 text-gray-400 opacity-50'}`}>
+                              <span key={p.id} className={`px-2.5 py-1 rounded-full text-[9px] sm:text-[10px] font-black uppercase transition-all shadow-sm ${p.ready ? 'bg-emerald-500 text-white' : 'bg-gray-200 text-gray-400 opacity-60'}`}>
                                 {p.ready ? '✅' : '⏳'} {p.name || 'Jogador'}
                               </span>
                             ))}
@@ -411,26 +411,26 @@ export default function GameContainer() {
                         </div>
                       )}
 
-                      <div className="flex flex-col sm:flex-row gap-4 w-full">
-                        {!players.find(p => p.id === myId)?.ready ? (
-                          <button onClick={playAgain} className={`flex-1 group font-black px-6 py-4 sm:py-5 rounded-[1.5rem] sm:rounded-[2rem] text-xl sm:text-2xl transition-all transform hover:scale-105 active:translate-y-1 active:shadow-none shadow-lg flex items-center justify-center gap-3 bg-[#009660] text-white shadow-[0_6px_0_#004d32]`}>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 w-full">
+                        {players.find(p => (p.id === myId || p.playerId === playerId))?.ready ? (
+                          <div className="bg-emerald-100 text-emerald-700 px-6 py-4 rounded-2xl sm:rounded-3xl text-xl font-black flex items-center justify-center gap-3 border-2 border-emerald-200 shadow-inner">
+                             <span>✅</span> VOCÊ ESTÁ PRONTO!
+                          </div>
+                        ) : (
+                          <button onClick={playAgain} className="group bg-[#009660] hover:bg-[#00a86b] text-white font-black px-6 py-4 rounded-2xl sm:rounded-3xl text-xl sm:text-2xl transition-all shadow-[0_6px_0_#004d32] active:translate-y-1 active:shadow-none flex items-center justify-center gap-3">
                             <span className="group-hover:animate-bounce">🎮</span> JOGAR DE NOVO
                           </button>
-                        ) : (
-                          <div className="flex-1 bg-emerald-100 text-emerald-700 px-6 py-4 sm:py-5 rounded-[1.5rem] sm:rounded-[2rem] text-xl sm:text-2xl font-black flex items-center justify-center gap-3 border-2 border-emerald-200">
-                             <span>✅</span> PRONTO!
-                          </div>
                         )}
                         
-                        <button onClick={leaveRoom} className="flex-1 group bg-white text-red-500 hover:bg-red-50 font-black px-6 py-4 sm:py-5 rounded-[1.5rem] sm:rounded-[2rem] text-xl sm:text-2xl transition-all transform hover:scale-105 active:translate-y-1 active:shadow-none shadow-md border-b-4 border-gray-200 flex items-center justify-center gap-3">
-                           <span>🏠</span> SAIR
+                        <button onClick={leaveRoom} className="bg-white hover:bg-red-50 text-red-500 font-black px-6 py-4 rounded-2xl sm:rounded-3xl text-xl sm:text-2xl transition-all shadow-[0_6px_0_#e5e7eb] active:translate-y-1 active:shadow-none border-2 border-gray-100 flex items-center justify-center gap-3">
+                           <span>🏠</span> SAIR DO JOGO
                         </button>
                       </div>
 
                       {/* Botão de Reiniciar do Dono */}
                       {isRoomOwner && players.filter(p => p.ready).length >= 2 && (
-                        <button onClick={() => startGame(currentTheme?.id || 'animais')} className="w-full mt-2 bg-[#FFCE00] hover:bg-[#ffe050] text-[#009660] font-black py-4 rounded-[1.5rem] shadow-[0_6px_0_#d1a900] transition-all transform hover:scale-105 active:translate-y-1 active:shadow-none text-xl uppercase animate-pulse">
-                          🚀 REINICIAR AGORA ({players.filter(p => p.ready).length} JOGADORES)
+                        <button onClick={() => startGame(currentTheme?.id || 'animais')} className="w-full mt-1 bg-[#FFCE00] hover:bg-[#ffe050] text-[#009660] font-black py-4 rounded-2xl shadow-[0_6px_0_#d1a900] transition-all transform hover:scale-105 active:translate-y-1 active:shadow-none text-xl uppercase animate-pulse border-2 border-white/20">
+                          🚀 REINICIAR PARTIDA ({players.filter(p => p.ready).length} JOGADORES)
                         </button>
                       )}
                     </div>

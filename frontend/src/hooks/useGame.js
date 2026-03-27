@@ -25,7 +25,8 @@ const useGame = () => {
         scores,
         currentTheme,
         maxPlayers,
-        myId, // <--- PEGANDO DO CONTEXT
+        myId,
+        playerId,
         forceEndGame,
         playAgain,
         updateMaxPlayers,
@@ -58,7 +59,8 @@ const useGame = () => {
         scores,
         currentTheme,
         maxPlayers,
-        myId, // <--- EXPORTANDO
+        myId,
+        playerId,
         isConnected
     };
 };

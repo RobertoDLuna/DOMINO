@@ -3,6 +3,8 @@ const http = require("http");
 const cors = require("cors");
 const path = require("path");
 
+const themeRoutes = require("./src/routes/themeRoutes");
+
 // Global error handlers for Docker troubleshooting
 process.on("uncaughtException", (err) => {
   console.error("❌ FATAL: Uncaught Exception:", err);
@@ -24,10 +26,16 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// API Routes
+app.use("/api/themes", themeRoutes);
+
 // Serving Static Frontend Files (Production)
 const frontendPath = path.join(__dirname, "../frontend/dist");
 console.log(`🌐 Servindo frontend de: ${frontendPath}`);
 app.use(express.static(frontendPath));
+
+// Servindo Uploads de Temas Customizados
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 const server = http.createServer(app);
 const io = setupSocket(server);

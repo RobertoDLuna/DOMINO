@@ -14,6 +14,23 @@ export default function Piece({
   const iconA = reverse ? piece.ladoB : piece.ladoA;
   const iconB = reverse ? piece.ladoA : piece.ladoB;
 
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+
+  const renderSide = (symbol) => {
+    if (typeof symbol === 'string' && (symbol.startsWith('/uploads') || symbol.startsWith('http'))) {
+      const src = symbol.startsWith('http') ? symbol : `${API_URL}${symbol}`;
+      return (
+        <img 
+          src={src} 
+          alt="Symbol" 
+          className="w-full h-full object-cover p-1.5 sm:p-2.5 drop-shadow-sm transition-transform hover:scale-110" 
+        />
+      );
+    }
+    return symbol;
+  };
+
+
   // Design tokens para maior clareza e manutenção
   const baseStyles = `relative flex transition-all items-center justify-center overflow-hidden flex-shrink-0 rounded-xl border-b-8 bg-gradient-to-br from-white to-gray-50 shadow-[0_8px_20px_rgba(0,0,0,0.15)]`;
   
@@ -39,7 +56,7 @@ export default function Piece({
     >
       {/* Lado A */}
       <div className={`flex-1 flex items-center justify-center ${horizontal ? 'text-5xl' : 'text-4xl'} select-none w-full h-full text-center text-slate-800`}>
-        {iconA}
+        {renderSide(iconA)}
       </div>
 
       {/* Divisória Central 'Groove' */}
@@ -50,7 +67,7 @@ export default function Piece({
 
       {/* Lado B */}
       <div className={`flex-1 flex items-center justify-center ${horizontal ? 'text-5xl' : 'text-4xl'} select-none w-full h-full text-center text-slate-800`}>
-        {iconB}
+        {renderSide(iconB)}
       </div>
 
       {/* Brilho sutil no topo para efeito 3D */}

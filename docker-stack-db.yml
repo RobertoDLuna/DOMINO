@@ -1,0 +1,34 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    networks:
+      - public-proxy-v2
+    environment:
+      POSTGRES_DB: domino_db
+      POSTGRES_USER: domino
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - domino_pgdata:/var/lib/postgresql/data
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+      placement:
+        constraints:
+          - node.role == manager
+      resources:
+        limits:
+          memory: 256M
+          cpus: "0.3"
+
+networks:
+  public-proxy-v2:
+    external: true
+
+volumes:
+  domino_pgdata:
+    driver: local

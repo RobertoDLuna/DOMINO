@@ -7,10 +7,14 @@ services:
       - public-proxy-v2
     environment:
       - REDIS_URL=redis://redis:6379
+      - DATABASE_URL=postgresql://domino:${POSTGRES_PASSWORD}@postgres:5432/domino_db?schema=public
+      - NODE_ENV=production
     deploy:
       replicas: 1
       restart_policy:
         condition: on-failure
+        delay: 5s
+        max_attempts: 3
       labels:
         - "traefik.enable=true"
         # Dominio Principal
@@ -21,10 +25,11 @@ services:
         - "traefik.http.services.domino.loadbalancer.server.port=3001"
       resources:
         limits:
-          memory: 384M
+          memory: 512M
           cpus: "0.5"
     depends_on:
       - redis
+      - postgres
 
   redis:
     image: redis:alpine
@@ -34,11 +39,38 @@ services:
       replicas: 1
       restart_policy:
         condition: on-failure
-    resources:
-      limits:
-        memory: 128M
-        cpus: "0.2"
+      resources:
+        limits:
+          memory: 128M
+          cpus: "0.2"
+
+  postgres:
+    image: postgres:16-alpine
+    networks:
+      - public-proxy-v2
+    environment:
+      POSTGRES_DB: domino_db
+      POSTGRES_USER: domino
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - domino_pgdata:/var/lib/postgresql/data
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          # Garante que os dados ficam sempre no mesmo nó
+          - node.role == manager
+      resources:
+        limits:
+          memory: 256M
+          cpus: "0.3"
 
 networks:
   public-proxy-v2:
     external: true
+
+volumes:
+  domino_pgdata:
+    driver: local

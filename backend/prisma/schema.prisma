@@ -1,0 +1,54 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Category {
+  id        Int           @id @default(autoincrement())
+  name      String        @unique @db.VarChar(255)
+  themes    Theme[]
+  subs      SubCategory[]
+  createdAt DateTime      @default(now()) @map("created_at")
+
+  @@map("categories")
+}
+
+model SubCategory {
+  id         Int      @id @default(autoincrement())
+  name       String   @db.VarChar(255)
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  categoryId Int      @map("category_id")
+  themes     Theme[]
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@map("subcategories")
+}
+
+model Theme {
+  id            String       @id @default(uuid())
+  name          String       @db.VarChar(255)
+  description   String?      @db.Text
+  color         String       @default("#009660") @db.VarChar(50)
+  isPublic      Boolean      @default(false) @map("is_public")
+  ownerId       String?      @map("owner_id") // UUID or simple identifier
+  
+  // Array of 6 image URLs (for pieces 1-6, 0 is blank)
+  symbols       String[]     @default([])
+  
+  category      Category     @relation(fields: [categoryId], references: [id])
+  categoryId    Int          @map("category_id")
+  
+  subcategory   SubCategory?  @relation(fields: [subcategoryId], references: [id])
+  subcategoryId Int?         @map("subcategory_id")
+
+  createdAt     DateTime     @default(now()) @map("created_at")
+  updatedAt     DateTime     @updatedAt @map("updated_at")
+
+  @@map("themes")
+}

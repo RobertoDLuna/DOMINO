@@ -38,5 +38,13 @@ export const themes = [
     description: 'O que levamos na nossa mochila?',
     color: 'bg-amber-500',
     borderColor: 'border-amber-700'
+  },
+  {
+    id: 'classico',
+    name: 'Dominó Clássico',
+    emoji: '🎲',
+    description: 'O jogo tradicional com a peça vazia e números de 1 a 6.',
+    color: 'bg-slate-800',
+    borderColor: 'border-slate-950'
   }
 ];

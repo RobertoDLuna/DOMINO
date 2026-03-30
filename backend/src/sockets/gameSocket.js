@@ -116,7 +116,7 @@ module.exports = (io) => {
         }
 
         if (room.players.length >= 2) {
-          const gameData = GameService.createGame(room.players, themeId);
+          const gameData = await GameService.createGame(room.players, themeId);
           const updatedRoom = { ...room, ...gameData, status: 'playing' };
           await RedisService.setRoom(roomId, updatedRoom);
 

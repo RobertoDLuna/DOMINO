@@ -10,12 +10,15 @@ RUN npm run build
 FROM node:18-alpine
 WORKDIR /app
 
-# Copy backend dependencies and install
+# Copy backend dependencies and install (including devDeps for prisma CLI)
 COPY backend/package*.json ./backend/
-RUN cd backend && npm install --production
+RUN cd backend && npm install
 
-# Copy backend source
+# Copy backend source (includes prisma/schema.prisma)
 COPY backend/ ./backend/
+
+# Generate Prisma Client from schema
+RUN cd backend && npx prisma generate
 
 # Copy frontend build from stage 1
 COPY --from=frontend-builder /app/frontend/dist ./frontend/dist
@@ -27,4 +30,6 @@ ENV PORT=3001
 EXPOSE 3001
 
 WORKDIR /app/backend
-CMD ["node", "server.js"]
+
+# Startup: run migrations then start server
+CMD ["sh", "-c", "npx prisma migrate deploy && node server.js"]

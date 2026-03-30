@@ -1,3 +1,4 @@
+const { getPrisma } = require("../config/prismaClient");
 const ScoringService = require("./ScoringService");
 const themes = require("../config/themes");
 
@@ -14,9 +15,33 @@ class GameService {
 
   /**
    * Initializes a new game instance.
+   * Now async to fetch potential custom themes from Postgres.
    */
-  createGame(players, themeId = 'animais') {
-    const theme = themes[themeId] || themes.animais;
+  async createGame(players, themeId = 'animais') {
+    let theme = themes[themeId];
+
+    if (!theme) {
+      try {
+        const prisma = getPrisma();
+        const dbTheme = await prisma.theme.findUnique({ 
+          where: { id: themeId },
+          include: { category: true } 
+        });
+        if (dbTheme) {
+          theme = {
+            id: dbTheme.id,
+            name: dbTheme.name,
+            symbols: ["", ...dbTheme.symbols],
+            color: dbTheme.color
+          };
+        }
+      } catch (err) {
+        console.warn("[GameService] DB indisponível, usando fallback de temas padrão.", err.message);
+      }
+    }
+
+    if (!theme) theme = themes.animais;
+    
     const images = theme.symbols;
     const pieces = [];
 

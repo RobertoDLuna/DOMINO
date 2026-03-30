@@ -22,3 +22,10 @@ npm-debug.log*
 Dockerfile
 docker-stack.yml
 .dockerignore
+
+# Environment secrets (NEVER copy into image)
+.env
+**/.env
+
+# User-uploaded files (managed at runtime via Docker volume)
+backend/uploads/

@@ -7,36 +7,43 @@ const themes = {
     id: 'animais',
     name: 'Animais Selvagens 🦁',
     description: 'Aprenda sobre os bichinhos da floresta!',
-    symbols: ["🐶", "🐱", "🐰", "🦊", "🐨", "🦁", "🐯"],
+    symbols: ["", "🐱", "🐰", "🦊", "🐨", "🦁", "🐯"],
     color: '#009660'
   },
   matematica: {
     id: 'matematica',
     name: 'Matemática Divertida 🔢',
     description: 'Vamos praticar os numerais de 0 a 6.',
-    symbols: ["0️⃣", "1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣"],
+    symbols: ["", "1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣"],
     color: '#3B82F6'
   },
   frutas: {
     id: 'frutas',
     name: 'Frutas Tropicais 🍎',
     description: 'Descubra as frutas mais deliciosas!',
-    symbols: ["🍎", "🍐", "🍊", "🍋", "🍌", "🍉", "🍇"],
+    symbols: ["", "🍐", "🍊", "🍋", "🍌", "🍉", "🍇"],
     color: '#EF4444'
   },
   espaco: {
     id: 'espaco',
     name: 'Espaço Sideral 🚀',
     description: 'Uma aventura incrível pelo universo!',
-    symbols: ["🚀", "👩‍🚀", "🌕", "🛰️", "🪐", "🌌", "👽"],
+    symbols: ["", "👩‍🚀", "🌕", "🛰️", "🪐", "🌌", "👽"],
     color: '#6366F1'
   },
   objetos: {
     id: 'objetos',
     name: 'Objetos Escolares 🎒',
     description: 'O que levamos na nossa mochila?',
-    symbols: ["🎒", "📚", "✏️", "📐", "🖍️", "🎨", "📝"],
+    symbols: ["", "📚", "✏️", "📐", "🖍️", "🎨", "📝"],
     color: '#F59E0B'
+  },
+  classico: {
+    id: 'classico',
+    name: 'Dominó Clássico 🎲',
+    description: 'O jogo tradicional com a peça vazia e números de 1 a 6.',
+    symbols: ["", "1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣"],
+    color: '#1E293B'
   }
 };
 

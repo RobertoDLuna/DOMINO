@@ -1,0 +1,19 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: domino-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: domino_db
+      POSTGRES_USER: domino
+      POSTGRES_PASSWORD: SeducDomin0
+    ports:
+      - "5432:5432"
+    volumes:
+      - domino_pgdata:/var/lib/postgresql/data
+
+volumes:
+  domino_pgdata:
+    driver: local

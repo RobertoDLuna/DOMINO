@@ -1,29 +1,29 @@
 // frontend/src/services/ThemeService.js
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+// Use relative URL so it works in both dev (via Vite proxy) and production (same origin)
+const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 class ThemeService {
-  /**
-   * Fetch all system categories.
-   */
   async getCategories() {
-    const res = await fetch(`${API_URL}/themes/categories`);
-    return await res.json();
+    try {
+      const res = await fetch(`${API_URL}/themes/categories`);
+      if (!res.ok) return [];
+      return await res.json();
+    } catch {
+      return [];
+    }
   }
 
-  /**
-   * Fetch all available themes (Standard + Custom).
-   */
   async getThemes(ownerId = null) {
-    const url = ownerId ? `${API_URL}/themes?ownerId=${ownerId}` : `${API_URL}/themes`;
-    const res = await fetch(url);
-    return await res.json();
+    try {
+      const url = ownerId ? `${API_URL}/themes?ownerId=${ownerId}` : `${API_URL}/themes`;
+      const res = await fetch(url);
+      if (!res.ok) return [];
+      return await res.json();
+    } catch {
+      return [];
+    }
   }
 
-  /**
-   * Register a new custom theme.
-   * Uses FormData for file upload.
-   */
   async createTheme(themeData) {
     const formData = new FormData();
     Object.keys(themeData).forEach(key => {
@@ -38,12 +38,12 @@ class ThemeService {
       method: 'POST',
       body: formData
     });
-    
+
     if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.error || "Erro ao criar tema.");
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || 'Erro ao criar tema.');
     }
-    
+
     return await res.json();
   }
 }

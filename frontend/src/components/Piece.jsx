@@ -14,16 +14,17 @@ export default function Piece({
   const iconA = reverse ? piece.ladoB : piece.ladoA;
   const iconB = reverse ? piece.ladoA : piece.ladoB;
 
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+  // Empty string = same origin (works in dev via Vite proxy AND in production)
+  const API_BASE = import.meta.env.VITE_API_URL?.replace('/api', '') || '';
 
   const renderSide = (symbol) => {
     if (typeof symbol === 'string' && (symbol.startsWith('/uploads') || symbol.startsWith('http'))) {
-      const src = symbol.startsWith('http') ? symbol : `${API_URL}${symbol}`;
+      const src = symbol.startsWith('http') ? symbol : `${API_BASE}${symbol}`;
       return (
-        <img 
-          src={src} 
-          alt="Symbol" 
-          className="w-full h-full object-cover p-1.5 sm:p-2.5 drop-shadow-sm transition-transform hover:scale-110" 
+        <img
+          src={src}
+          alt="Symbol"
+          className="w-full h-full object-cover p-1.5 sm:p-2.5 drop-shadow-sm transition-transform hover:scale-110"
         />
       );
     }

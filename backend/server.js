@@ -72,10 +72,21 @@ app.use((req, res) => {
   } else {
     // Se estiver em desenvolvimento e não houver build, retorna 404 limpo para API
     if (req.url.startsWith('/api')) {
-      res.status(404).json({ error: `Rota de API não encontrada: ${req.url}` });
-    } else {
-      res.status(404).send("Frontend não construído (dist/index.html não encontrado).");
+      return res.status(404).json({ 
+        error: "API endpoint not found", 
+        path: req.url 
+      });
     }
+    // Para o frontend, em vez de 404 vazio, retorna algo que o Traefik não veja como Bad Gateway
+    res.status(200).send(`
+      <body style="background:#009660;color:white;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0">
+        <div style="text-align:center">
+          <h1>🚀 DOMINÓ ONLINE</h1>
+          <p>O servidor está vivo, mas o frontend não foi encontrado na pasta dist.</p>
+          <small>Status: Backend OK / Frontend MISSING</small>
+        </div>
+      </body>
+    `);
   }
 });
 

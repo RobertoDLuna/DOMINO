@@ -31,5 +31,5 @@ EXPOSE 3001
 
 WORKDIR /app/backend
 
-# Startup: Migrate database, Seed initial data, and then Start the server
-CMD ["sh", "-c", "npx prisma migrate deploy && npm run db:seed && node server.js"]
+# Startup: Attempt migrations and seed, then ALWAYS start the server
+CMD ["sh", "-c", "npx prisma migrate deploy ; npm run db:seed ; node server.js"]

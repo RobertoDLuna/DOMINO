@@ -37,7 +37,9 @@ app.use("/api/themes", themeRoutes);
 
 // Serving Static Frontend Files (Production)
 const frontendPath = path.join(__dirname, "../frontend/dist");
+const indexPath = path.join(frontendPath, "index.html");
 console.log(`🌐 Servindo frontend de: ${frontendPath}`);
+console.log(`📄 index.html encontrado? ${require('fs').existsSync(indexPath) ? '✅ SIM' : '❌ NÃO'}`);
 app.use(express.static(frontendPath));
 
 // Servindo Uploads de Temas Customizados

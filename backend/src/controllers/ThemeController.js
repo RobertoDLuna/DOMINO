@@ -14,8 +14,8 @@ class ThemeController {
       const categories = await prisma.category.findMany({ include: { subs: true } });
       res.json(categories);
     } catch (error) {
-      console.warn('[ThemeController] DB unavailable:', error.message);
-      res.json([]); // Returns empty array instead of crashing
+      console.error('[ThemeController] DB Error in getCategories:', error.message);
+      res.status(500).json({ error: "Erro ao carregar categorias. Verifique a conexão com o banco de dados.", details: error.message });
     }
   }
 
@@ -35,8 +35,8 @@ class ThemeController {
       });
       res.json(themes);
     } catch (error) {
-      console.warn('[ThemeController] DB unavailable:', error.message);
-      res.json([]);
+      console.error('[ThemeController] DB Error in listThemes:', error.message);
+      res.json([]); // Return empty for players, but log the error
     }
   }
 

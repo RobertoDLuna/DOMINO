@@ -31,5 +31,5 @@ EXPOSE 3001
 
 WORKDIR /app/backend
 
-# Startup: Always start the server immediately to avoid Bad Gateway
-CMD ["node", "server.js"]
+# Startup: Migrate database, Seed initial data, and then Start the server
+CMD ["sh", "-c", "npx prisma migrate deploy && npm run db:seed && node server.js"]

@@ -38,8 +38,10 @@ const upload = multer({
  * 4. DELETE /: Remove a specific theme.
  */
 router.get('/categories', ThemeController.getCategories);
+router.post('/categories', ThemeController.createCategory);
 router.get('/', ThemeController.listThemes);
 router.post('/', upload.array('symbols', 6), ThemeController.createTheme);
 router.delete('/:id', ThemeController.deleteTheme);
+router.delete('/categories/:id', ThemeController.deleteCategory);
 
 module.exports = router;

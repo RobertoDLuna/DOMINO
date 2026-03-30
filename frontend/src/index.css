@@ -89,6 +89,16 @@ body {
   z-index: 101;
 }
 
+/* Modal isolation rules */
+body.modal-open {
+  overflow: hidden;
+}
+
+.modal-open #room-code-display,
+.modal-open #avatar-guide-container {
+  display: none !important;
+}
+
 .rain {
   position: absolute;
   width: 2px;

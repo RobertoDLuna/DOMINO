@@ -26,6 +26,12 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Log de requisições para depuração (Raio-X)
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  next();
+});
+
 // API Routes
 app.use("/api/themes", themeRoutes);
 
@@ -57,9 +63,20 @@ app.get("/health", (req, res) => {
 });
 
 // SPA Fallback: Qualquer rota que não seja arquivo estático ou API, serve o index.html
-// Usando middleware genérico no final para evitar erros de sintaxe do Express 5
 app.use((req, res) => {
-  res.sendFile(path.join(frontendPath, "index.html"));
+  const indexPath = path.join(frontendPath, "index.html");
+  const fs = require('fs');
+  
+  if (fs.existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else {
+    // Se estiver em desenvolvimento e não houver build, retorna 404 limpo para API
+    if (req.url.startsWith('/api')) {
+      res.status(404).json({ error: `Rota de API não encontrada: ${req.url}` });
+    } else {
+      res.status(404).send("Frontend não construído (dist/index.html não encontrado).");
+    }
+  }
 });
 
 // Middleware de Erros Global

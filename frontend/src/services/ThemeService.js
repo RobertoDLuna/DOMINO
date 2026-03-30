@@ -46,6 +46,47 @@ class ThemeService {
 
     return await res.json();
   }
+
+  async createCategory(name) {
+    const res = await fetch(`${API_URL}/themes/categories`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name })
+    });
+    
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || 'Erro ao criar categoria.');
+    }
+    
+    return await res.json();
+  }
+
+  async deleteCategory(id) {
+    const res = await fetch(`${API_URL}/themes/categories/${id}`, {
+      method: 'DELETE'
+    });
+    
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || err.message || 'Erro ao excluir categoria.');
+    }
+    
+    return await res.json();
+  }
+
+  async deleteTheme(id) {
+    const res = await fetch(`${API_URL}/themes/${id}`, {
+      method: 'DELETE'
+    });
+    
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || err.message || 'Erro ao excluir tema.');
+    }
+    
+    return await res.json();
+  }
 }
 
 export default new ThemeService();

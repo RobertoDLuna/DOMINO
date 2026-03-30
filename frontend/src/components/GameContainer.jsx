@@ -5,6 +5,7 @@ import Piece from "./Piece";
 import SnakeBoard from "./SnakeBoard";
 import AvatarGuide from "./AvatarGuide";
 import ThemeSelector from "./ThemeSelector";
+import ThemeCreator from "./ThemeCreator";
 import SoundService from "../services/SoundService";
 
 import logoCampina from '../assets/logo-campina.png';
@@ -17,7 +18,6 @@ export default function GameContainer() {
     iWon, gameOverMsg, scores, currentTheme, maxPlayers, myId, playerId, isConnected
   } = useGame();
 
-  // Cálculo do vencedor (global para uso em overlays)
   const winnerId = scores && Object.keys(scores).length > 0 
     ? Object.keys(scores).reduce((a, b) => (scores[a] || 0) >= (scores[b] || 0) ? a : b) 
     : null;
@@ -49,7 +49,9 @@ export default function GameContainer() {
   const handleJoinRoom = () => {
     joinRoom(roomIdInput, getFinalName());
   };
+
   const [selectedTheme, setSelectedTheme] = useState('animais');
+  const [showCreator, setShowCreator] = useState(false);
   const [timer, setTimer] = useState(30);
   const [showAvatar, setShowAvatar] = useState(false);
   const [selectedPiece, setSelectedPiece] = useState(null);
@@ -60,7 +62,6 @@ export default function GameContainer() {
   const isMyTurn = currentTurn === myId;
   const isRoomOwner = players.length > 0 && players[0].id === myId;
 
-  // Auto-pass timer
   useEffect(() => {
     let interval;
     if (gameState === "playing" && isMyTurn) {
@@ -81,7 +82,6 @@ export default function GameContainer() {
     return () => clearInterval(interval);
   }, [gameState, isMyTurn]);
 
-  // Avatar inactivity delay (3s)
   useEffect(() => {
     let timeout;
     if (gameState === "playing") {
@@ -93,7 +93,6 @@ export default function GameContainer() {
     return () => clearTimeout(timeout);
   }, [gameState, currentTurn, board.length]);
 
-  // Sound triggers
   useEffect(() => {
     if (gameState === "playing" && board.length > 0) {
       SoundService.playPlace();
@@ -118,30 +117,23 @@ export default function GameContainer() {
     }
   };
 
-  // Click-to-place logic
   const handlePieceClick = (piece) => {
     if (!isMyTurn) return;
-
-    // Deselect on second click
     if (selectedPiece?.id === piece.id) {
       setSelectedPiece(null);
       return;
     }
-
-    // First click on empty board: place directly
     if (board.length === 0) {
       makeMove(piece.id, 'right');
       setSelectedPiece(null);
       return;
     }
-
     const leftEnd = board[0]?.ladoA;
     const rightEnd = board[board.length - 1]?.ladoB;
     const fitsLeft = piece.ladoA === leftEnd || piece.ladoB === leftEnd;
     const fitsRight = piece.ladoA === rightEnd || piece.ladoB === rightEnd;
 
     if (fitsLeft && fitsRight) {
-      // Fits both sides - show modal
       setSelectedPiece(piece);
       setSideModal({ pieceId: piece.id, leftEnd, rightEnd });
     } else if (fitsLeft) {
@@ -151,7 +143,6 @@ export default function GameContainer() {
       makeMove(piece.id, 'right');
       setSelectedPiece(null);
     } else {
-      // Piece doesn't fit: just highlight it briefly
       setSelectedPiece(null);
     }
   };
@@ -189,7 +180,7 @@ export default function GameContainer() {
           </p>
         </header>
         <div className="flex-1 flex flex-col items-center justify-center z-10 w-full overflow-y-auto scrollbar-hide py-8">
-          <div className="w-full max-w-sm flex flex-col items-center gap-8">
+          <div className="w-full max-w-sm lg:max-w-4xl flex flex-col items-center gap-8">
             <div className="w-full bg-white/0 sm:bg-white sm:p-12 rounded-[3.5rem] sm:shadow-[0_25px_80px_rgba(0,0,0,0.3)] text-center sm:border-b-[12px] sm:border-emerald-900/10">
               <div className="mb-6 sm:mb-8">
                 <input type="text" placeholder="SEU NOME" value={playerNameInput} onChange={handleNameChange} className="w-full bg-emerald-50 border-4 border-emerald-100 p-4 sm:p-5 rounded-[2rem] focus:outline-none focus:border-[#009660] placeholder-emerald-900/30 text-center text-xl sm:text-2xl font-black uppercase text-[#009660] transition-all" />
@@ -224,15 +215,15 @@ export default function GameContainer() {
               <span className="text-xs font-black uppercase tracking-widest">{players.length} / {maxPlayers} JOGADORES</span>
             </div>
           </div>
-          {room && (
-            <div className="mt-4 bg-emerald-950/60 px-6 py-3 rounded-2xl border-4 border-[#FFCE00]/30 flex flex-col items-center gap-1 shadow-[0_10px_40px_rgba(0,0,0,0.3)] transform hover:scale-105 transition-all">
+          {room && !showCreator && (
+            <div id="room-code-display" className="mt-4 bg-emerald-950/60 px-6 py-3 rounded-2xl border-4 border-[#FFCE00]/30 flex flex-col items-center gap-1 shadow-[0_10px_40px_rgba(0,0,0,0.3)] transform hover:scale-105 transition-all">
               <span className="text-[10px] sm:text-xs font-black uppercase opacity-60 tracking-[0.2em] text-[#FFCE00]">CÓDIGO DA SALA</span>
               <span className="text-3xl sm:text-5xl font-mono font-black text-white tracking-[0.2em] select-all drop-shadow-lg">{room}</span>
             </div>
           )}
         </header>
-        <div className="flex-1 flex flex-col items-center justify-start z-10 w-full overflow-y-auto scrollbar-hide py-6 h-full">
-           <div className="w-full max-w-lg flex flex-col items-center gap-6 sm:gap-4">
+        <div className="flex-1 flex flex-col items-center justify-start z-10 w-full overflow-y-auto scrollbar-hide py-6 pb-20 h-full">
+           <div className="w-full max-w-lg lg:max-w-4xl flex flex-col items-center gap-6 sm:gap-4">
               {isRoomOwner ? (
                 <div className="w-full flex flex-col gap-6">
                   <div className="bg-white/10 p-4 rounded-[2rem] border border-white/20 backdrop-blur-sm">
@@ -243,35 +234,61 @@ export default function GameContainer() {
                       ))}
                     </div>
                   </div>
-                  <ThemeSelector selectedTheme={selectedTheme} onSelect={setSelectedTheme} />
+                  <ThemeSelector 
+                    selectedTheme={selectedTheme} 
+                    onSelect={setSelectedTheme} 
+                    onOpenCreator={() => {
+                      setShowCreator(true);
+                      document.body.classList.add('modal-open');
+                    }}
+                  />
                 </div>
               ) : null}
 
-              <div className="w-full max-w-sm flex flex-col gap-4 mt-6">
-                {players.length >= maxPlayers ? (
-                  isRoomOwner && (
-                    <button onClick={handleStartGame} className="bg-[#FFCE00] hover:bg-[#ffe050] text-[#009660] px-10 py-5 sm:px-12 sm:py-6 rounded-[2rem] sm:rounded-[3rem] font-black text-2xl sm:text-3xl shadow-[0_8px_0_#d1a900] animate-bounce-slow transition-all active:translate-y-1 active:shadow-[0_4px_0_#d1a900] border-b-2 border-white/20 uppercase">JOGAR! 🚀</button>
-                  )
-                ) : (
-                  <div className="bg-black/20 p-4 sm:p-5 rounded-3xl border border-white/10">
-                    <p className="text-white font-black text-sm sm:text-base uppercase tracking-widest animate-pulse italic text-center">Aguardando amiguinhos ({players.length}/{maxPlayers})</p>
+              {!showCreator && (
+                <>
+                  <div className="w-full max-w-sm flex flex-col gap-4 mt-6">
+                    {players.length >= maxPlayers ? (
+                      isRoomOwner && (
+                        <button onClick={handleStartGame} className="bg-[#FFCE00] hover:bg-[#ffe050] text-[#009660] px-10 py-5 sm:px-12 sm:py-6 rounded-[2rem] sm:rounded-[3rem] font-black text-2xl sm:text-3xl shadow-[0_8px_0_#d1a900] animate-bounce-slow transition-all active:translate-y-1 active:shadow-[0_4px_0_#d1a900] border-b-2 border-white/20 uppercase">JOGAR! 🚀</button>
+                      )
+                    ) : (
+                      <div className="bg-black/20 p-4 sm:p-5 rounded-3xl border border-white/10">
+                        <p className="text-white font-black text-sm sm:text-base uppercase tracking-widest animate-pulse italic text-center">Aguardando amiguinhos ({players.length}/{maxPlayers})</p>
+                      </div>
+                    )}
+                    <button onClick={leaveRoom} className="bg-white/90 group hover:bg-[#FFCE00] px-6 py-3 sm:py-4 rounded-full shadow-lg transition-all flex items-center justify-center gap-3 border-b-4 border-gray-200 hover:border-yellow-600 active:scale-95">
+                      <span className="text-lg sm:text-2xl group-hover:scale-125 transition-transform">🏠</span>
+                      <span className="text-[#009660] font-black text-sm sm:text-base uppercase tracking-tight font-sans">Sair da Sala</span>
+                    </button>
                   </div>
-                )}
-                <button onClick={leaveRoom} className="bg-white/90 group hover:bg-[#FFCE00] px-6 py-3 sm:py-4 rounded-full shadow-lg transition-all flex items-center justify-center gap-3 border-b-4 border-gray-200 hover:border-yellow-600 active:scale-95">
-                  <span className="text-lg sm:text-2xl group-hover:scale-125 transition-transform">🏠</span>
-                  <span className="text-[#009660] font-black text-sm sm:text-base uppercase tracking-tight font-sans">Sair da Sala</span>
-                </button>
-              </div>
-              <div className="flex flex-wrap justify-center gap-2 sm:gap-3 w-full mt-4">
-                {players.map((p, i) => (
-                  <div key={i} className={`px-4 sm:px-6 py-2 sm:py-3 rounded-[1.5rem] shadow-xl transition-all transform flex items-center gap-3 ${p.id === myId ? 'bg-[#FFCE00] text-[#009660] border-b-4 border-yellow-600' : 'bg-white text-emerald-900 border-b-4 border-gray-200'}`}>
-                    <span className="text-lg sm:text-xl">{p.id === myId ? '🎓' : '🎒'}</span>
-                    <span className="font-black text-xs sm:text-sm truncate max-w-[80px] sm:max-w-[120px]">{p.name || `JOGADOR ${i+1}`}</span>
+                  <div id="avatar-guide-container" className="flex flex-wrap justify-center gap-2 sm:gap-3 w-full mt-4">
+                    {players.map((p, i) => (
+                      <div key={i} className={`px-4 sm:px-6 py-2 sm:py-3 rounded-[1.5rem] shadow-xl transition-all transform flex items-center gap-3 ${p.id === myId ? 'bg-[#FFCE00] text-[#009660] border-b-4 border-yellow-600' : 'bg-white text-emerald-900 border-b-4 border-gray-200'}`}>
+                        <span className="text-lg sm:text-xl">{p.id === myId ? '🎓' : '🎒'}</span>
+                        <span className="font-black text-xs sm:text-sm truncate max-w-[80px] sm:max-w-[120px]">{p.name || `JOGADOR ${i+1}`}</span>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
+                </>
+              )}
            </div>
         </div>
+
+        {showCreator && (
+          <ThemeCreator 
+            onThemeCreated={(newTheme) => {
+              setSelectedTheme(newTheme.id);
+              setShowCreator(false);
+              document.body.classList.remove('modal-open');
+              window.dispatchEvent(new CustomEvent('refreshThemes'));
+            }} 
+            onClose={() => {
+              setShowCreator(false);
+              document.body.classList.remove('modal-open');
+            }} 
+          />
+        )}
       </div>
     );
   }
@@ -280,7 +297,6 @@ export default function GameContainer() {
   if (gameState === "playing" || gameState === "finished") {
     return (
       <div className="h-screen bg-[#F0FDF4] flex flex-col font-sans overflow-hidden select-none relative">
-        {/* Play Table */}
         <main className={`flex-1 flex flex-col items-center justify-center bg-[#009660] relative px-4 shadow-inner border-b-[10px] sm:border-b-[20px] border-emerald-950/20 overflow-hidden ${gameState === 'finished' ? 'blur-xl scale-110 pointer-events-none' : ''} transition-all duration-1000`}>
            <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/felt.png')] pointer-events-none"></div>
            <div className="absolute top-4 sm:top-6 left-4 sm:left-6 flex flex-col items-start gap-2 sm:gap-3 z-[100]">
@@ -293,7 +309,7 @@ export default function GameContainer() {
                   </div>
                 </div>
               ))}
-              <div className={`sm:hidden transition-all duration-700 transform ${showAvatar ? 'translate-y-0 opacity-100' : '-translate-y-10 opacity-0 pointer-events-none'}`}>
+              <div id="avatar-guide-container" className={`sm:hidden transition-all duration-700 transform ${showAvatar ? 'translate-y-0 opacity-100' : '-translate-y-10 opacity-0 pointer-events-none'}`}>
                  <AvatarGuide gameState={gameState} myTurn={isMyTurn} isWinner={iWon} className="!items-start !max-w-[140px]" />
               </div>
            </div>
@@ -345,14 +361,14 @@ export default function GameContainer() {
         </div>
 
         {sideModal && (
-          <div className="absolute inset-0 z-[110] flex items-center justify-center backdrop-blur-sm bg-black/40" onClick={() => { setSideModal(null); setSelectedPiece(null); }}>
-            <div className="bg-white rounded-[2rem] shadow-[0_40px_80px_rgba(0,0,0,0.5)] p-6 sm:p-10 flex flex-col items-center gap-6 border-8 border-[#FFCE00] max-w-[320px] w-full mx-4" onClick={e => e.stopPropagation()}>
-              <h2 className="text-2xl font-black uppercase text-[#009660] text-center">Onde colocar?</h2>
-              <div className="flex gap-4 w-full">
+          <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-300">
+            <div className="bg-white w-full max-w-2xl lg:max-w-4xl max-h-[92vh] rounded-[3rem] shadow-[0_40px_100px_rgba(0,0,0,0.5)] flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
+              <h2 className="text-2xl font-black uppercase text-[#009660] text-center p-6">Onde colocar?</h2>
+              <div className="flex gap-4 w-full p-6">
                 <button onClick={() => handleSideChoice('left')} className="flex-1 bg-[#009660] hover:bg-[#00a86b] text-white font-black py-5 rounded-2xl shadow-[0_6px_0_#006d46] text-xl transition-all active:translate-y-1 active:shadow-none flex flex-col items-center gap-1"><span className="text-3xl">⬅️</span><span>AQUI</span><span className="text-3xl drop-shadow-sm mt-1">{sideModal.leftEnd}</span></button>
                 <button onClick={() => handleSideChoice('right')} className="flex-1 bg-[#FFCE00] hover:bg-[#ffe050] text-[#009660] font-black py-5 rounded-2xl shadow-[0_6px_0_#d1a900] text-xl transition-all active:translate-y-1 active:shadow-none flex flex-col items-center gap-1"><span className="text-3xl">➡️</span><span>ALI</span><span className="text-3xl drop-shadow-sm mt-1">{sideModal.rightEnd}</span></button>
               </div>
-              <button onClick={() => { setSideModal(null); setSelectedPiece(null); }} className="text-gray-400 text-xs uppercase font-bold tracking-widest hover:text-red-400 transition-colors">Cancelar</button>
+              <button onClick={() => { setSideModal(null); setSelectedPiece(null); }} className="text-gray-400 text-xs uppercase font-bold tracking-widest hover:text-red-400 transition-colors pb-6">Cancelar</button>
             </div>
           </div>
         )}
@@ -361,10 +377,8 @@ export default function GameContainer() {
           <AvatarGuide gameState={gameState} myTurn={isMyTurn} isWinner={iWon} className="!max-w-[120px] sm:!max-w-[180px] drop-shadow-2xl" />
         </div>
 
-        {/* Game Over Popup Overlay */}
         {gameState === "finished" && (
           <div className="absolute inset-0 z-[110] flex items-center justify-center p-4">
-              {/* Partículas de Vitória/Derrota */}
               <div className="absolute inset-0 z-[120] pointer-events-none overflow-hidden">
                  {iWon ? (
                    [...Array(60)].map((_, i) => (
@@ -397,7 +411,6 @@ export default function GameContainer() {
                     </div>
                     <div className={`text-base sm:text-lg font-black mb-6 sm:mb-8 p-4 rounded-[1.5rem] shadow-inner ${iWon ? 'bg-emerald-50 text-[#009660]' : 'bg-red-50 text-red-900'}`}>{gameOverMsg}</div>
                     <div className="flex flex-col gap-4 w-full">
-                      {/* Status de quem está pronto */}
                       {players.length > 0 && (
                         <div className="bg-emerald-50 p-2 sm:p-3 rounded-2xl border-2 border-emerald-100 flex flex-col items-center">
                           <p className="text-[9px] sm:text-[10px] font-black uppercase text-emerald-800 opacity-60 mb-2 tracking-widest">Jogadores Prontos ({players.filter(p => p.ready).length}/{players.length})</p>
@@ -427,10 +440,9 @@ export default function GameContainer() {
                         </button>
                       </div>
 
-                      {/* Botão de Reiniciar do Dono */}
                       {isRoomOwner && players.filter(p => p.ready).length >= 2 && (
                         <button onClick={() => startGame(currentTheme?.id || 'animais')} className="w-full mt-1 bg-[#FFCE00] hover:bg-[#ffe050] text-[#009660] font-black py-4 rounded-2xl shadow-[0_6px_0_#d1a900] transition-all transform hover:scale-105 active:translate-y-1 active:shadow-none text-xl uppercase animate-pulse border-2 border-white/20">
-                          🚀 REINICIAR PARTIDA ({players.filter(p => p.ready).length} JOGADORES)
+                           🚀 REINICIAR PARTIDA ({players.filter(p => p.ready).length} JOGADORES)
                         </button>
                       )}
                     </div>

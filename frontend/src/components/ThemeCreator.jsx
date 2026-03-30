@@ -3,6 +3,7 @@ import ThemeService from "../services/ThemeService";
 
 const ThemeCreator = ({ onThemeCreated, onClose }) => {
   const [categories, setCategories] = useState([]);
+  const [subcategories, setSubcategories] = useState([]);
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -15,38 +16,90 @@ const ThemeCreator = ({ onThemeCreated, onClose }) => {
   const [symbols, setSymbols] = useState(Array(6).fill(null));
   const [previews, setPreviews] = useState(Array(6).fill(null));
   const [loading, setLoading] = useState(false);
+  const [loadingCategories, setLoadingCategories] = useState(true);
   const [error, setError] = useState("");
+  const [isAddingNewCategory, setIsAddingNewCategory] = useState(false);
+  const [newCatName, setNewCatName] = useState("");
 
   useEffect(() => {
-    // Load categories for selector
-    ThemeService.getCategories().then(setCategories).catch(console.error);
+    ThemeService.getCategories()
+      .then(setCategories)
+      .catch(console.error)
+      .finally(() => setLoadingCategories(false));
   }, []);
+
+  const handleCreateCategory = async () => {
+    if (!newCatName.trim()) return;
+    try {
+      setLoading(true);
+      const created = await ThemeService.createCategory(newCatName);
+      setCategories([...categories, created]);
+      setFormData({ ...formData, categoryId: created.id, subcategoryId: "" });
+      setSubcategories([]);
+      setIsAddingNewCategory(false);
+      setNewCatName("");
+      setError("");
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteCategory = async () => {
+    if (!formData.categoryId) return;
+    const cat = categories.find(c => String(c.id) === String(formData.categoryId));
+    if (!cat) return;
+
+    if (!confirm(`Tem certeza que deseja excluir a categoria "${cat.name}"?`)) return;
+
+    try {
+      setLoading(true);
+      await ThemeService.deleteCategory(cat.id);
+      setCategories(categories.filter(c => c.id !== cat.id));
+      setFormData({ ...formData, categoryId: "", subcategoryId: "" });
+      setSubcategories([]);
+      setError(""); 
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCategoryChange = (e) => {
+    const categoryId = e.target.value;
+    const selected = categories.find(c => String(c.id) === String(categoryId));
+    setSubcategories(selected?.subs || []);
+    setFormData({ ...formData, categoryId, subcategoryId: "" });
+  };
 
   const handleFileChange = (index, file) => {
     if (!file) return;
     const newSymbols = [...symbols];
     newSymbols[index] = file;
     setSymbols(newSymbols);
-
     const newPreviews = [...previews];
     newPreviews[index] = URL.createObjectURL(file);
     setPreviews(newPreviews);
   };
 
+  const validate = () => {
+    if (!formData.name.trim()) return "Digite um nome para o tema.";
+    if (!formData.categoryId) return "Selecione uma categoria para o tema.";
+    if (symbols.some(s => !s)) return "Envie as 6 imagens das peças (pontos 1 a 6).";
+    return null;
+  };
+
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (symbols.some(s => !s)) {
-      setError("Por favor, envie as 6 imagens para as peças (1 a 6).");
-      return;
-    }
+    e?.preventDefault();
+    const validationError = validate();
+    if (validationError) { setError(validationError); return; }
+
     setError("");
     setLoading(true);
-
     try {
-      const result = await ThemeService.createTheme({
-        ...formData,
-        symbols: symbols
-      });
+      const result = await ThemeService.createTheme({ ...formData, symbols });
       onThemeCreated(result);
     } catch (err) {
       setError(err.message);
@@ -56,64 +109,205 @@ const ThemeCreator = ({ onThemeCreated, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-300">
-      <div className="bg-white w-full max-w-2xl max-h-[90vh] rounded-[3rem] shadow-[0_40px_100px_rgba(0,0,0,0.5)] flex flex-col overflow-hidden relative">
-        <header className="p-6 sm:p-8 bg-emerald-50 border-b-2 border-emerald-100 flex justify-between items-center bg-gradient-to-r from-emerald-50 to-white">
+    <div className="fixed inset-0 z-[250] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-300">
+      <div className="bg-white w-full max-w-2xl lg:max-w-4xl max-h-[92vh] rounded-[3rem] shadow-[0_40px_100px_rgba(0,0,0,0.5)] flex flex-col overflow-hidden">
+        
+        {/* Header */}
+        <header className="p-6 sm:p-8 bg-gradient-to-r from-emerald-50 to-white border-b-2 border-emerald-100 flex justify-between items-center flex-shrink-0">
           <div>
-            <h2 className="text-2xl sm:text-3xl font-black text-[#009660] uppercase italic tracking-tighter leading-none">Novo Tema Customizado</h2>
-            <p className="text-[10px] sm:text-xs font-black uppercase text-emerald-900/40 tracking-widest mt-1">Crie seu próprio conjunto de dominó 🎨</p>
+            <h2 className="text-2xl sm:text-3xl font-black text-[#009660] uppercase italic tracking-tighter leading-none">Novo Tema</h2>
+            <p className="text-[10px] sm:text-xs font-black uppercase text-emerald-900/40 tracking-widest mt-1">Crie seu próprio conjunto de dominó</p>
           </div>
-          <button onClick={onClose} className="w-10 h-10 rounded-full bg-white text-emerald-900 hover:bg-emerald-100 transition-colors shadow-sm flex items-center justify-center font-black">X</button>
+          <button onClick={onClose} className="w-10 h-10 rounded-full bg-white text-emerald-900 hover:bg-red-50 hover:text-red-500 transition-colors shadow-sm border border-gray-100 flex items-center justify-center font-black text-sm cursor-pointer">✕</button>
         </header>
 
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 sm:p-8 space-y-6 scrollbar-hide">
-          {error && <div className="bg-red-50 text-red-500 p-4 rounded-2xl border-2 border-red-100 font-black text-sm uppercase tracking-tight text-center">{error}</div>}
+        {/* Body */}
+        <div className="flex-1 overflow-y-auto p-6 sm:p-8 space-y-5 scrollbar-hide">
+          {error && (
+            <div className="bg-red-50 text-red-500 p-4 rounded-2xl border-2 border-red-100 font-black text-sm uppercase tracking-tight text-center animate-in shake">
+              ⚠️ {error}
+            </div>
+          )}
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div className="flex flex-col lg:grid lg:grid-cols-2 gap-6 sm:gap-8">
+            {/* Left Column */}
             <section className="space-y-4">
+              {/* Name */}
               <div>
-                <label className="text-[10px] font-black uppercase text-emerald-900/60 mb-1 block ml-2">Nome do Tema</label>
-                <input required type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full bg-emerald-50/50 border-2 border-emerald-100 p-4 rounded-2xl focus:border-emerald-500 transition-all outline-none font-black text-emerald-900 uppercase" placeholder="EX: ANIMAIS DA FAZENDA" />
+                <label className="text-[10px] font-black uppercase text-emerald-900/60 mb-1.5 block ml-1">Nome do Tema *</label>
+                <input
+                  required
+                  type="text"
+                  value={formData.name}
+                  onChange={e => setFormData({ ...formData, name: e.target.value })}
+                  className="w-full bg-emerald-50/50 border-2 border-emerald-100 p-4 rounded-2xl focus:border-[#009660] transition-all outline-none font-black text-emerald-900 uppercase placeholder:text-emerald-200"
+                  placeholder="EX: ANIMAIS DA FAZENDA"
+                />
               </div>
+
+              {/* Category */}
               <div>
-                <label className="text-[10px] font-black uppercase text-emerald-900/60 mb-1 block ml-2">Categoria</label>
-                <select required value={formData.categoryId} onChange={e => setFormData({...formData, categoryId: e.target.value, subcategoryId: ""})} className="w-full bg-emerald-50/50 border-2 border-emerald-100 p-4 rounded-2xl focus:border-emerald-500 transition-all outline-none font-black text-emerald-900 uppercase">
-                  <option value="">Selecione...</option>
-                  {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="text-[10px] font-black uppercase text-emerald-900/60 mb-1 block ml-2">Visibilidade</label>
-                <div className="flex gap-2">
-                  <button type="button" onClick={() => setFormData({...formData, isPublic: true})} className={`flex-1 p-3 rounded-2xl font-black text-xs transition-all border-2 ${formData.isPublic ? 'bg-emerald-500 text-white border-emerald-600 shadow-md' : 'bg-gray-50 text-gray-400 border-gray-100'}`}>PÚBLICO ✅</button>
-                  <button type="button" onClick={() => setFormData({...formData, isPublic: false})} className={`flex-1 p-3 rounded-2xl font-black text-xs transition-all border-2 ${!formData.isPublic ? 'bg-emerald-950 text-white border-black shadow-md' : 'bg-gray-50 text-gray-400 border-gray-100'}`}>PRIVADO 🔒</button>
+                <div className="flex justify-between items-end mb-1.5 ml-1">
+                  <label className="text-[10px] font-black uppercase text-emerald-900/60 block">
+                    Categoria *
+                    {loadingCategories && <span className="ml-2 opacity-40 font-normal normal-case">carregando...</span>}
+                  </label>
+                  <button 
+                    type="button" 
+                    onClick={() => setIsAddingNewCategory(!isAddingNewCategory)}
+                    className="text-[9px] font-black uppercase text-emerald-600 hover:text-emerald-700 transition-colors cursor-pointer"
+                  >
+                    {isAddingNewCategory ? "✕ Cancelar" : "➕ Nova Categoria"}
+                  </button>
                 </div>
+
+                {isAddingNewCategory ? (
+                  <div className="flex flex-col sm:flex-row gap-2 animate-in slide-in-from-right-2 duration-300">
+                    <input
+                      type="text"
+                      value={newCatName}
+                      onChange={e => setNewCatName(e.target.value.toUpperCase())}
+                      className="flex-1 bg-emerald-50/50 border-2 border-emerald-300 p-4 rounded-2xl focus:border-emerald-500 transition-all outline-none font-black text-emerald-900 uppercase placeholder:text-emerald-200 text-sm"
+                      placeholder="EX: GEOGRAFIA"
+                      autoFocus
+                    />
+                    <button 
+                      type="button"
+                      onClick={handleCreateCategory}
+                      className="bg-emerald-500 text-white px-6 py-4 rounded-2xl font-black text-xs hover:bg-emerald-600 active:scale-95 transition-all shadow-sm cursor-pointer whitespace-nowrap"
+                    >
+                      SALVAR CATEGORIA
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <select
+                      required
+                      value={formData.categoryId}
+                      onChange={handleCategoryChange}
+                      className={`flex-1 bg-emerald-50/50 border-2 p-4 rounded-2xl focus:border-[#009660] transition-all outline-none font-black text-emerald-900 uppercase cursor-pointer ${!formData.categoryId ? 'border-red-200' : 'border-emerald-100'}`}
+                    >
+                      <option value="">— Selecione a categoria —</option>
+                      {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    </select>
+
+                    {formData.categoryId && (
+                      <button
+                        type="button"
+                        onClick={handleDeleteCategory}
+                        className="w-14 h-14 flex items-center justify-center bg-red-50 hover:bg-red-500 text-red-500 hover:text-white rounded-2xl border-2 border-red-100 transition-all active:scale-90 flex-shrink-0"
+                        title="Excluir Categoria"
+                      >
+                        <span className="text-xl">🗑️</span>
+                      </button>
+                    )}
+                  </div>
+                )}
+                {!loadingCategories && categories.length === 0 && !isAddingNewCategory && (
+                  <p className="text-[10px] text-red-400 font-black mt-1 ml-1 uppercase tracking-wide">Nenhuma categoria encontrada. Crie uma nova acima.</p>
+                )}
+              </div>
+
+              {/* Subcategory */}
+              {subcategories.length > 0 && (
+                <div>
+                  <label className="text-[10px] font-black uppercase text-emerald-900/60 mb-1.5 block ml-1">Subcategoria</label>
+                  <select
+                    value={formData.subcategoryId}
+                    onChange={e => setFormData({ ...formData, subcategoryId: e.target.value })}
+                    className="w-full bg-emerald-50/50 border-2 border-emerald-100 p-4 rounded-2xl focus:border-[#009660] transition-all outline-none font-black text-emerald-900 uppercase cursor-pointer"
+                  >
+                    <option value="">— Opcional —</option>
+                    {subcategories.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                  </select>
+                </div>
+              )}
+
+              {/* Visibility */}
+              <div>
+                <label className="text-[10px] font-black uppercase text-emerald-900/60 mb-1.5 block ml-1">Visibilidade</label>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, isPublic: true })}
+                    className={`flex-1 p-3 rounded-2xl font-black text-xs transition-all border-2 cursor-pointer ${formData.isPublic ? 'bg-emerald-500 text-white border-emerald-600 shadow-md' : 'bg-gray-50 text-gray-400 border-gray-100 hover:border-gray-200'}`}
+                  >
+                    PÚBLICO ✅
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, isPublic: false })}
+                    className={`flex-1 p-3 rounded-2xl font-black text-xs transition-all border-2 cursor-pointer ${!formData.isPublic ? 'bg-slate-800 text-white border-slate-900 shadow-md' : 'bg-gray-50 text-gray-400 border-gray-100 hover:border-gray-200'}`}
+                  >
+                    PRIVADO 🔒
+                  </button>
+                </div>
+                <p className={`text-[9px] mt-1.5 ml-1 font-black uppercase tracking-widest ${formData.isPublic ? 'text-emerald-400' : 'text-slate-400'}`}>
+                  {formData.isPublic ? 'Visível para todos na plataforma' : 'Visível apenas para você'}
+                </p>
               </div>
             </section>
 
+            {/* Right Column — Images */}
             <section>
-              <label className="text-[10px] font-black uppercase text-emerald-900/60 mb-1 block ml-2 text-center">Imagens das Peças (1 a 6)</label>
-              <div className="grid grid-cols-3 gap-2 bg-emerald-50/30 p-4 rounded-3xl border-2 border-emerald-100/50">
+              <label className="text-[10px] font-black uppercase text-emerald-900/60 mb-2 block ml-1 text-center">
+                Imagens das Peças * <span className="text-emerald-300">(pontos 1 a 6)</span>
+              </label>
+              <div className="grid grid-cols-3 gap-2 bg-emerald-50/30 p-3 rounded-3xl border-2 border-emerald-100/50">
                 {[...Array(6)].map((_, i) => (
-                  <div key={i} className="aspect-square relative group bg-white rounded-xl border-2 border-dashed border-emerald-100 hover:border-emerald-300 transition-all overflow-hidden flex items-center justify-center shadow-inner cursor-pointer">
-                    <input required type="file" accept="image/*" onChange={e => handleFileChange(i, e.target.files[0])} className="absolute inset-0 opacity-0 cursor-pointer z-10" />
+                  <div
+                    key={i}
+                    className={`aspect-square relative group rounded-xl border-2 border-dashed transition-all overflow-hidden flex items-center justify-center cursor-pointer ${previews[i] ? 'border-emerald-400 bg-emerald-50' : 'border-emerald-100 bg-white hover:border-emerald-300'}`}
+                  >
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={e => handleFileChange(i, e.target.files[0])}
+                      className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                    />
                     {previews[i] ? (
-                      <img src={previews[i]} alt={`Preview ${i+1}`} className="w-full h-full object-cover group-hover:scale-110 transition-transform" />
+                      <img src={previews[i]} alt={`Peça ${i + 1}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
                     ) : (
-                      <span className="text-xl font-black text-emerald-200">{i + 1}</span>
+                      <div className="flex flex-col items-center gap-0.5">
+                        <span className="text-2xl font-black text-emerald-200">{i + 1}</span>
+                        <span className="text-[8px] font-black text-emerald-200 uppercase">PONTO</span>
+                      </div>
+                    )}
+                    {previews[i] && (
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all flex items-center justify-center">
+                        <span className="text-white text-xs font-black opacity-0 group-hover:opacity-100">✏️ Trocar</span>
+                      </div>
                     )}
                   </div>
                 ))}
               </div>
-              <p className="text-[9px] text-center mt-2 font-black text-emerald-900/30 uppercase tracking-widest italic">O valor '0' (zero) será vazio por padrão.</p>
+              <div className="flex justify-center mt-3 gap-1">
+                {symbols.map((s, i) => (
+                  <div key={i} className={`w-2 h-2 rounded-full transition-all ${s ? 'bg-emerald-400' : 'bg-gray-200'}`} />
+                ))}
+              </div>
+              <p className="text-[9px] text-center mt-1.5 font-black text-emerald-900/30 uppercase tracking-widest italic">
+                O ponto '0' (zero) será vazio por padrão
+              </p>
             </section>
           </div>
-        </form>
+        </div>
 
-        <footer className="p-6 sm:p-8 bg-white border-t-2 border-emerald-50 flex gap-4">
-          <button type="button" onClick={onClose} className="flex-1 py-4 px-6 rounded-2xl bg-gray-100 text-gray-500 font-black uppercase tracking-widest text-xs hover:bg-gray-200 transition-all active:scale-95">Sair</button>
-          <button onClick={handleSubmit} disabled={loading} className="flex-[2] py-4 px-6 rounded-2xl bg-[#FFCE00] text-[#009660] font-black uppercase tracking-widest text-sm shadow-[0_6px_0_#d1a900] hover:scale-[1.02] transition-all active:translate-y-1 active:shadow-none disabled:opacity-50 min-w-[200px]">
-             {loading ? 'Salvando...' : 'Criar Tema Agora! 🚀'}
+        {/* Footer */}
+        <footer className="p-4 sm:p-6 bg-white border-t-2 border-emerald-50 flex gap-3 flex-shrink-0 sticky bottom-0 z-[210] shadow-[0_-10px_30px_rgba(0,0,0,0.05)]">
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-1 py-4 rounded-2xl bg-gray-100 text-gray-500 font-black uppercase tracking-widest text-xs hover:bg-gray-200 transition-all active:scale-95 cursor-pointer"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={handleSubmit}
+            disabled={loading}
+            className="flex-[2] py-4 rounded-2xl bg-[#FFCE00] text-[#009660] font-black uppercase tracking-widest text-sm shadow-[0_6px_0_#d1a900] hover:brightness-105 transition-all active:translate-y-1 active:shadow-none disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+          >
+            {loading ? '⏳ Salvando...' : '🚀 Criar Tema!'}
           </button>
         </footer>
       </div>

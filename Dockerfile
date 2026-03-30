@@ -31,14 +31,5 @@ EXPOSE 3001
 
 WORKDIR /app/backend
 
-# Startup: Try migrations (with retry), then always start the server
-# The game works without DB (Redis fallback), so we never block startup on migration failures
-CMD ["sh", "-c", "\
-  echo '🔄 Aguardando banco de dados...' && \
-  for i in $(seq 1 10); do \
-    npx prisma migrate deploy 2>&1 && echo '✅ Migrações aplicadas!' && break || \
-    echo \"⏳ Tentativa $i/10 falhou. Aguardando 5s...\" && sleep 5; \
-  done; \
-  echo '🚀 Iniciando servidor...' && \
-  node server.js \
-"]
+# Startup: Always start the server immediately to avoid Bad Gateway
+CMD ["node", "server.js"]

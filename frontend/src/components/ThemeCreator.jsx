@@ -41,7 +41,7 @@ const ThemeCreator = ({ onThemeCreated, onClose }) => {
       const created = await ThemeService.createCategory(newCatName, currentSymbols);
       setCategories([...categories, created]);
       setFormData({ ...formData, categoryId: created.id, subcategoryId: "" });
-      setSubcategories([]);
+      setSubcategories(created.subs || []);
       setIsAddingNewCategory(false);
       setNewCatName("");
       setError("");

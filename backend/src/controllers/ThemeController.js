@@ -87,15 +87,32 @@ class ThemeController {
     const { name } = req.body;
     const files = req.files;
 
-    if (!name?.trim()) return res.status(400).json({ error: "O nome da categoria é obrigatório." });
+    if (!name?.trim()) return res.status(400).json({ error: "O nome do nível de ensino é obrigatório." });
 
     try {
       const prisma = getPrisma();
-      let category = await prisma.category.findUnique({ where: { name: name.trim() } });
+      let category = await prisma.category.findUnique({ 
+        where: { name: name.trim() },
+        include: { subs: true }
+      });
       
       if (!category) {
+        // Lista padrão de disciplinas sugeridas para novos níveis
+        const defaultSubs = [
+          'Matemática', 'Ciências', 'Língua Portuguesa', 
+          'Geografia', 'História', 'Inglês', 'Artes', 
+          'Educação Física', 'Geral'
+        ];
+
         category = await prisma.category.create({
-          data: { name: name.trim() }
+          data: { 
+            name: name.trim(),
+            isDefault: false,
+            subs: {
+              create: defaultSubs.map(name => ({ name, isDefault: false }))
+            }
+          },
+          include: { subs: true }
         });
       }
 
@@ -117,7 +134,7 @@ class ThemeController {
       res.status(201).json(category);
     } catch (error) {
       console.error('[ThemeController] Error creating category:', error.message);
-      res.status(500).json({ error: "Erro ao salvar categoria no banco." });
+      res.status(500).json({ error: "Erro ao salvar nível no banco." });
     }
   }
 

@@ -301,7 +301,7 @@ export default function GameContainer() {
           <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/felt.png')] pointer-events-none"></div>
           <div className="absolute top-4 sm:top-6 left-4 sm:left-6 flex flex-col items-start gap-2 sm:gap-3 z-[100]">
             {players.map((p, idx) => (
-              <div key={p.id} className={`flex items-center gap-2 sm:gap-3 px-3 sm:px-5 py-2 sm:py-3 rounded-[1.2rem] sm:rounded-[1.5rem] border-b-[3px] sm:border-b-[5px] transition-all duration-500 transform ${currentTurn === p.id ? 'bg-[#FFCE00] border-yellow-700 text-[#009660] scale-105 shadow-[0_8px_25px_rgba(0,0,0,0.2)]' : 'bg-white/90 border-gray-300 text-emerald-900 opacity-80 shadow-md'} ${players.length > 2 ? 'scale-90 sm:scale-100' : ''}`}>
+              <div key={p.id} className={`flex items-center gap-2 sm:gap-3 px-3 sm:px-5 py-2 sm:py-3 rounded-[1.2rem] sm:rounded-[1.5rem] border-b-[3px] sm:border-b-[5px] transition-all duration-500 transform w-[110px] sm:w-[170px] ${currentTurn === p.id ? 'bg-[#FFCE00] border-yellow-700 text-[#009660] scale-105 shadow-[0_8px_25px_rgba(0,0,0,0.2)]' : 'bg-white/90 border-gray-300 text-emerald-900 opacity-80 shadow-md'} ${players.length > 2 ? 'scale-90 sm:scale-100' : ''}`}>
                 <span className="text-base sm:text-2xl">{p.id === myId ? '🔥' : ['👤', '🎒', '🎓', '🎒'][idx % 4]}</span>
                 <div className="flex flex-col leading-none overflow-hidden">
                   <span className="text-[7px] sm:text-[9px] font-black uppercase tracking-widest mb-0.5 opacity-60 truncate max-w-[60px] sm:max-w-[100px]">{p.name || `Competidor ${idx + 1}`}</span>

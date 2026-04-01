@@ -170,12 +170,13 @@ const AuthScreen = ({ onAuthSuccess, onGuestStart }) => {
             <>
               <div>
                 <select
-                  required
-                  className="w-full bg-emerald-50/50 border-2 border-emerald-100 p-4 rounded-xl font-black text-emerald-900 outline-none focus:border-emerald-300 transition-all uppercase appearance-none"
-                  value={formData.schoolId}
+                  required={['PROFESSOR', 'ALUNO'].includes(formData.role)}
+                  disabled={formData.role === 'EXTERNO'}
+                  className="w-full bg-emerald-50/50 border-2 border-emerald-100 p-4 rounded-xl font-black text-emerald-900 outline-none focus:border-emerald-300 transition-all uppercase appearance-none disabled:opacity-50"
+                  value={formData.role === 'EXTERNO' ? '' : formData.schoolId}
                   onChange={e => setFormData({ ...formData, schoolId: e.target.value })}
                 >
-                  <option value="">— SELECIONAR ESCOLA —</option>
+                  <option value="">— SELECIONAR ESCOLA / EXTERNO —</option>
                   {schools.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                 </select>
               </div>

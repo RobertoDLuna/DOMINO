@@ -168,6 +168,16 @@ class AdminController {
     try {
       const prisma = getPrisma();
       
+      const targetUser = await prisma.user.findUnique({ where: { id } });
+      if (!targetUser) {
+        return res.status(404).json({ error: 'Usuário não encontrado.' });
+      }
+
+      // Safeguard: Nobody can delete the Master admin account
+      if (targetUser.email === 'robertocgw@gmail.com') {
+        return res.status(403).json({ error: 'Você não tem permissão para excluir a conta do Master Admin.' });
+      }
+
       // Delete themes of the user first or let cascade delete handle it if configured
       // We will reassign or delete their themes to avoid unlinked themes if not cascaded
       // Actually Prisma doesn't always cascade depending on schema, so let's delete their themes manually 

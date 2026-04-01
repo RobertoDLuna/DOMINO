@@ -14,6 +14,8 @@ const AdminDashboard = ({ onBack }) => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newUser, setNewUser] = useState({ fullName: '', email: '', password: '', role: 'EXTERNO', schoolId: '' });
 
+  const currentUser = AuthService.getCurrentUser();
+
   const loadData = async () => {
     setLoading(true);
     try {
@@ -105,7 +107,13 @@ const AdminDashboard = ({ onBack }) => {
               <input required type="text" placeholder="NOME COMPLETO" className="w-full bg-emerald-50 border-2 border-emerald-100 p-4 rounded-xl font-black uppercase text-xs" value={newUser.fullName} onChange={e => setNewUser({...newUser, fullName: e.target.value})} />
               <input required type="email" placeholder="E-MAIL" className="w-full bg-emerald-50 border-2 border-emerald-100 p-4 rounded-xl font-black uppercase text-xs" value={newUser.email} onChange={e => setNewUser({...newUser, email: e.target.value.toLowerCase()})} />
               <input required type="text" placeholder="SENHA INICIAL" className="w-full bg-emerald-50 border-2 border-emerald-100 p-4 rounded-xl font-black uppercase text-xs" value={newUser.password} onChange={e => setNewUser({...newUser, password: e.target.value})} />
-              <select required className="w-full bg-emerald-50 border-2 border-emerald-100 p-4 rounded-xl font-black uppercase text-xs" value={newUser.schoolId} onChange={e => setNewUser({...newUser, schoolId: e.target.value})}>
+              <select 
+                required={['PROFESSOR', 'ALUNO'].includes(newUser.role)} 
+                className="w-full bg-emerald-50 border-2 border-emerald-100 p-4 rounded-xl font-black uppercase text-xs disabled:opacity-50" 
+                value={newUser.schoolId} 
+                onChange={e => setNewUser({...newUser, schoolId: e.target.value})}
+                disabled={['ADMIN', 'EXTERNO'].includes(newUser.role)}
+              >
                 <option value="">— SELECIONAR ESCOLA / EXTERNO —</option>
                 {schools.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
               </select>
@@ -255,7 +263,7 @@ const AdminDashboard = ({ onBack }) => {
                          >
                            🔑
                          </button>
-                         {u.role !== 'ADMIN' && (
+                         {(currentUser?.email === 'robertocgw@gmail.com' || u.email !== 'robertocgw@gmail.com') && u.id !== currentUser?.id && (
                            <button 
                              onClick={() => handleDeleteUser(u.id, u.fullName)}
                              className="bg-red-50 hover:bg-red-500 text-red-400 hover:text-white p-2 rounded-xl text-xs font-black uppercase transition-colors"

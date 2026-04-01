@@ -15,6 +15,7 @@ router.get('/users', AdminController.getUsers);
 router.post('/users', AdminController.createUser);
 router.put('/users/:id/reset-password', AdminController.resetUserPassword);
 router.delete('/users/:id', AdminController.deleteUser);
+router.post('/import-schools', AdminController.importSchools);
 
 module.exports = router;
 

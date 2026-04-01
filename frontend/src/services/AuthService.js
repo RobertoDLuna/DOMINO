@@ -3,9 +3,19 @@ const API_URL = import.meta.env.VITE_API_URL || '/api';
 class AuthService {
   async getSchools() {
     try {
-      const res = await fetch(`${API_URL}/schools`);
-      return await res.json();
-    } catch {
+      console.log(`[AuthService] Buscando escolas em: ${API_URL}/schools`);
+      const res = await fetch(`${API_URL}/schools`, { cache: 'no-store' });
+      
+      if (!res.ok) {
+        console.error(`[AuthService] Erro na requisição: ${res.status}`);
+        return [];
+      }
+      
+      const data = await res.json();
+      console.log(`[AuthService] ${data.length} escolas encontradas.`);
+      return Array.isArray(data) ? data : [];
+    } catch (err) {
+      console.error('[AuthService] Falha catastrófica ao buscar escolas:', err);
       return [];
     }
   }

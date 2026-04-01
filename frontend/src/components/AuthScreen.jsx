@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import logoCampina from '../assets/logo-campina.png';
 import logoPrefeitura from '../assets/logo-prefeitura.png';
 import AuthService from "../services/AuthService";
@@ -11,14 +11,23 @@ const AuthScreen = ({ onAuthSuccess, onGuestStart }) => {
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
-    password: "",
     schoolId: "",
     role: "EXTERNO"
   });
+  const passwordRef = useRef(null);
 
   useEffect(() => {
+    const fetchSchools = async () => {
+      try {
+        const data = await AuthService.getSchools();
+        setSchools(data || []);
+      } catch (err) {
+        console.error("Erro ao carregar escolas no AuthScreen:", err);
+      }
+    };
+
     if (view === "register") {
-      AuthService.getSchools().then(setSchools);
+      fetchSchools();
     }
   }, [view]);
 
@@ -27,7 +36,8 @@ const AuthScreen = ({ onAuthSuccess, onGuestStart }) => {
     setLoading(true);
     setError("");
     try {
-      const result = await AuthService.register(formData);
+      const payload = { ...formData, password: passwordRef.current?.value || "" };
+      const result = await AuthService.register(payload);
       onAuthSuccess(result.user, result.token);
     } catch (err) {
       setError(err.message);
@@ -41,7 +51,8 @@ const AuthScreen = ({ onAuthSuccess, onGuestStart }) => {
     setLoading(true);
     setError("");
     try {
-      const result = await AuthService.login(formData.email, formData.password);
+      const pwd = passwordRef.current?.value || "";
+      const result = await AuthService.login(formData.email, pwd);
       onAuthSuccess(result.user, result.token);
     } catch (err) {
       setError(err.message);
@@ -160,10 +171,9 @@ const AuthScreen = ({ onAuthSuccess, onGuestStart }) => {
           <input
             required
             type="password"
+            ref={passwordRef}
             placeholder="SENHA"
             className="w-full bg-emerald-50/50 border-2 border-emerald-100 p-4 rounded-xl font-black text-emerald-900 outline-none focus:border-emerald-300 transition-all placeholder:text-emerald-200"
-            value={formData.password}
-            onChange={e => setFormData({ ...formData, password: e.target.value })}
           />
 
           {view === "register" && (

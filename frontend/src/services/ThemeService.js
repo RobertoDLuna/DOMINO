@@ -27,7 +27,9 @@ class ThemeService {
   async createCategory(name, symbols) {
     const formData = new FormData();
     formData.append('name', name);
-    symbols.forEach(file => formData.append('symbols', file));
+    if (Array.isArray(symbols)) {
+      symbols.filter(file => file !== null).forEach(file => formData.append('symbols', file));
+    }
 
     const res = await fetch(`${API_URL}/themes/categories`, {
       method: 'POST',
@@ -88,8 +90,8 @@ class ThemeService {
   async createTheme(themeData) {
     const formData = new FormData();
     Object.keys(themeData).forEach(key => {
-      if (key === 'symbols') {
-        themeData[key].forEach(file => formData.append('symbols', file));
+      if (key === 'symbols' && Array.isArray(themeData[key])) {
+        themeData[key].filter(file => file !== null).forEach(file => formData.append('symbols', file));
       } else {
         formData.append(key, themeData[key]);
       }

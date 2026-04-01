@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import AdminService from '../services/AdminService';
 import AuthService from '../services/AuthService';
 
@@ -12,9 +12,59 @@ const AdminDashboard = ({ onBack }) => {
 
   // Modal Context
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [newUser, setNewUser] = useState({ fullName: '', email: '', password: '', role: 'EXTERNO', schoolId: '' });
+  const [newUser, setNewUser] = useState({ fullName: '', email: '', role: 'EXTERNO', schoolId: '' });
+  const newUserPasswordRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   const currentUser = AuthService.getCurrentUser();
+
+  const handleFileImport = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      try {
+        const text = event.target.result;
+        const lines = text.split('\n');
+        const headers = lines[0].split(/[;,]/).map(h => h.trim().toLowerCase());
+        
+        const schoolsToImport = lines.slice(1).map(line => {
+          const values = line.split(/[;,]/).map(v => v.trim());
+          if (values.length < 1) return null;
+          
+          let schoolObj = {};
+          headers.forEach((header, index) => {
+            if (header.includes('nome') || header.includes('escola')) schoolObj.name = values[index];
+            if (header.includes('inep')) schoolObj.inep = values[index];
+            if (header.includes('endereço') || header.includes('address')) schoolObj.address = values[index];
+            if (header.includes('telefone') || header.includes('phone')) schoolObj.phone = values[index];
+            if (header.includes('email')) schoolObj.email = values[index];
+            if (header.includes('cnpj')) schoolObj.cnpj = values[index];
+            if (header.includes('diretor')) schoolObj.director = values[index];
+          });
+          
+          return schoolObj.name ? schoolObj : null;
+        }).filter(s => s !== null);
+
+        if (schoolsToImport.length === 0) {
+          alert('Nenhuma escola válida encontrada no CSV.');
+          return;
+        }
+
+        setLoading(true);
+        const result = await AdminService.importSchools(schoolsToImport);
+        alert(`✅ ${result.count} escolas importadas/atualizadas com sucesso!`);
+        loadData();
+      } catch (err) {
+        alert('Erro ao processar CSV: ' + err.message);
+      } finally {
+        setLoading(false);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+      }
+    };
+    reader.readAsText(file);
+  };
 
   const loadData = async () => {
     setLoading(true);
@@ -85,10 +135,12 @@ const AdminDashboard = ({ onBack }) => {
   const handleCreateUser = async (e) => {
     e.preventDefault();
     try {
-      await AdminService.createUser(newUser);
+      const payload = { ...newUser, password: newUserPasswordRef.current?.value || '' };
+      await AdminService.createUser(payload);
       alert('✅ Conta criada com sucesso! O novo usuário será forçado a criar sua própria senha no primeiro login.');
       setShowCreateModal(false);
-      setNewUser({ fullName: '', email: '', password: '', role: 'EXTERNO', schoolId: '' });
+      setNewUser({ fullName: '', email: '', role: 'EXTERNO', schoolId: '' });
+      if (newUserPasswordRef.current) newUserPasswordRef.current.value = '';
       loadData();
     } catch (err) {
       alert(err.message);
@@ -106,7 +158,7 @@ const AdminDashboard = ({ onBack }) => {
             <form onSubmit={handleCreateUser} className="space-y-3">
               <input required type="text" placeholder="NOME COMPLETO" className="w-full bg-emerald-50 border-2 border-emerald-100 p-4 rounded-xl font-black uppercase text-xs" value={newUser.fullName} onChange={e => setNewUser({...newUser, fullName: e.target.value})} />
               <input required type="email" placeholder="E-MAIL" className="w-full bg-emerald-50 border-2 border-emerald-100 p-4 rounded-xl font-black uppercase text-xs" value={newUser.email} onChange={e => setNewUser({...newUser, email: e.target.value.toLowerCase()})} />
-              <input required type="text" placeholder="SENHA INICIAL" className="w-full bg-emerald-50 border-2 border-emerald-100 p-4 rounded-xl font-black uppercase text-xs" value={newUser.password} onChange={e => setNewUser({...newUser, password: e.target.value})} />
+              <input required type="password" ref={newUserPasswordRef} placeholder="SENHA INICIAL" className="w-full bg-emerald-50 border-2 border-emerald-100 p-4 rounded-xl font-black uppercase text-xs" />
               <select 
                 required={['PROFESSOR', 'ALUNO'].includes(newUser.role)} 
                 className="w-full bg-emerald-50 border-2 border-emerald-100 p-4 rounded-xl font-black uppercase text-xs disabled:opacity-50" 
@@ -145,48 +197,72 @@ const AdminDashboard = ({ onBack }) => {
           </div>
         </header>
 
-      {/* Estatísticas */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
-        {[
-          { label: 'Usuários', value: stats.users, icon: '👤', color: 'bg-emerald-100/50 text-emerald-700' },
-          { label: 'Escolas', value: stats.schools, icon: '🏫', color: 'bg-blue-100/50 text-blue-700' },
-          { label: 'Temas Ativos', value: stats.themes - stats.pendingThemes, icon: '🎮', color: 'bg-purple-100/50 text-purple-700' },
-          { label: 'Pendentes', value: stats.pendingThemes, icon: '⏳', color: 'bg-yellow-100/50 text-yellow-700' }
-        ].map((stat, i) => (
-          <div key={i} className={`p-6 rounded-3xl ${stat.color} border-2 border-white/50 shadow-sm flex flex-col items-center justify-center text-center animate-in zoom-in-95 duration-500 delay-${i*100}`}>
-            <span className="text-4xl sm:text-5xl mb-2">{stat.icon}</span>
-            <span className="text-3xl font-black">{stat.value}</span>
-            <span className="text-[10px] font-black uppercase tracking-widest opacity-60 mt-1">{stat.label}</span>
+        {/* Estatísticas */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8 shrink-0">
+          {[
+            { label: 'Usuários', value: stats.users, icon: '👤', color: 'bg-emerald-100/50 text-emerald-700' },
+            { label: 'Escolas', value: stats.schools, icon: '🏫', color: 'bg-blue-100/50 text-blue-700' },
+            { label: 'Temas Ativos', value: stats.themes - stats.pendingThemes, icon: '🎮', color: 'bg-purple-100/50 text-purple-700' },
+            { label: 'Pendentes', value: stats.pendingThemes, icon: '⏳', color: 'bg-yellow-100/50 text-yellow-700' }
+          ].map((stat, i) => (
+            <div key={i} className={`p-6 rounded-3xl ${stat.color} border-2 border-white/50 shadow-sm flex flex-col items-center justify-center text-center animate-in zoom-in-95 duration-500 delay-${i*100}`}>
+              <span className="text-4xl sm:text-5xl mb-2">{stat.icon}</span>
+              <span className="text-3xl font-black">{stat.value}</span>
+              <span className="text-[10px] font-black uppercase tracking-widest opacity-60 mt-1">{stat.label}</span>
+            </div>
+          ))}
+        </div>
+        
+        {/* Importador de Escolas em destaque */}
+        <div className="mb-6 bg-blue-50 border-2 border-blue-100 p-6 rounded-[2rem] flex items-center justify-between animate-in slide-in-from-top-4 duration-700 shrink-0">
+          <div className="flex items-center gap-4">
+            <div className="bg-white p-3 rounded-2xl shadow-sm text-2xl">🏫</div>
+            <div>
+              <h3 className="text-sm font-black text-blue-900 uppercase italic">Base de Dados de Escolas</h3>
+              <p className="text-[10px] font-bold text-blue-700/60 uppercase tracking-widest">Importe o arquivo CSV para atualizar a lista do sistema</p>
+            </div>
           </div>
-        ))}
-      </div>
-
-      <div className="flex gap-4 mb-6 sticky top-0 bg-[#F0FDF4] z-20 py-2 items-center justify-between">
-        <div className="flex gap-4">
+          <input 
+            type="file" 
+            ref={fileInputRef} 
+            onChange={handleFileImport} 
+            accept=".csv" 
+            className="hidden" 
+          />
           <button 
-            onClick={() => setActiveTab('pending')}
-            className={`px-6 py-3 rounded-xl font-black text-[11px] uppercase tracking-widest transition-all ${activeTab === 'pending' ? 'bg-white shadow-md text-emerald-900' : 'text-emerald-900/40 hover:bg-white/50'}`}
+            onClick={() => fileInputRef.current?.click()}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-[0_4px_0_#1e3a8a] active:translate-y-1 active:shadow-none transition-all flex items-center gap-2"
           >
-            Aprovações ({stats.pendingThemes})
-          </button>
-          <button 
-            onClick={() => setActiveTab('users')}
-            className={`px-6 py-3 rounded-xl font-black text-[11px] uppercase tracking-widest transition-all ${activeTab === 'users' ? 'bg-[#FFCE00] shadow-[0_4px_0_#d1a900] text-emerald-900' : 'text-emerald-900/40 hover:bg-white/50'}`}
-          >
-            Usuários Registrados
+            UPLOAD CSV 🚀
           </button>
         </div>
-        {activeTab === 'users' && (
-          <button 
-            onClick={() => setShowCreateModal(true)}
-            className="bg-[#009660] hover:bg-[#00a86b] text-white px-5 py-3 rounded-xl font-black text-[11px] uppercase tracking-widest shadow-[0_4px_0_#006d46] hover:translate-y-1 hover:shadow-none transition-all flex items-center gap-2"
-          >
-            ✍️ Criar Conta
-          </button>
-        )}
-      </div>
 
-      <div className="bg-white flex-1 rounded-[2.5rem] shadow-xl border-[10px] border-emerald-900/5 p-6 overflow-hidden flex flex-col">
+        <div className="flex gap-4 mb-6 sticky top-0 bg-[#F0FDF4] z-20 py-2 items-center justify-between shrink-0">
+          <div className="flex gap-4">
+            <button 
+              onClick={() => setActiveTab('pending')}
+              className={`px-6 py-3 rounded-xl font-black text-[11px] uppercase tracking-widest transition-all ${activeTab === 'pending' ? 'bg-white shadow-md text-emerald-900' : 'text-emerald-900/40 hover:bg-white/50'}`}
+            >
+              Aprovações ({stats.pendingThemes})
+            </button>
+            <button 
+              onClick={() => setActiveTab('users')}
+              className={`px-6 py-3 rounded-xl font-black text-[11px] uppercase tracking-widest transition-all ${activeTab === 'users' ? 'bg-[#FFCE00] shadow-[0_4px_0_#d1a900] text-emerald-900' : 'text-emerald-900/40 hover:bg-white/50'}`}
+            >
+              Usuários Registrados
+            </button>
+          </div>
+          {activeTab === 'users' && (
+            <button 
+              onClick={() => setShowCreateModal(true)}
+              className="bg-[#009660] hover:bg-[#00a86b] text-white px-5 py-3 rounded-xl font-black text-[11px] uppercase tracking-widest shadow-[0_4px_0_#006d46] hover:translate-y-1 hover:shadow-none transition-all flex items-center gap-2"
+            >
+              ✍️ Criar Conta
+            </button>
+          )}
+        </div>
+
+        <div className="bg-white flex-1 rounded-[2.5rem] shadow-xl border-[10px] border-emerald-900/5 p-6 overflow-hidden flex flex-col">
         {loading ? (
           <div className="flex-1 flex items-center justify-center text-emerald-600 font-black animate-pulse">
             CARREGANDO DADOS...
@@ -282,7 +358,7 @@ const AdminDashboard = ({ onBack }) => {
         )}
       </div>
     </div>
-    </div>
+  </div>
   );
 };
 

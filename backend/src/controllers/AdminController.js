@@ -196,7 +196,42 @@ class AdminController {
       res.status(500).json({ error: 'Erro ao excluir o usuário.' });
     }
   }
-}
 
+  async importSchools(req, res) {
+    try {
+      const { schools } = req.body;
+      if (!Array.isArray(schools)) {
+        return res.status(400).json({ error: 'Dados de escolas inválidos.' });
+      }
+
+      const prisma = getPrisma();
+      
+      // Upsert schools (create if name doesn't exist)
+      let count = 0;
+      for (const school of schools) {
+        if (!school.name) continue;
+        await prisma.school.upsert({
+          where: { name: school.name },
+          update: {},
+          create: {
+            name: school.name,
+            inep: school.inep || null,
+            address: school.address || null,
+            phone: school.phone || null,
+            email: school.email || null,
+            cnpj: school.cnpj || null,
+            director: school.director || null
+          }
+        });
+        count++;
+      }
+
+      res.json({ message: `${count} escolas importadas com sucesso!`, count });
+    } catch (error) {
+      console.error('[AdminController] Error importSchools:', error);
+      res.status(500).json({ error: 'Erro ao importar escolas.' });
+    }
+  }
+}
 
 module.exports = new AdminController();

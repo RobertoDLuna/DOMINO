@@ -1,17 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import AuthService from '../services/AuthService';
 import logoCampina from '../assets/logo-campina.png';
 import logoPrefeitura from '../assets/logo-prefeitura.png';
 
 const ChangePasswordScreen = ({ onPasswordChanged }) => {
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const newPasswordRef = useRef(null);
+  const confirmPasswordRef = useRef(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+
+    const newPassword = newPasswordRef.current?.value || '';
+    const confirmPassword = confirmPasswordRef.current?.value || '';
 
     if (newPassword !== confirmPassword) {
       return setError('As senhas não coincidem.');
@@ -66,19 +69,17 @@ const ChangePasswordScreen = ({ onPasswordChanged }) => {
           <input
             required
             type="password"
+            ref={newPasswordRef}
             placeholder="NOVA SENHA"
             className="w-full bg-emerald-50/50 border-2 border-emerald-100 p-4 rounded-xl font-black text-emerald-900 outline-none focus:border-[#FFCE00] transition-all placeholder:text-emerald-200"
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
           />
 
           <input
             required
             type="password"
+            ref={confirmPasswordRef}
             placeholder="CONFIRMAR NOVA SENHA"
             className="w-full bg-emerald-50/50 border-2 border-emerald-100 p-4 rounded-xl font-black text-emerald-900 outline-none focus:border-[#FFCE00] transition-all placeholder:text-emerald-200"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
           />
 
           <button

@@ -83,6 +83,16 @@ class AdminService {
     if (!res.ok) throw new Error(data.error || 'Erro ao excluir o usuário.');
     return data;
   }
+  async importSchools(schools) {
+    const res = await fetch(`${API_URL}/admin/import-schools`, {
+      method: 'POST',
+      headers: await this.getHeaders(),
+      body: JSON.stringify({ schools })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Erro ao importar escolas.');
+    return data;
+  }
 }
 
 export default new AdminService();

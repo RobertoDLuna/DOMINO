@@ -16,8 +16,7 @@ const METRICS = {
  * Calculates the optimal number of pieces per row based on container width.
  * This is the core of Option A - adaptive layout.
  */
-function calcMaxPerRow(containerWidth) {
-  const { H_W, GAP, MARGIN } = METRICS;
+function calcMaxPerRow(containerWidth, H_W, GAP, MARGIN) {
   const pieceSlot = H_W + GAP;
   // Fit as many horizontal pieces as possible with comfortable margins
   const maxFit = Math.floor((containerWidth - MARGIN * 2) / pieceSlot);
@@ -31,6 +30,27 @@ function calcMaxPerRow(containerWidth) {
 export default function SnakeBoard({ board, isMyTurn, onDrop, draggingPiece }) {
   const containerRef = React.useRef(null);
   const [containerSize, setContainerSize] = useState({ width: 800, height: 600 });
+
+  // Detect if current theme uses images
+  const isImageTheme = board.length > 0 && typeof board[0].ladoA === 'string' && (board[0].ladoA.startsWith('/') || board[0].ladoA.startsWith('http'));
+
+  const metrics = isImageTheme ? {
+    H_W: 180, // Larger for images
+    H_H: 100,
+    V_W: 88,
+    V_H: 192,
+    GAP: 8,
+    MARGIN: 20
+  } : {
+    H_W: 120,
+    H_H: 68,
+    V_W: 60,
+    V_H: 128, 
+    GAP: 4,   
+    MARGIN: 20 
+  };
+
+  const { H_W, H_H, V_W, V_H, GAP, MARGIN } = metrics;
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -46,10 +66,8 @@ export default function SnakeBoard({ board, isMyTurn, onDrop, draggingPiece }) {
     return () => observer.disconnect();
   }, []);
 
-  const { H_W, H_H, V_W, V_H, GAP, MARGIN } = METRICS;
-
-  // Dynamically calculate maxPerRow based on actual container width (Option A!)
-  const maxPerRow = calcMaxPerRow(containerSize.width);
+  // Dynamically calculate maxPerRow based on actual container width
+  const maxPerRow = calcMaxPerRow(containerSize.width, H_W, GAP, MARGIN);
 
   // ----------------------------------------------------------------
   // 1. DETERMINISTIC ITEM LIST
@@ -105,7 +123,7 @@ export default function SnakeBoard({ board, isMyTurn, onDrop, draggingPiece }) {
       posX = cursorX;
       posY = rowAxisY - h / 2;
       
-      positions.push({ ...item, posX, posY, horizontal, reverse: false, isActive: isMyTurn });
+      positions.push({ ...item, posX, posY, w, h, horizontal, reverse: false, isActive: isMyTurn });
       
       col++;
       cursorX += w + GAP;
@@ -129,7 +147,7 @@ export default function SnakeBoard({ board, isMyTurn, onDrop, draggingPiece }) {
       posX = cursorX - w;
       posY = rowAxisY - h / 2;
       
-      positions.push({ ...item, posX, posY, horizontal, reverse: true, isActive: isMyTurn });
+      positions.push({ ...item, posX, posY, w, h, horizontal, reverse: true, isActive: isMyTurn });
       
       col++;
       cursorX -= (w + GAP);
@@ -153,7 +171,7 @@ export default function SnakeBoard({ board, isMyTurn, onDrop, draggingPiece }) {
       posX = colAxisX - w / 2;
       posY = cursorY;
       
-      positions.push({ ...item, posX, posY, horizontal, reverse: false, isActive: isMyTurn });
+      positions.push({ ...item, posX, posY, w, h, horizontal, reverse: false, isActive: isMyTurn });
       
       downCount++;
       cursorY += h + GAP;
@@ -279,6 +297,8 @@ export default function SnakeBoard({ board, isMyTurn, onDrop, draggingPiece }) {
                 matchIcon={matchIcon}
                 horizontal={pos.horizontal || board.length === 0}
                 active={pos.isActive}
+                w={pos.w}
+                h={pos.h}
               />
             </div>
           );
@@ -290,6 +310,8 @@ export default function SnakeBoard({ board, isMyTurn, onDrop, draggingPiece }) {
               piece={pos} 
               horizontal={pos.horizontal} 
               reverse={pos.reverse}
+              width={pos.w}
+              height={pos.h}
               className="hover:z-50 shadow-2xl"
             />
           </div>

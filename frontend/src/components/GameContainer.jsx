@@ -364,38 +364,51 @@ export default function GameContainer() {
           <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-300">
             <div className="bg-white w-full max-w-2xl lg:max-w-4xl max-h-[92vh] rounded-[3rem] shadow-[0_40px_100px_rgba(0,0,0,0.5)] flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
               <h2 className="text-2xl font-black uppercase text-[#009660] text-center p-6">Onde colocar?</h2>
-              <div className="flex gap-4 w-full p-6">
-                <button onClick={() => handleSideChoice('left')} className="flex-1 bg-[#009660] hover:bg-[#00a86b] text-white font-black py-5 rounded-2xl shadow-[0_6px_0_#006d46] text-xl transition-all active:translate-y-1 active:shadow-none flex flex-col items-center gap-1 group">
-                  <span className="text-3xl group-hover:scale-125 transition-transform duration-300">⬅️</span>
-                  <span>AQUI</span>
-                  <div className="w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center mt-1">
-                    {typeof sideModal.leftEnd === 'string' && (sideModal.leftEnd.startsWith('http') || sideModal.leftEnd.startsWith('memes/') || sideModal.leftEnd.includes('.')) ? (
-                      <img 
-                        src={sideModal.leftEnd.startsWith('http') ? sideModal.leftEnd : `/${sideModal.leftEnd}`} 
-                        alt="Esquerda" 
-                        className="max-w-full max-h-full object-contain drop-shadow-md rounded-xl"
-                      />
-                    ) : (
-                      <span className="text-4xl drop-shadow-sm">{sideModal.leftEnd}</span>
-                    )}
+              
+              {(() => {
+                const API_BASE = import.meta.env.VITE_API_URL?.replace('/api', '') || '';
+                const renderSideLabel = (symbol) => {
+                  if (!symbol) return null;
+                  
+                  const isImagePath = typeof symbol === 'string' && (symbol.startsWith('/') || symbol.startsWith('http'));
+
+                  if (isImagePath) {
+                    const src = symbol.startsWith('http') ? symbol : `${API_BASE}${symbol}`;
+                    return <img src={src} alt="Symbol" className="max-w-full max-h-full object-contain drop-shadow-md rounded-xl" />;
+                  }
+                  return <span className="text-4xl drop-shadow-sm">{symbol}</span>;
+                };
+
+                return (
+                  <div className="flex gap-4 w-full p-6">
+                    <button onClick={() => handleSideChoice('left')} className="flex-1 bg-[#009660] hover:bg-[#00a86b] text-white font-black py-5 rounded-2xl shadow-[0_6px_0_#006d46] text-xl transition-all active:translate-y-1 active:shadow-none flex flex-col items-center gap-1 group">
+                      <span className="text-3xl group-hover:scale-125 transition-transform duration-300">⬅️</span>
+                      <span>AQUI</span>
+                      {(() => {
+                        const isImage = typeof sideModal.leftEnd === 'string' && (sideModal.leftEnd.startsWith('/') || sideModal.leftEnd.startsWith('http'));
+                        return (
+                          <div className={isImage ? "w-24 h-24 sm:w-40 sm:h-40 flex items-center justify-center mt-1" : "w-16 h-16 sm:w-24 sm:h-24 flex items-center justify-center mt-1"}>
+                            {renderSideLabel(sideModal.leftEnd)}
+                          </div>
+                        );
+                      })()}
+                    </button>
+                    <button onClick={() => handleSideChoice('right')} className="flex-1 bg-[#FFCE00] hover:bg-[#ffe050] text-[#009660] font-black py-5 rounded-2xl shadow-[0_6px_0_#d1a900] text-xl transition-all active:translate-y-1 active:shadow-none flex flex-col items-center gap-1 group">
+                      <span className="text-3xl group-hover:scale-125 transition-transform duration-300">➡️</span>
+                      <span>ALÍ</span>
+                      {(() => {
+                        const isImage = typeof sideModal.rightEnd === 'string' && (sideModal.rightEnd.startsWith('/') || sideModal.rightEnd.startsWith('http'));
+                        return (
+                          <div className={isImage ? "w-24 h-24 sm:w-40 sm:h-40 flex items-center justify-center mt-1" : "w-16 h-16 sm:w-24 sm:h-24 flex items-center justify-center mt-1"}>
+                            {renderSideLabel(sideModal.rightEnd)}
+                          </div>
+                        );
+                      })()}
+                    </button>
                   </div>
-                </button>
-                <button onClick={() => handleSideChoice('right')} className="flex-1 bg-[#FFCE00] hover:bg-[#ffe050] text-[#009660] font-black py-5 rounded-2xl shadow-[0_6px_0_#d1a900] text-xl transition-all active:translate-y-1 active:shadow-none flex flex-col items-center gap-1 group">
-                  <span className="text-3xl group-hover:scale-125 transition-transform duration-300">➡️</span>
-                  <span>ALÍ</span>
-                  <div className="w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center mt-1">
-                    {typeof sideModal.rightEnd === 'string' && (sideModal.rightEnd.startsWith('http') || sideModal.rightEnd.startsWith('memes/') || sideModal.rightEnd.includes('.')) ? (
-                      <img 
-                        src={sideModal.rightEnd.startsWith('http') ? sideModal.rightEnd : `/${sideModal.rightEnd}`} 
-                        alt="Direita" 
-                        className="max-w-full max-h-full object-contain drop-shadow-md rounded-xl"
-                      />
-                    ) : (
-                      <span className="text-4xl drop-shadow-sm">{sideModal.rightEnd}</span>
-                    )}
-                  </div>
-                </button>
-              </div>
+                );
+              })()}
+              
               <button onClick={() => { setSideModal(null); setSelectedPiece(null); }} className="text-gray-400 text-xs uppercase font-bold tracking-widest hover:text-red-400 transition-colors pb-6">Cancelar</button>
             </div>
           </div>

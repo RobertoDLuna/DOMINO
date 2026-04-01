@@ -85,17 +85,36 @@ class ThemeController {
 
   async createCategory(req, res) {
     const { name } = req.body;
+    const files = req.files;
+
     if (!name?.trim()) return res.status(400).json({ error: "O nome da categoria é obrigatório." });
 
     try {
       const prisma = getPrisma();
-      const existing = await prisma.category.findUnique({ where: { name: name.trim() } });
-      if (existing) return res.json(existing); // Return existing instead of erroring if name matches
+      let category = await prisma.category.findUnique({ where: { name: name.trim() } });
+      
+      if (!category) {
+        category = await prisma.category.create({
+          data: { name: name.trim() }
+        });
+      }
 
-      const created = await prisma.category.create({
-        data: { name: name.trim() }
-      });
-      res.status(201).json(created);
+      // Se enviou imagens, cria um tema padrão para essa categoria automaticamente
+      if (files && files.length === 6) {
+        const symbolsUrls = files.map(file => `/uploads/themes/${file.filename}`);
+        
+        await prisma.theme.create({
+          data: {
+            name: `Padrão - ${category.name}`,
+            categoryId: category.id,
+            symbols: symbolsUrls,
+            isPublic: true,
+            color: '#009660'
+          }
+        });
+      }
+
+      res.status(201).json(category);
     } catch (error) {
       console.error('[ThemeController] Error creating category:', error.message);
       res.status(500).json({ error: "Erro ao salvar categoria no banco." });

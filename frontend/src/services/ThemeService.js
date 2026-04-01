@@ -47,11 +47,16 @@ class ThemeService {
     return await res.json();
   }
 
-  async createCategory(name) {
+  async createCategory(name, symbols = null) {
+    const formData = new FormData();
+    formData.append('name', name);
+    if (symbols && symbols.length === 6) {
+      symbols.forEach(file => formData.append('symbols', file));
+    }
+
     const res = await fetch(`${API_URL}/themes/categories`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name })
+      body: formData
     });
     
     if (!res.ok) {

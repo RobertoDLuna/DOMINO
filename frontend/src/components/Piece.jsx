@@ -9,10 +9,16 @@ export default function Piece({
   horizontal = false, 
   reverse = false, 
   className = "", 
+  width,
+  height,
   style = {} 
 }) {
   const iconA = reverse ? piece.ladoB : piece.ladoA;
   const iconB = reverse ? piece.ladoA : piece.ladoB;
+  
+  // Adjusted width/height for orientation-specific content
+  const actualW = width || (horizontal ? 120 : 60);
+  const actualH = height || (horizontal ? 68 : 128);
 
   // Empty string = same origin (works in dev via Vite proxy AND in production)
   const API_BASE = import.meta.env.VITE_API_URL?.replace('/api', '') || '';
@@ -35,9 +41,7 @@ export default function Piece({
   // Design tokens para maior clareza e manutenção
   const baseStyles = `relative flex transition-all items-center justify-center overflow-hidden flex-shrink-0 rounded-xl border-b-8 bg-gradient-to-br from-white to-gray-50 shadow-[0_8px_20px_rgba(0,0,0,0.15)]`;
   
-  const orientationStyles = horizontal 
-    ? 'flex-row w-[120px] h-[60px]' 
-    : 'flex-col w-[60px] h-[120px]';
+  const orientationStyles = horizontal ? 'flex-row' : 'flex-col';
 
   const selectedStyles = selected
     ? 'border-[#FFCE00] scale-110 -translate-y-2 ring-4 ring-[#FFCE00] ring-offset-2 shadow-[0_20px_40px_rgba(255,206,0,0.4)] z-50'
@@ -52,7 +56,7 @@ export default function Piece({
       draggable={draggable}
       onDragStart={onDragStart}
       onClick={onClick}
-      style={style}
+      style={{ ...style, width: actualW, height: actualH }}
       className={`${baseStyles} ${orientationStyles} ${selectedStyles} ${interactivityStyles} ${className}`}
     >
       {/* Lado A */}

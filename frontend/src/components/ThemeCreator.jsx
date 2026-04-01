@@ -30,15 +30,24 @@ const ThemeCreator = ({ onThemeCreated, onClose }) => {
 
   const handleCreateCategory = async () => {
     if (!newCatName.trim()) return;
+    
+    // Check if user already put some images (optional but recommended for populating)
+    const currentSymbols = symbols.some(s => s) ? symbols : null;
+
     try {
       setLoading(true);
-      const created = await ThemeService.createCategory(newCatName);
+      const created = await ThemeService.createCategory(newCatName, currentSymbols);
       setCategories([...categories, created]);
       setFormData({ ...formData, categoryId: created.id, subcategoryId: "" });
       setSubcategories([]);
       setIsAddingNewCategory(false);
       setNewCatName("");
       setError("");
+      
+      // If symbols were sent, refresh themes listing so they can play it right away
+      if (currentSymbols) {
+        window.dispatchEvent(new CustomEvent('refreshThemes'));
+      }
     } catch (err) {
       setError(err.message);
     } finally {

@@ -9,6 +9,8 @@ services:
       - REDIS_URL=redis://redis:6379
       - DATABASE_URL=postgresql://domino:SeducDomin0@postgres:5432/domino_db?schema=public
       - NODE_ENV=production
+    volumes:
+      - domino_uploads:/app/backend/uploads
     deploy:
       replicas: 1
       restart_policy:
@@ -73,4 +75,6 @@ networks:
 
 volumes:
   domino_pgdata:
+    driver: local
+  domino_uploads:
     driver: local

@@ -12,6 +12,7 @@ router.get('/pending', AdminController.getPendingApprovals);
 router.put('/approve-theme/:id', AdminController.approveTheme);
 router.delete('/reject-theme/:id', AdminController.rejectTheme);
 router.get('/users', AdminController.getUsers);
+router.post('/users', AdminController.createUser);
 router.put('/users/:id/reset-password', AdminController.resetUserPassword);
 router.delete('/users/:id', AdminController.deleteUser);
 

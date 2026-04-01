@@ -1,24 +1,32 @@
 import React, { useState, useEffect } from 'react';
 import AdminService from '../services/AdminService';
+import AuthService from '../services/AuthService';
 
 const AdminDashboard = ({ onBack }) => {
   const [activeTab, setActiveTab] = useState('pending'); // pending, users
   const [stats, setStats] = useState({ users: 0, schools: 0, themes: 0, pendingThemes: 0 });
   const [pendingThemes, setPendingThemes] = useState([]);
   const [users, setUsers] = useState([]);
+  const [schools, setSchools] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // Modal Context
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [newUser, setNewUser] = useState({ fullName: '', email: '', password: '', role: 'EXTERNO', schoolId: '' });
 
   const loadData = async () => {
     setLoading(true);
     try {
-      const [statsData, pendingData, usersData] = await Promise.all([
+      const [statsData, pendingData, usersData, schoolsData] = await Promise.all([
         AdminService.getStats(),
         AdminService.getPendingApprovals(),
-        AdminService.getUsers()
+        AdminService.getUsers(),
+        AuthService.getSchools()
       ]);
       setStats(statsData);
       setPendingThemes(pendingData);
       setUsers(usersData);
+      setSchools(schoolsData);
     } catch (err) {
       console.error(err);
     } finally {
@@ -72,8 +80,46 @@ const AdminDashboard = ({ onBack }) => {
     }
   };
 
+  const handleCreateUser = async (e) => {
+    e.preventDefault();
+    try {
+      await AdminService.createUser(newUser);
+      alert('✅ Conta criada com sucesso! O novo usuário será forçado a criar sua própria senha no primeiro login.');
+      setShowCreateModal(false);
+      setNewUser({ fullName: '', email: '', password: '', role: 'EXTERNO', schoolId: '' });
+      loadData();
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-[200] flex justify-end bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+      {/* OVERLAY / MODAL - Create User Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 z-[300] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white p-8 rounded-[3.5rem] w-full max-w-md shadow-2xl relative animate-in zoom-in-95 border-b-[8px] border-emerald-900/10">
+            <button onClick={() => setShowCreateModal(false)} className="absolute top-6 right-6 p-2 bg-gray-100 hover:bg-gray-200 rounded-full font-black text-xs">X</button>
+            <h2 className="text-2xl font-black text-emerald-900 uppercase italic mb-6">Criar Novo Usuário</h2>
+            <form onSubmit={handleCreateUser} className="space-y-3">
+              <input required type="text" placeholder="NOME COMPLETO" className="w-full bg-emerald-50 border-2 border-emerald-100 p-4 rounded-xl font-black uppercase text-xs" value={newUser.fullName} onChange={e => setNewUser({...newUser, fullName: e.target.value})} />
+              <input required type="email" placeholder="E-MAIL" className="w-full bg-emerald-50 border-2 border-emerald-100 p-4 rounded-xl font-black uppercase text-xs" value={newUser.email} onChange={e => setNewUser({...newUser, email: e.target.value.toLowerCase()})} />
+              <input required type="text" placeholder="SENHA INICIAL" className="w-full bg-emerald-50 border-2 border-emerald-100 p-4 rounded-xl font-black uppercase text-xs" value={newUser.password} onChange={e => setNewUser({...newUser, password: e.target.value})} />
+              <select required className="w-full bg-emerald-50 border-2 border-emerald-100 p-4 rounded-xl font-black uppercase text-xs" value={newUser.schoolId} onChange={e => setNewUser({...newUser, schoolId: e.target.value})}>
+                <option value="">— SELECIONAR ESCOLA / EXTERNO —</option>
+                {schools.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+              </select>
+              <div className="grid grid-cols-4 gap-2 pt-2">
+                {['ADMIN', 'PROFESSOR', 'ALUNO', 'EXTERNO'].map(role => (
+                  <button key={role} type="button" onClick={() => setNewUser({...newUser, role})} className={`py-2 rounded-xl text-[9px] font-black transition-all ${newUser.role === role ? 'bg-[#009660] text-white' : 'bg-gray-100 text-gray-400'}`}>{role}</button>
+                ))}
+              </div>
+              <button type="submit" className="w-full bg-[#FFCE00] text-emerald-900 py-4 mt-4 rounded-2xl font-black uppercase tracking-widest shadow-[0_6px_0_#d1a900] hover:translate-y-1 hover:shadow-[0_3px_0_#d1a900] active:translate-y-2 active:shadow-none transition-all">CRIAR CONTA ✨</button>
+            </form>
+          </div>
+        </div>
+      )}
+
       <div className="w-full max-w-5xl h-full bg-[#F0FDF4] shadow-[0_0_50px_rgba(0,0,0,0.5)] flex flex-col p-4 sm:p-8 animate-in slide-in-from-right-10 duration-500 overflow-hidden border-l-8 border-[#009660]">
         <header className="flex justify-between items-center mb-8 relative z-10 shrink-0">
           <div className="flex items-center gap-4">
@@ -107,19 +153,29 @@ const AdminDashboard = ({ onBack }) => {
         ))}
       </div>
 
-      <div className="flex gap-4 mb-6">
-        <button 
-          onClick={() => setActiveTab('pending')}
-          className={`flex-1 sm:flex-none px-8 py-4 rounded-2xl font-black text-xs sm:text-sm uppercase tracking-widest transition-all ${activeTab === 'pending' ? 'bg-[#FFCE00] text-[#009660] shadow-[0_4px_0_#d1a900]' : 'bg-white text-emerald-900/50 hover:bg-emerald-50'}`}
-        >
-          Aprovações ({stats.pendingThemes})
-        </button>
-        <button 
-          onClick={() => setActiveTab('users')}
-          className={`flex-1 sm:flex-none px-8 py-4 rounded-2xl font-black text-xs sm:text-sm uppercase tracking-widest transition-all ${activeTab === 'users' ? 'bg-[#FFCE00] text-[#009660] shadow-[0_4px_0_#d1a900]' : 'bg-white text-emerald-900/50 hover:bg-emerald-50'}`}
-        >
-          Usuários Registrados
-        </button>
+      <div className="flex gap-4 mb-6 sticky top-0 bg-[#F0FDF4] z-20 py-2 items-center justify-between">
+        <div className="flex gap-4">
+          <button 
+            onClick={() => setActiveTab('pending')}
+            className={`px-6 py-3 rounded-xl font-black text-[11px] uppercase tracking-widest transition-all ${activeTab === 'pending' ? 'bg-white shadow-md text-emerald-900' : 'text-emerald-900/40 hover:bg-white/50'}`}
+          >
+            Aprovações ({stats.pendingThemes})
+          </button>
+          <button 
+            onClick={() => setActiveTab('users')}
+            className={`px-6 py-3 rounded-xl font-black text-[11px] uppercase tracking-widest transition-all ${activeTab === 'users' ? 'bg-[#FFCE00] shadow-[0_4px_0_#d1a900] text-emerald-900' : 'text-emerald-900/40 hover:bg-white/50'}`}
+          >
+            Usuários Registrados
+          </button>
+        </div>
+        {activeTab === 'users' && (
+          <button 
+            onClick={() => setShowCreateModal(true)}
+            className="bg-[#009660] hover:bg-[#00a86b] text-white px-5 py-3 rounded-xl font-black text-[11px] uppercase tracking-widest shadow-[0_4px_0_#006d46] hover:translate-y-1 hover:shadow-none transition-all flex items-center gap-2"
+          >
+            ✍️ Criar Conta
+          </button>
+        )}
       </div>
 
       <div className="bg-white flex-1 rounded-[2.5rem] shadow-xl border-[10px] border-emerald-900/5 p-6 overflow-hidden flex flex-col">

@@ -52,6 +52,17 @@ class AdminService {
     return await res.json();
   }
 
+  async createUser(data) {
+    const res = await fetch(`${API_URL}/admin/users`, {
+      method: 'POST',
+      headers: await this.getHeaders(),
+      body: JSON.stringify(data)
+    });
+    const result = await res.json();
+    if (!res.ok) throw new Error(result.error || 'Erro ao criar o usuário.');
+    return result;
+  }
+
   async resetUserPassword(id, tempPassword) {
     const res = await fetch(`${API_URL}/admin/users/${id}/reset-password`, {
       method: 'PUT',

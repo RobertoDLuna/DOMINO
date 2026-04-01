@@ -145,24 +145,59 @@ class ThemeController {
     const { id } = req.params;
     try {
       const prisma = getPrisma();
+      const category = await prisma.category.findUnique({ where: { id: parseInt(id) } });
       
-      // Check if category has themes
-      const category = await prisma.category.findUnique({
-        where: { id: parseInt(id) },
-        include: { _count: { select: { themes: true } } }
-      });
-
-      if (!category) return res.status(404).json({ error: "Categoria não encontrada." });
-      
-      if (category._count.themes > 0) {
-        return res.status(400).json({ error: "Não é possível excluir esta categoria pois ela possui temas vinculados." });
+      if (!category) return res.status(404).json({ error: "Nível não encontrado." });
+      if (category.isDefault) {
+        return res.status(403).json({ error: "Níveis de ensino padrão não podem ser excluídos." });
       }
 
       await prisma.category.delete({ where: { id: parseInt(id) } });
-      res.json({ message: "Categoria removida com sucesso." });
+      res.json({ message: "Nível excluído com sucesso." });
     } catch (error) {
       console.error('[ThemeController] Error deleting category:', error.message);
-      res.status(500).json({ error: "Erro ao excluir categoria." });
+      res.status(500).json({ error: "Erro ao excluir nível no banco." });
+    }
+  }
+
+  async createSubCategory(req, res) {
+    const { name, categoryId } = req.body;
+    if (!name?.trim() || !categoryId) {
+      return res.status(400).json({ error: "Nome e nível de ensino são obrigatórios." });
+    }
+
+    try {
+      const prisma = getPrisma();
+      const sub = await prisma.subCategory.create({
+        data: {
+          name: name.trim(),
+          categoryId: parseInt(categoryId),
+          isDefault: false
+        }
+      });
+      res.status(201).json(sub);
+    } catch (error) {
+      console.error('[ThemeController] Error creating subcategory:', error.message);
+      res.status(500).json({ error: "Erro ao salvar disciplina no banco." });
+    }
+  }
+
+  async deleteSubCategory(req, res) {
+    const { id } = req.params;
+    try {
+      const prisma = getPrisma();
+      const sub = await prisma.subCategory.findUnique({ where: { id: parseInt(id) } });
+      
+      if (!sub) return res.status(404).json({ error: "Disciplina não encontrada." });
+      if (sub.isDefault) {
+        return res.status(403).json({ error: "Componentes curriculares padrão não podem ser excluídos." });
+      }
+
+      await prisma.subCategory.delete({ where: { id: parseInt(id) } });
+      res.json({ message: "Disciplina excluída com sucesso." });
+    } catch (error) {
+      console.error('[ThemeController] Error deleting subcategory:', error.message);
+      res.status(500).json({ error: "Erro ao excluir disciplina no banco." });
     }
   }
 }

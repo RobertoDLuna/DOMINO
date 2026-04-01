@@ -66,6 +66,11 @@ app.get("/health", (req, res) => {
 
 // SPA Fallback: Qualquer rota que não seja arquivo estático ou API, serve o index.html
 app.use((req, res) => {
+  // Se for uma requisição de API que chegou aqui, é um 404 real de API
+  if (req.url.startsWith('/api')) {
+    return res.status(404).json({ error: "Endpoint de API não encontrado. Verifique se o servidor foi reiniciado." });
+  }
+
   const indexPath = path.join(frontendPath, "index.html");
   if (require('fs').existsSync(indexPath)) {
     return res.sendFile(indexPath);

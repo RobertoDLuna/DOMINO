@@ -7,43 +7,49 @@ const { getPrisma } = require('../config/prismaClient');
  */
 async function seed() {
   const prisma = getPrisma();
+  console.log('🧹 Limpando dados antigos (Temas, Subcategorias, Categorias)...');
+  
+  // Excluir em ordem reversa para respeitar chaves estrangeiras
+  await prisma.theme.deleteMany({});
+  await prisma.subCategory.deleteMany({});
+  await prisma.category.deleteMany({});
+
   console.log('🌱 Populando categorias iniciais...');
+
+  const commonSubs = [
+    'Matemática',
+    'Ciências',
+    'Língua Portuguesa',
+    'Geografia',
+    'História',
+    'Inglês',
+    'Artes',
+    'Educação Física',
+    'Geral'
+  ];
 
   const categories = [
     {
-      name: 'Matemática',
-      subs: ['Numerais', 'Formas Geométricas', 'Operações', 'Frações']
+      name: 'Educação Infantil',
+      subs: commonSubs
     },
     {
-      name: 'Ciências',
-      subs: ['Animais', 'Plantas', 'Corpo Humano', 'Planetas']
+      name: 'Anos Iniciais',
+      subs: commonSubs
     },
     {
-      name: 'Língua Portuguesa',
-      subs: ['Letras do Alfabeto', 'Sílabas', 'Palavras', 'Sinais de Pontuação']
-    },
-    {
-      name: 'Geografia',
-      subs: ['Bandeiras', 'Mapas', 'Países', 'Continentes']
-    },
-    {
-      name: 'História',
-      subs: ['Datas Históricas', 'Personalidades', 'Civilizações', 'Arte']
-    },
-    {
-      name: 'Geral',
-      subs: ['Cores', 'Profissões', 'Alimentos', 'Objetos do Dia a Dia']
+      name: 'Anos Finais',
+      subs: commonSubs
     }
   ];
 
   for (const cat of categories) {
-    const created = await prisma.category.upsert({
-      where: { name: cat.name },
-      update: {},
-      create: {
+    const created = await prisma.category.create({
+      data: {
         name: cat.name,
+        isDefault: true,
         subs: {
-          create: cat.subs.map(name => ({ name }))
+          create: cat.subs.map(name => ({ name, isDefault: true }))
         }
       }
     });

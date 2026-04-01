@@ -20,6 +20,8 @@ const ThemeCreator = ({ onThemeCreated, onClose }) => {
   const [error, setError] = useState("");
   const [isAddingNewCategory, setIsAddingNewCategory] = useState(false);
   const [newCatName, setNewCatName] = useState("");
+  const [isAddingNewSubCategory, setIsAddingNewSubCategory] = useState(false);
+  const [newSubName, setNewSubName] = useState("");
 
   useEffect(() => {
     ThemeService.getCategories()
@@ -60,7 +62,12 @@ const ThemeCreator = ({ onThemeCreated, onClose }) => {
     const cat = categories.find(c => String(c.id) === String(formData.categoryId));
     if (!cat) return;
 
-    if (!confirm(`Tem certeza que deseja excluir a categoria "${cat.name}"?`)) return;
+    if (cat.isDefault) {
+      setError("Níveis de ensino padrão não podem ser excluídos.");
+      return;
+    }
+
+    if (!confirm(`Tem certeza que deseja excluir o nível "${cat.name}"?`)) return;
 
     try {
       setLoading(true);
@@ -69,6 +76,69 @@ const ThemeCreator = ({ onThemeCreated, onClose }) => {
       setFormData({ ...formData, categoryId: "", subcategoryId: "" });
       setSubcategories([]);
       setError(""); 
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCreateSubCategory = async () => {
+    if (!newSubName.trim() || !formData.categoryId) return;
+
+    try {
+      setLoading(true);
+      const created = await ThemeService.createSubCategory(newSubName, formData.categoryId);
+      
+      // Update local state
+      const updatedCategories = categories.map(c => {
+        if (String(c.id) === String(formData.categoryId)) {
+          return { ...c, subs: [...(c.subs || []), created] };
+        }
+        return c;
+      });
+      
+      setCategories(updatedCategories);
+      setSubcategories([...subcategories, created]);
+      setFormData({ ...formData, subcategoryId: created.id });
+      setIsAddingNewSubCategory(false);
+      setNewSubName("");
+      setError("");
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteSubCategory = async () => {
+    if (!formData.subcategoryId) return;
+    const sub = subcategories.find(s => String(s.id) === String(formData.subcategoryId));
+    if (!sub) return;
+
+    if (sub.isDefault) {
+      setError("Componentes curriculares padrão não podem ser excluídos.");
+      return;
+    }
+
+    if (!confirm(`Tem certeza que deseja excluir a disciplina "${sub.name}"?`)) return;
+
+    try {
+      setLoading(true);
+      await ThemeService.deleteSubCategory(sub.id);
+      
+      // Update local state
+      const updatedCategories = categories.map(c => {
+        if (String(c.id) === String(formData.categoryId)) {
+          return { ...c, subs: c.subs.filter(s => s.id !== sub.id) };
+        }
+        return c;
+      });
+      
+      setCategories(updatedCategories);
+      setSubcategories(subcategories.filter(s => s.id !== sub.id));
+      setFormData({ ...formData, subcategoryId: "" });
+      setError("");
     } catch (err) {
       setError(err.message);
     } finally {
@@ -177,7 +247,7 @@ const ThemeCreator = ({ onThemeCreated, onClose }) => {
                       value={newCatName}
                       onChange={e => setNewCatName(e.target.value.toUpperCase())}
                       className="flex-1 bg-emerald-50/50 border-2 border-emerald-300 p-4 rounded-2xl focus:border-emerald-500 transition-all outline-none font-black text-emerald-900 uppercase placeholder:text-emerald-200 text-sm"
-                      placeholder="EX: GEOGRAFIA"
+                      placeholder="EX: ENSINO MÉDIO"
                       autoFocus
                     />
                     <button 
@@ -185,7 +255,7 @@ const ThemeCreator = ({ onThemeCreated, onClose }) => {
                       onClick={handleCreateCategory}
                       className="bg-emerald-500 text-white px-6 py-4 rounded-2xl font-black text-xs hover:bg-emerald-600 active:scale-95 transition-all shadow-sm cursor-pointer whitespace-nowrap"
                     >
-                      SALVAR CATEGORIA
+                      SALVAR NÍVEL
                     </button>
                   </div>
                 ) : (
@@ -196,16 +266,16 @@ const ThemeCreator = ({ onThemeCreated, onClose }) => {
                       onChange={handleCategoryChange}
                       className={`flex-1 bg-emerald-50/50 border-2 p-4 rounded-2xl focus:border-[#009660] transition-all outline-none font-black text-emerald-900 uppercase cursor-pointer ${!formData.categoryId ? 'border-red-200' : 'border-emerald-100'}`}
                     >
-                      <option value="">— Selecione a categoria —</option>
+                      <option value="">— Selecione o Nível —</option>
                       {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                     </select>
 
-                    {formData.categoryId && (
+                    {formData.categoryId && categories.find(c => String(c.id) === String(formData.categoryId))?.isDefault === false && (
                       <button
                         type="button"
                         onClick={handleDeleteCategory}
                         className="w-14 h-14 flex items-center justify-center bg-red-50 hover:bg-red-500 text-red-500 hover:text-white rounded-2xl border-2 border-red-100 transition-all active:scale-90 flex-shrink-0"
-                        title="Excluir Categoria"
+                        title="Excluir Nível"
                       >
                         <span className="text-xl">🗑️</span>
                       </button>
@@ -213,22 +283,66 @@ const ThemeCreator = ({ onThemeCreated, onClose }) => {
                   </div>
                 )}
                 {!loadingCategories && categories.length === 0 && !isAddingNewCategory && (
-                  <p className="text-[10px] text-red-400 font-black mt-1 ml-1 uppercase tracking-wide">Nenhuma categoria encontrada. Crie uma nova acima.</p>
+                  <p className="text-[10px] text-red-400 font-black mt-1 ml-1 uppercase tracking-wide">Nenhum nível de ensino encontrado. Crie um novo acima.</p>
                 )}
               </div>
 
               {/* Subcategory */}
-              {subcategories.length > 0 && (
+              {formData.categoryId && (
                 <div>
-                  <label className="text-[10px] font-black uppercase text-emerald-900/60 mb-1.5 block ml-1">Subcategoria</label>
-                  <select
-                    value={formData.subcategoryId}
-                    onChange={e => setFormData({ ...formData, subcategoryId: e.target.value })}
-                    className="w-full bg-emerald-50/50 border-2 border-emerald-100 p-4 rounded-2xl focus:border-[#009660] transition-all outline-none font-black text-emerald-900 uppercase cursor-pointer"
-                  >
-                    <option value="">— Opcional —</option>
-                    {subcategories.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                  </select>
+                  <div className="flex justify-between items-end mb-1.5 ml-1">
+                    <label className="text-[10px] font-black uppercase text-emerald-900/60 block">Componente Curricular *</label>
+                    <button 
+                      type="button" 
+                      onClick={() => setIsAddingNewSubCategory(!isAddingNewSubCategory)}
+                      className="text-[9px] font-black uppercase text-emerald-600 hover:text-emerald-700 transition-colors cursor-pointer"
+                    >
+                      {isAddingNewSubCategory ? "✕ Cancelar" : "➕ Nova Disciplina"}
+                    </button>
+                  </div>
+
+                  {isAddingNewSubCategory ? (
+                    <div className="flex flex-col sm:flex-row gap-2 animate-in slide-in-from-right-2 duration-300">
+                      <input
+                        type="text"
+                        value={newSubName}
+                        onChange={e => setNewSubName(e.target.value.toUpperCase())}
+                        className="flex-1 bg-emerald-50/50 border-2 border-emerald-300 p-4 rounded-2xl focus:border-emerald-500 transition-all outline-none font-black text-emerald-900 uppercase placeholder:text-emerald-200 text-sm"
+                        placeholder="EX: ROBÓTICA"
+                        autoFocus
+                      />
+                      <button 
+                        type="button"
+                        onClick={handleCreateSubCategory}
+                        className="bg-emerald-500 text-white px-6 py-4 rounded-2xl font-black text-xs hover:bg-emerald-600 active:scale-95 transition-all shadow-sm cursor-pointer whitespace-nowrap"
+                      >
+                        SALVAR DISCIPLINA
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex gap-2">
+                       <select
+                        required
+                        value={formData.subcategoryId}
+                        onChange={e => setFormData({ ...formData, subcategoryId: e.target.value })}
+                        className="flex-1 bg-emerald-50/50 border-2 border-emerald-100 p-4 rounded-2xl focus:border-[#009660] transition-all outline-none font-black text-emerald-900 uppercase cursor-pointer"
+                      >
+                        <option value="">— Selecione a disciplina —</option>
+                        {subcategories.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                      </select>
+
+                      {formData.subcategoryId && subcategories.find(s => String(s.id) === String(formData.subcategoryId))?.isDefault === false && (
+                        <button
+                          type="button"
+                          onClick={handleDeleteSubCategory}
+                          className="w-14 h-14 flex items-center justify-center bg-red-50 hover:bg-red-500 text-red-500 hover:text-white rounded-2xl border-2 border-red-100 transition-all active:scale-90 flex-shrink-0"
+                          title="Excluir Disciplina"
+                        >
+                          <span className="text-xl">🗑️</span>
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
 

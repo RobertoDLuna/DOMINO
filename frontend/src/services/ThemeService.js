@@ -92,6 +92,30 @@ class ThemeService {
     
     return await res.json();
   }
+
+  async createSubCategory(name, categoryId) {
+    const res = await fetch(`${API_URL}/themes/categories/subs`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, categoryId })
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || 'Erro ao criar disciplina.');
+    }
+    return await res.json();
+  }
+
+  async deleteSubCategory(id) {
+    const res = await fetch(`${API_URL}/themes/categories/subs/${id}`, {
+      method: 'DELETE'
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || 'Erro ao excluir disciplina.');
+    }
+    return await res.json();
+  }
 }
 
 export default new ThemeService();

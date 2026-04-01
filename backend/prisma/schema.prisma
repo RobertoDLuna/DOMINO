@@ -12,6 +12,7 @@ datasource db {
 model Category {
   id        Int           @id @default(autoincrement())
   name      String        @unique @db.VarChar(255)
+  isDefault Boolean       @default(false) @map("is_default")
   themes    Theme[]
   subs      SubCategory[]
   createdAt DateTime      @default(now()) @map("created_at")
@@ -22,6 +23,7 @@ model Category {
 model SubCategory {
   id         Int      @id @default(autoincrement())
   name       String   @db.VarChar(255)
+  isDefault  Boolean  @default(false) @map("is_default")
   category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   categoryId Int      @map("category_id")
   themes     Theme[]

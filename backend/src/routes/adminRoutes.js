@@ -9,6 +9,7 @@ router.use(restrictRole(['ADMIN']));
 
 router.get('/stats', AdminController.getStats);
 router.get('/pending', AdminController.getPendingApprovals);
+router.get('/approved', AdminController.getApprovedThemes);
 router.put('/approve-theme/:id', AdminController.approveTheme);
 router.delete('/reject-theme/:id', AdminController.rejectTheme);
 router.get('/users', AdminController.getUsers);

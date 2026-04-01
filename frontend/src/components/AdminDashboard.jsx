@@ -3,9 +3,10 @@ import AdminService from '../services/AdminService';
 import AuthService from '../services/AuthService';
 
 const AdminDashboard = ({ onBack }) => {
-  const [activeTab, setActiveTab] = useState('pending'); // pending, users
+  const [activeTab, setActiveTab] = useState('pending'); // pending, users, approved_themes
   const [stats, setStats] = useState({ users: 0, schools: 0, themes: 0, pendingThemes: 0 });
   const [pendingThemes, setPendingThemes] = useState([]);
+  const [approvedThemes, setApprovedThemes] = useState([]);
   const [users, setUsers] = useState([]);
   const [schools, setSchools] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -69,14 +70,16 @@ const AdminDashboard = ({ onBack }) => {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [statsData, pendingData, usersData, schoolsData] = await Promise.all([
+      const [statsData, pendingData, approvedData, usersData, schoolsData] = await Promise.all([
         AdminService.getStats(),
         AdminService.getPendingApprovals(),
+        AdminService.getApprovedThemes(),
         AdminService.getUsers(),
         AuthService.getSchools()
       ]);
       setStats(statsData);
       setPendingThemes(pendingData);
+      setApprovedThemes(approvedData);
       setUsers(usersData);
       setSchools(schoolsData);
     } catch (err) {
@@ -103,6 +106,16 @@ const AdminDashboard = ({ onBack }) => {
     if (!confirm("Tem certeza que deseja excluir permanentemente este tema rejeitado?")) return;
     try {
       await AdminService.rejectTheme(id);
+      loadData();
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
+  const handleDeleteTheme = async (id, name) => {
+    if (!confirm(`⚠️ CUIDADO: Deseja apagar permanentemente o tema "${name}"?`)) return;
+    try {
+      await AdminService.rejectTheme(id); // Reusing rejectTheme as it just deletes by ID
       loadData();
     } catch (err) {
       alert(err.message);
@@ -246,6 +259,12 @@ const AdminDashboard = ({ onBack }) => {
               Aprovações ({stats.pendingThemes})
             </button>
             <button 
+              onClick={() => setActiveTab('approved_themes')}
+              className={`px-6 py-3 rounded-xl font-black text-[11px] uppercase tracking-widest transition-all ${activeTab === 'approved_themes' ? 'bg-purple-500 text-white shadow-md' : 'text-emerald-900/40 hover:bg-white/50'}`}
+            >
+              Temas Aprovados
+            </button>
+            <button 
               onClick={() => setActiveTab('users')}
               className={`px-6 py-3 rounded-xl font-black text-[11px] uppercase tracking-widest transition-all ${activeTab === 'users' ? 'bg-[#FFCE00] shadow-[0_4px_0_#d1a900] text-emerald-900' : 'text-emerald-900/40 hover:bg-white/50'}`}
             >
@@ -299,6 +318,45 @@ const AdminDashboard = ({ onBack }) => {
                     </button>
                     <button onClick={() => handleReject(theme.id)} className="flex-1 sm:flex-none bg-red-100 hover:bg-red-200 text-red-600 py-3 px-6 rounded-2xl font-black text-xs uppercase tracking-widest shadow-[0_4px_0_#fda4af] active:translate-y-1 active:shadow-none transition-all">
                       Rejeitar ✗
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        ) : activeTab === 'approved_themes' ? (
+          <div className="flex-1 overflow-y-auto space-y-4 pr-2 custom-scrollbar">
+            {approvedThemes.length === 0 ? (
+              <div className="text-center py-20 opacity-50">
+                <span className="text-6xl block mb-4">🎮</span>
+                <p className="font-black uppercase tracking-widest text-emerald-900">Nenhum tema aprovado ainda</p>
+              </div>
+            ) : (
+              approvedThemes.map(theme => (
+                <div key={theme.id} className="bg-purple-50 rounded-3xl p-6 border-2 border-purple-100 flex flex-col sm:flex-row items-center justify-between gap-6 animate-in slide-in-from-bottom-2">
+                  <div className="flex-1 w-full">
+                    <div className="flex items-center gap-3 mb-2">
+                       <span className="px-3 py-1 bg-white rounded-full text-[10px] font-black uppercase tracking-widest text-purple-600 shadow-sm border border-purple-100">
+                         {theme.category?.name} {theme.subcategory?.name ? ` › ${theme.subcategory?.name}` : ''}
+                       </span>
+                       <span className="text-[8px] font-black uppercase bg-emerald-100 text-emerald-600 px-2 py-0.5 rounded-full">ATIVO</span>
+                    </div>
+                    <h3 className="text-xl font-black text-purple-900 uppercase tracking-tight mb-1">{theme.name}</h3>
+                    <p className="text-xs font-bold text-purple-800/60 leading-relaxed mb-3">"{theme.description}"</p>
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg">👨‍🏫</span>
+                      <span className="text-[10px] font-black uppercase tracking-widest text-purple-900/60">
+                        {theme.owner?.fullName} ({theme.owner?.email})
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="flex sm:flex-col gap-3 w-full sm:w-auto shrink-0">
+                    <button 
+                      onClick={() => handleDeleteTheme(theme.id, theme.name)} 
+                      className="flex-1 sm:flex-none bg-red-50 hover:bg-red-500 text-red-400 hover:text-white py-3 px-6 rounded-2xl font-black text-xs uppercase tracking-widest shadow-[0_4px_0_#fda4af] active:translate-y-1 active:shadow-none transition-all flex items-center justify-center gap-2"
+                    >
+                      🗑️ EXCLUIR TEMA
                     </button>
                   </div>
                 </div>

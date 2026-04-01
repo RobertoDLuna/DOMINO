@@ -25,6 +25,13 @@ class AdminService {
     if (!res.ok) throw new Error('Erro ao buscar aprovações pendentes');
     return await res.json();
   }
+  async getApprovedThemes() {
+    const res = await fetch(`${API_URL}/admin/approved`, {
+      headers: await this.getHeaders()
+    });
+    if (!res.ok) throw new Error('Erro ao buscar temas aprovados');
+    return await res.json();
+  }
 
   async approveTheme(id) {
     const res = await fetch(`${API_URL}/admin/approve-theme/${id}`, {

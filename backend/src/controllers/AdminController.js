@@ -40,6 +40,25 @@ class AdminController {
     }
   }
 
+  async getApprovedThemes(req, res) {
+    try {
+      const prisma = getPrisma();
+      const approvedThemes = await prisma.theme.findMany({
+        where: { isApproved: true },
+        include: {
+          owner: { select: { fullName: true, email: true } },
+          category: { select: { name: true } },
+          subcategory: { select: { name: true } }
+        },
+        orderBy: { createdAt: 'desc' }
+      });
+      res.json(approvedThemes);
+    } catch (error) {
+      console.error('[AdminController] Error getApprovedThemes:', error);
+      res.status(500).json({ error: 'Erro ao buscar temas aprovados.' });
+    }
+  }
+
   async approveTheme(req, res) {
     const { id } = req.params;
     try {

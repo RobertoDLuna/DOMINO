@@ -6,17 +6,33 @@ import SnakeBoard from "./SnakeBoard";
 import AvatarGuide from "./AvatarGuide";
 import ThemeSelector from "./ThemeSelector";
 import ThemeCreator from "./ThemeCreator";
+import AdminDashboard from "./AdminDashboard";
 import SoundService from "../services/SoundService";
+import AuthService from "../services/AuthService";
 
 import logoCampina from '../assets/logo-campina.png';
 import logoPrefeitura from '../assets/logo-prefeitura.png';
 
-export default function GameContainer() {
+export default function GameContainer({ user, isGuest }) {
   const {
     room, players, gameState, myHand, board, currentTurn,
     createRoom, joinRoom, leaveRoom, startGame, makeMove, passTurn, forceEndGame, updateMaxPlayers, playAgain,
     iWon, gameOverMsg, scores, currentTheme, maxPlayers, myId, playerId, isConnected
   } = useGame();
+
+  const [showAdmin, setShowAdmin] = useState(false);
+  const [playerInfo, setPlayerInfo] = useState({
+    name: user?.fullName || localStorage.getItem("dominoPlayerName") || "",
+    avatar: localStorage.getItem("dominoPlayerAvatar") || "0",
+    id: user?.id || localStorage.getItem("dominoPlayerId") || `guest-${Date.now()}`
+  });
+
+  const canCreateThemes = user && user.role === 'PROFESSOR';
+
+  const handleLogout = () => {
+    AuthService.logout();
+    window.location.reload();
+  };
 
   const winnerId = scores && Object.keys(scores).length > 0
     ? Object.keys(scores).reduce((a, b) => (scores[a] || 0) >= (scores[b] || 0) ? a : b)
@@ -43,11 +59,11 @@ export default function GameContainer() {
   };
 
   const handleCreateRoom = () => {
-    createRoom(getFinalName());
+    createRoom(playerInfo.name || "JOGADOR");
   };
 
   const handleJoinRoom = () => {
-    joinRoom(roomIdInput, getFinalName());
+    joinRoom(roomIdInput, playerInfo.name || "JOGADOR");
   };
 
   const [selectedTheme, setSelectedTheme] = useState('animais');
@@ -181,9 +197,18 @@ export default function GameContainer() {
         </header>
         <div className="flex-1 flex flex-col items-center justify-center z-10 w-full overflow-y-auto scrollbar-hide py-8">
           <div className="w-full max-w-sm lg:max-w-4xl flex flex-col items-center gap-8">
-            <div className="w-full bg-white/0 sm:bg-white sm:p-12 rounded-[3.5rem] sm:shadow-[0_25px_80px_rgba(0,0,0,0.3)] text-center sm:border-b-[12px] sm:border-emerald-900/10">
-              <div className="mb-6 sm:mb-8">
-                <input type="text" placeholder="SEU NOME" value={playerNameInput} onChange={handleNameChange} className="w-full bg-emerald-50 border-4 border-emerald-100 p-4 sm:p-5 rounded-[2rem] focus:outline-none focus:border-[#009660] placeholder-emerald-900/30 text-center text-xl sm:text-2xl font-black uppercase text-[#009660] transition-all" />
+            <div className="w-full bg-white/0 sm:bg-white sm:p-12 rounded-[3.5rem] sm:shadow-[0_25px_80px_rgba(0,0,0,0.3)] text-center sm:border-b-[12px] sm:border-emerald-900/10 overflow-hidden">
+              <div className="mb-6 sm:mb-8 flex flex-col gap-2">
+                <div className="flex items-center gap-2 w-full">
+                  <input type="text" placeholder="SEU NOME" value={playerInfo.name} disabled={!!user} onChange={(e) => setPlayerInfo({...playerInfo, name: e.target.value.toUpperCase()})} className="flex-1 bg-emerald-50 border-4 border-emerald-100 p-4 sm:p-5 rounded-[2rem] focus:outline-none focus:border-[#009660] placeholder-emerald-900/30 text-center text-xl sm:text-2xl font-black uppercase text-[#009660] transition-all min-w-0" />
+                  {user && (
+                    <button onClick={handleLogout} className="bg-red-50 text-red-500 p-4 rounded-2xl border-2 border-red-100 hover:bg-red-100 transition-colors" title="Sair">
+                      🚪
+                    </button>
+                  )}
+                </div>
+                {isGuest && <p className="text-[10px] font-black uppercase text-emerald-900/40 tracking-widest">Modo Convidado</p>}
+                {user && <p className="text-[10px] font-black uppercase text-emerald-900/40 tracking-widest">{user.role} | {user.school || 'Externo'}</p>}
               </div>
               <button onClick={handleCreateRoom} className="w-full bg-[#FFCE00] hover:bg-[#ffe050] text-[#009660] font-black py-5 sm:py-6 rounded-3xl shadow-[0_8px_0_#d1a900] transition-all transform hover:scale-105 active:translate-y-1 active:shadow-[0_4px_0_#d1a900] mb-6 sm:mb-8 text-xl sm:text-2xl uppercase tracking-tight">Criar Sala 🏫</button>
               <div className="flex flex-col gap-4 sm:gap-5 pt-4 sm:pt-6 border-t-2 border-dashed border-gray-200">
@@ -237,6 +262,7 @@ export default function GameContainer() {
                 <ThemeSelector
                   selectedTheme={selectedTheme}
                   onSelect={setSelectedTheme}
+                  canCreate={canCreateThemes}
                   onOpenCreator={() => {
                     setShowCreator(true);
                     document.body.classList.add('modal-open');

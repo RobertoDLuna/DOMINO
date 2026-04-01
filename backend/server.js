@@ -4,6 +4,9 @@ const cors = require("cors");
 const path = require("path");
 
 const themeRoutes = require("./src/routes/themeRoutes");
+const authRoutes = require("./src/routes/authRoutes");
+const schoolRoutes = require("./src/routes/schoolRoutes");
+const adminRoutes = require("./src/routes/adminRoutes");
 
 // Global error handlers for Docker troubleshooting
 process.on("uncaughtException", (err) => {
@@ -33,7 +36,10 @@ app.use((req, res, next) => {
 });
 
 // API Routes
+app.use("/api/auth", authRoutes);
+app.use("/api/schools", schoolRoutes);
 app.use("/api/themes", themeRoutes);
+app.use("/api/admin", adminRoutes);
 
 // Serving Static Frontend Files (Production)
 const frontendPath = path.join(__dirname, "../frontend/dist");

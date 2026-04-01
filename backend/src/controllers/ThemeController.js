@@ -11,11 +11,15 @@ class ThemeController {
   async getCategories(req, res) {
     try {
       const prisma = getPrisma();
-      const categories = await prisma.category.findMany({ include: { subs: true } });
+      // Only show approved categories or default ones (isApproved: true)
+      const categories = await prisma.category.findMany({
+        where: { isApproved: true },
+        include: { subs: true }
+      });
       res.json(categories);
     } catch (error) {
       console.error('[ThemeController] DB Error in getCategories:', error.message);
-      res.status(500).json({ error: "Erro ao carregar categorias. Verifique a conexão com o banco de dados.", details: error.message });
+      res.status(500).json({ error: "Erro ao carregar categorias.", details: error.message });
     }
   }
 
@@ -25,9 +29,14 @@ class ThemeController {
       const prisma = getPrisma();
       const themes = await prisma.theme.findMany({
         where: {
-          OR: [
-            { isPublic: true },
-            { ownerId: ownerId || 'guest' }
+          AND: [
+            { isApproved: true },
+            {
+              OR: [
+                { isPublic: true },
+                { ownerId: ownerId || 'guest' }
+              ]
+            }
           ]
         },
         include: { category: true, subcategory: true },
@@ -36,26 +45,21 @@ class ThemeController {
       res.json(themes);
     } catch (error) {
       console.error('[ThemeController] DB Error in listThemes:', error.message);
-      res.json([]); // Return empty for players, but log the error
+      res.json([]);
     }
   }
 
   async createTheme(req, res) {
     try {
       const prisma = getPrisma();
-      const { name, description, color, categoryId, subcategoryId, isPublic, ownerId } = req.body;
+      const { name, description, color, categoryId, subcategoryId, isPublic } = req.body;
       const files = req.files;
+      const ownerId = req.user.id; // From authMiddleware
 
       // Validate required fields
-      if (!name?.trim()) {
-        return res.status(400).json({ error: "O nome do tema é obrigatório." });
-      }
-      if (!categoryId || isNaN(parseInt(categoryId))) {
-        return res.status(400).json({ error: "Selecione uma categoria válida para o tema." });
-      }
-      if (!files || files.length < 6) {
-        return res.status(400).json({ error: "É necessário enviar 6 imagens (para os pontos 1 a 6)." });
-      }
+      if (!name?.trim()) return res.status(400).json({ error: "O nome do tema é obrigatório." });
+      if (!categoryId) return res.status(400).json({ error: "Selecione um nível de ensino válido." });
+      if (!files || files.length < 6) return res.status(400).json({ error: "Envie as 6 imagens." });
 
       const symbolsUrls = files.map(file => `/uploads/themes/${file.filename}`);
 
@@ -65,7 +69,8 @@ class ThemeController {
           description: description?.trim() || null,
           color: color || '#009660',
           isPublic: isPublic === 'true' || isPublic === true,
-          ownerId: ownerId || null,
+          isApproved: false, // Wait for admin
+          ownerId,
           categoryId: parseInt(categoryId),
           subcategoryId: subcategoryId && !isNaN(parseInt(subcategoryId)) ? parseInt(subcategoryId) : null,
           symbols: symbolsUrls
@@ -74,18 +79,15 @@ class ThemeController {
 
       res.status(201).json(newTheme);
     } catch (error) {
-      console.error('[ThemeController] Error creating theme:', error.message);
-      // Prisma foreign key violation → invalid categoryId
-      if (error.code === 'P2003') {
-        return res.status(400).json({ error: "Categoria não encontrada no banco de dados." });
-      }
-      res.status(500).json({ error: "Erro ao criar tema. Verifique se o banco de dados está configurado." });
+      console.error('[ThemeController] Error creating theme:', error);
+      res.status(500).json({ error: "Erro ao criar tema." });
     }
   }
 
   async createCategory(req, res) {
     const { name } = req.body;
     const files = req.files;
+    const ownerId = req.user.id;
 
     if (!name?.trim()) return res.status(400).json({ error: "O nome do nível de ensino é obrigatório." });
 
@@ -98,16 +100,13 @@ class ThemeController {
       
       if (!category) {
         // Lista padrão de disciplinas sugeridas para novos níveis
-        const defaultSubs = [
-          'Matemática', 'Ciências', 'Língua Portuguesa', 
-          'Geografia', 'História', 'Inglês', 'Artes', 
-          'Educação Física', 'Geral'
-        ];
+        const defaultSubs = ['Matemática', 'Ciências', 'Língua Portuguesa', 'Geografia', 'História', 'Inglês', 'Artes', 'Educação Física', 'Geral'];
 
         category = await prisma.category.create({
           data: { 
             name: name.trim(),
             isDefault: false,
+            isApproved: false, // Custom categories also need approval?
             subs: {
               create: defaultSubs.map(name => ({ name, isDefault: false }))
             }
@@ -119,13 +118,14 @@ class ThemeController {
       // Se enviou imagens, cria um tema padrão para essa categoria automaticamente
       if (files && files.length === 6) {
         const symbolsUrls = files.map(file => `/uploads/themes/${file.filename}`);
-        
         await prisma.theme.create({
           data: {
             name: `Padrão - ${category.name}`,
             categoryId: category.id,
             symbols: symbolsUrls,
             isPublic: true,
+            isApproved: false, // Theme needs approval
+            ownerId,
             color: '#009660'
           }
         });
@@ -134,7 +134,7 @@ class ThemeController {
       res.status(201).json(category);
     } catch (error) {
       console.error('[ThemeController] Error creating category:', error.message);
-      res.status(500).json({ error: "Erro ao salvar nível no banco." });
+      res.status(500).json({ error: "Erro ao salvar nível." });
     }
   }
 

@@ -4,6 +4,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const ThemeController = require('../controllers/ThemeController');
+const { authMiddleware, restrictRole } = require('../middleware/authMiddleware');
 
 // Ensure upload directories exist
 const uploadDir = 'uploads/themes';
@@ -38,14 +39,40 @@ const upload = multer({
  * 4. DELETE /: Remove a specific theme.
  */
 router.get('/categories', ThemeController.getCategories);
-router.post('/categories', upload.array('symbols', 6), ThemeController.createCategory);
-router.delete('/categories/:id', ThemeController.deleteCategory);
+router.post('/categories', 
+  authMiddleware, 
+  restrictRole(['PROFESSOR']), 
+  upload.array('symbols', 6), 
+  ThemeController.createCategory
+);
+router.delete('/categories/:id', 
+  authMiddleware, 
+  restrictRole(['PROFESSOR']), 
+  ThemeController.deleteCategory
+);
 
-router.post('/categories/subs', ThemeController.createSubCategory);
-router.delete('/categories/subs/:id', ThemeController.deleteSubCategory);
+router.post('/categories/subs', 
+  authMiddleware, 
+  restrictRole(['PROFESSOR']), 
+  ThemeController.createSubCategory
+);
+router.delete('/categories/subs/:id', 
+  authMiddleware, 
+  restrictRole(['PROFESSOR']), 
+  ThemeController.deleteSubCategory
+);
 
 router.get('/', ThemeController.listThemes);
-router.post('/', upload.array('symbols', 6), ThemeController.createTheme);
-router.delete('/:id', ThemeController.deleteTheme);
+router.post('/', 
+  authMiddleware, 
+  restrictRole(['PROFESSOR']), 
+  upload.array('symbols', 6), 
+  ThemeController.createTheme
+);
+router.delete('/:id', 
+  authMiddleware, 
+  restrictRole(['PROFESSOR']), 
+  ThemeController.deleteTheme
+);
 
 module.exports = router;

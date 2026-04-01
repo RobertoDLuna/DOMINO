@@ -9,13 +9,57 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Category {
-  id        Int           @id @default(autoincrement())
-  name      String        @unique @db.VarChar(255)
-  isDefault Boolean       @default(false) @map("is_default")
+enum Role {
+  ADMIN
+  PROFESSOR
+  ALUNO
+  EXTERNO
+}
+
+model User {
+  id        String   @id @default(uuid())
+  fullName  String   @map("full_name") @db.VarChar(255)
+  email     String   @unique @db.VarChar(255)
+  password  String   @db.VarChar(255)
+  mustChangePassword Boolean @default(false) @map("must_change_password")
+  role      Role     @default(EXTERNO)
+  
+  school    School?  @relation(fields: [schoolId], references: [id])
+  schoolId  Int?     @map("school_id")
+  
   themes    Theme[]
-  subs      SubCategory[]
-  createdAt DateTime      @default(now()) @map("created_at")
+  
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("users")
+}
+
+model School {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique @db.VarChar(255)
+  inep      String?  @unique @db.VarChar(50)
+  address   String?  @db.Text
+  phone     String?  @db.VarChar(50)
+  email     String?  @db.VarChar(100)
+  cnpj      String?  @db.VarChar(50)
+  director  String?  @db.VarChar(255)
+  
+  users     User[]
+  
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("schools")
+}
+
+model Category {
+  id         Int           @id @default(autoincrement())
+  name       String        @unique @db.VarChar(255)
+  isDefault  Boolean       @default(false) @map("is_default")
+  isApproved Boolean       @default(true) @map("is_approved") // Default ones are approved
+  themes     Theme[]
+  subs       SubCategory[]
+  createdAt  DateTime      @default(now()) @map("created_at")
 
   @@map("categories")
 }
@@ -38,7 +82,10 @@ model Theme {
   description   String?      @db.Text
   color         String       @default("#009660") @db.VarChar(50)
   isPublic      Boolean      @default(false) @map("is_public")
-  ownerId       String?      @map("owner_id") // UUID or simple identifier
+  isApproved    Boolean      @default(false) @map("is_approved") // Custom themes need approval
+  
+  owner         User?        @relation(fields: [ownerId], references: [id])
+  ownerId       String?      @map("owner_id")
   
   // Array of 6 image URLs (for pieces 1-6, 0 is blank)
   symbols       String[]     @default([])
@@ -48,7 +95,7 @@ model Theme {
   
   subcategory   SubCategory?  @relation(fields: [subcategoryId], references: [id])
   subcategoryId Int?         @map("subcategory_id")
-
+  
   createdAt     DateTime     @default(now()) @map("created_at")
   updatedAt     DateTime     @updatedAt @map("updated_at")
 

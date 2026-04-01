@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { themes as defaultThemes } from '../config/themes';
 import ThemeService from '../services/ThemeService';
 
-const ThemeSelector = ({ selectedTheme, onSelect, onOpenCreator }) => {
+const ThemeSelector = ({ selectedTheme, onSelect, onOpenCreator, canCreate }) => {
   const [dbThemes, setDbThemes] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -57,12 +57,14 @@ const ThemeSelector = ({ selectedTheme, onSelect, onOpenCreator }) => {
         <h3 className="text-white font-black text-[10px] sm:text-xs uppercase tracking-[0.2em] opacity-80 ml-2">
           ESCOLHA A MATÉRIA DE HOJE:
         </h3>
-        <button 
-          onClick={onOpenCreator}
-          className="bg-[#FFCE00] hover:bg-[#ffe050] text-[#009660] font-black px-4 py-2 rounded-full text-[10px] uppercase tracking-widest shadow-lg transition-all active:scale-95 flex items-center gap-2 border-b-4 border-yellow-600"
-        >
-          <span>➕</span> <span>CRIAR TEMA</span>
-        </button>
+        {canCreate && (
+          <button 
+            onClick={onOpenCreator}
+            className="bg-[#FFCE00] hover:bg-[#ffe050] text-[#009660] font-black px-4 py-2 rounded-full text-[10px] uppercase tracking-widest shadow-lg transition-all active:scale-95 flex items-center gap-2 border-b-4 border-yellow-600"
+          >
+            <span>➕</span> <span>CRIAR TEMA</span>
+          </button>
+        )}
       </div>
       
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-6 p-4">

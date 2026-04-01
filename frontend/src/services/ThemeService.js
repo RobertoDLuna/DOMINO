@@ -1,34 +1,95 @@
 // frontend/src/services/ThemeService.js
 // Use relative URL so it works in both dev (via Vite proxy) and production (same origin)
+import AuthService from "./AuthService";
+
 const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 class ThemeService {
-  async getCategories() {
+  async getThemes(ownerId) {
     try {
-      const res = await fetch(`${API_URL}/themes/categories`);
-      if (!res.ok) return [];
+      const res = await fetch(`${API_URL}/themes${ownerId ? `?ownerId=${ownerId}` : ''}`);
       return await res.json();
     } catch {
       return [];
     }
   }
 
-  async getThemes(ownerId = null) {
+  async getCategories() {
     try {
-      const url = ownerId ? `${API_URL}/themes?ownerId=${ownerId}` : `${API_URL}/themes`;
-      const res = await fetch(url);
-      if (!res.ok) return [];
-      return await res.json();
+      const res = await fetch(`${API_URL}/themes/categories`);
+      const data = await res.json();
+      return Array.isArray(data) ? data : [];
     } catch {
       return [];
     }
+  }
+
+  async createCategory(name, symbols) {
+    const formData = new FormData();
+    formData.append('name', name);
+    symbols.forEach(file => formData.append('symbols', file));
+
+    const res = await fetch(`${API_URL}/themes/categories`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${AuthService.getToken()}`
+      },
+      body: formData
+    });
+    
+    const result = await res.json();
+    if (!res.ok) throw new Error(result.error || 'Erro ao criar nível de ensino.');
+    return result;
+  }
+
+  async deleteCategory(id) {
+    const res = await fetch(`${API_URL}/themes/categories/${id}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${AuthService.getToken()}`
+      }
+    });
+    if (!res.ok) {
+      const data = await res.json();
+      throw new Error(data.error || 'Erro ao excluir nível de ensino.');
+    }
+    return true;
+  }
+
+  async createSubCategory(name, categoryId) {
+    const res = await fetch(`${API_URL}/themes/categories/subs`, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${AuthService.getToken()}`
+      },
+      body: JSON.stringify({ name, categoryId })
+    });
+    
+    const result = await res.json();
+    if (!res.ok) throw new Error(result.error || 'Erro ao criar disciplina.');
+    return result;
+  }
+
+  async deleteSubCategory(id) {
+    const res = await fetch(`${API_URL}/themes/categories/subs/${id}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${AuthService.getToken()}`
+      }
+    });
+    if (!res.ok) {
+      const data = await res.json();
+      throw new Error(data.error || 'Erro ao excluir disciplina.');
+    }
+    return true;
   }
 
   async createTheme(themeData) {
     const formData = new FormData();
     Object.keys(themeData).forEach(key => {
       if (key === 'symbols') {
-        themeData.symbols.forEach(file => formData.append('symbols', file));
+        themeData[key].forEach(file => formData.append('symbols', file));
       } else {
         formData.append(key, themeData[key]);
       }
@@ -36,85 +97,29 @@ class ThemeService {
 
     const res = await fetch(`${API_URL}/themes`, {
       method: 'POST',
-      body: formData
-    });
-
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.error || 'Erro ao criar tema.');
-    }
-
-    return await res.json();
-  }
-
-  async createCategory(name, symbols = null) {
-    const formData = new FormData();
-    formData.append('name', name);
-    if (symbols && symbols.length === 6) {
-      symbols.forEach(file => formData.append('symbols', file));
-    }
-
-    const res = await fetch(`${API_URL}/themes/categories`, {
-      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${AuthService.getToken()}`
+      },
       body: formData
     });
     
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.message || 'Erro ao criar categoria.');
-    }
-    
-    return await res.json();
-  }
-
-  async deleteCategory(id) {
-    const res = await fetch(`${API_URL}/themes/categories/${id}`, {
-      method: 'DELETE'
-    });
-    
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.error || err.message || 'Erro ao excluir categoria.');
-    }
-    
-    return await res.json();
+    const result = await res.json();
+    if (!res.ok) throw new Error(result.error || 'Erro ao criar tema pedagógico.');
+    return result;
   }
 
   async deleteTheme(id) {
     const res = await fetch(`${API_URL}/themes/${id}`, {
-      method: 'DELETE'
-    });
-    
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.error || err.message || 'Erro ao excluir tema.');
-    }
-    
-    return await res.json();
-  }
-
-  async createSubCategory(name, categoryId) {
-    const res = await fetch(`${API_URL}/themes/categories/subs`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, categoryId })
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${AuthService.getToken()}`
+      }
     });
     if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.error || 'Erro ao criar disciplina.');
+      const data = await res.json();
+      throw new Error(data.error || 'Erro ao excluir tema.');
     }
-    return await res.json();
-  }
-
-  async deleteSubCategory(id) {
-    const res = await fetch(`${API_URL}/themes/categories/subs/${id}`, {
-      method: 'DELETE'
-    });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.error || 'Erro ao excluir disciplina.');
-    }
-    return await res.json();
+    return true;
   }
 }
 

@@ -6,7 +6,8 @@ const ThemeCreator = ({ onThemeCreated, onClose }) => {
   const [subcategories, setSubcategories] = useState([]);
   const [formData, setFormData] = useState({
     name: "",
-    description: "",
+    description: "", // Descrição curta
+    summary: "", // Resumo detalhado (novo)
     color: "#009660",
     categoryId: "",
     subcategoryId: "",
@@ -165,6 +166,8 @@ const ThemeCreator = ({ onThemeCreated, onClose }) => {
 
   const validate = () => {
     if (!formData.name.trim()) return "Digite um nome para o tema.";
+    if (!formData.description.trim()) return "Uma descrição curta é obrigatória.";
+    if (!formData.summary.trim()) return "O resumo do jogo é obrigatório.";
     if (!formData.categoryId) return "Selecione uma categoria para o tema.";
     if (symbols.some(s => !s)) return "Envie as 6 imagens das peças (pontos 1 a 6).";
     return null;
@@ -221,6 +224,33 @@ const ThemeCreator = ({ onThemeCreated, onClose }) => {
                   onChange={e => setFormData({ ...formData, name: e.target.value })}
                   className="w-full bg-emerald-50/50 border-2 border-emerald-100 p-4 rounded-2xl focus:border-[#009660] transition-all outline-none font-black text-emerald-900 uppercase placeholder:text-emerald-200"
                   placeholder="EX: ANIMAIS DA FAZENDA"
+                />
+              </div>
+
+              {/* Description */}
+              <div>
+                <label className="text-[10px] font-black uppercase text-emerald-900/60 mb-1.5 block ml-1">Descrição Curta *</label>
+                <input
+                  required
+                  type="text"
+                  maxLength={100}
+                  value={formData.description}
+                  onChange={e => setFormData({ ...formData, description: e.target.value })}
+                  className="w-full bg-emerald-50/50 border-2 border-emerald-100 p-4 rounded-2xl focus:border-[#009660] transition-all outline-none font-black text-emerald-900 uppercase placeholder:text-emerald-200"
+                  placeholder="EX: APRENDA SOBRE OS BICHINHOS DA FLORESTA"
+                />
+              </div>
+
+              {/* Summary */}
+              <div>
+                <label className="text-[10px] font-black uppercase text-emerald-900/60 mb-1.5 block ml-1">Resumo Detalhado *</label>
+                <textarea
+                  required
+                  rows={3}
+                  value={formData.summary}
+                  onChange={e => setFormData({ ...formData, summary: e.target.value })}
+                  className="w-full bg-emerald-50/50 border-2 border-emerald-100 p-4 rounded-2xl focus:border-[#009660] transition-all outline-none font-medium text-emerald-900 placeholder:text-emerald-200 resize-none"
+                  placeholder="DESCREVA O OBJETIVO DO JOGO E O QUE FOI CRIADO..."
                 />
               </div>
 

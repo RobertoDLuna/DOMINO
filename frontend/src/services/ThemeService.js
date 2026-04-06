@@ -5,9 +5,21 @@ import AuthService from "./AuthService";
 const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 class ThemeService {
-  async getThemes(ownerId) {
+  async getThemes(filters = {}) {
     try {
-      const res = await fetch(`${API_URL}/themes${ownerId ? `?ownerId=${ownerId}` : ''}`);
+      const params = new URLSearchParams();
+      
+      // Legacy support: if filters is a string, treat it as ownerId
+      if (typeof filters === 'string') {
+        params.append('ownerId', filters);
+      } else {
+        if (filters.ownerId) params.append('ownerId', filters.ownerId);
+        if (filters.categoryId) params.append('categoryId', filters.categoryId);
+        if (filters.subcategoryId) params.append('subcategoryId', filters.subcategoryId);
+        if (filters.search) params.append('search', filters.search);
+      }
+      
+      const res = await fetch(`${API_URL}/themes?${params.toString()}`);
       return await res.json();
     } catch {
       return [];

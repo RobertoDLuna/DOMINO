@@ -90,6 +90,8 @@ model Theme {
   // Array of 6 image URLs (for pieces 1-6, 0 is blank)
   symbols       String[]     @default([])
   
+  summary       String?      @db.Text
+  
   category      Category     @relation(fields: [categoryId], references: [id])
   categoryId    Int          @map("category_id")
   

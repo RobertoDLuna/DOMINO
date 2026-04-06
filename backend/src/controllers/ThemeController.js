@@ -24,22 +24,43 @@ class ThemeController {
   }
 
   async listThemes(req, res) {
-    const { ownerId } = req.query;
+    const { ownerId, categoryId, subcategoryId, search } = req.query;
     try {
       const prisma = getPrisma();
+      
+      const where = {
+        AND: [
+          { isApproved: true },
+          {
+            OR: [
+              { isPublic: true },
+              { ownerId: ownerId || 'guest' }
+            ]
+          }
+        ]
+      };
+
+      if (categoryId) {
+        where.AND.push({ categoryId: parseInt(categoryId) });
+      }
+      if (subcategoryId) {
+        where.AND.push({ subcategoryId: parseInt(subcategoryId) });
+      }
+      if (search) {
+        where.AND.push({
+          name: { contains: search, mode: 'insensitive' }
+        });
+      }
+
       const themes = await prisma.theme.findMany({
-        where: {
-          AND: [
-            { isApproved: true },
-            {
-              OR: [
-                { isPublic: true },
-                { ownerId: ownerId || 'guest' }
-              ]
-            }
-          ]
+        where,
+        include: { 
+          category: true, 
+          subcategory: true,
+          owner: {
+            select: { fullName: true }
+          }
         },
-        include: { category: true, subcategory: true },
         orderBy: { createdAt: 'desc' }
       });
       res.json(themes);
@@ -73,7 +94,8 @@ class ThemeController {
           ownerId,
           categoryId: parseInt(categoryId),
           subcategoryId: subcategoryId && !isNaN(parseInt(subcategoryId)) ? parseInt(subcategoryId) : null,
-          symbols: symbolsUrls
+          symbols: symbolsUrls,
+          summary: req.body.summary?.trim() || null
         }
       });
 

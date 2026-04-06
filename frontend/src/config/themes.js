@@ -4,7 +4,8 @@ export const themes = [
     name: 'Animais Selvagens',
     emoji: '🦁',
     description: 'Aprenda sobre os bichinhos da floresta!',
-    color: 'bg-emerald-500',
+    summary: 'Este jogo apresenta 6 animais selvagens incríveis: Leão, Tigre, Elefante, Girafa, Macaco e Zebra. Explore o reino animal enquanto diverte-se com o dominó pedagógico!',
+    color: 'emerald-500', // Just color name for the dynamic circle
     borderColor: 'border-emerald-700'
   },
   {
@@ -12,7 +13,8 @@ export const themes = [
     name: 'Matemática Divertida',
     emoji: '🔢',
     description: 'Vamos praticar os numerais de 0 a 6.',
-    color: 'bg-blue-500',
+    summary: 'Ideal para a primeira etapa da alfabetização matemática. As peças utilizam algarismos coloridos e formas geométricas para facilitar a associação numérica entre 0 e 6.',
+    color: 'blue-500',
     borderColor: 'border-blue-700'
   },
   {
@@ -20,7 +22,8 @@ export const themes = [
     name: 'Frutas Tropicais',
     emoji: '🍎',
     description: 'Descubra as frutas mais deliciosas!',
-    color: 'bg-red-500',
+    summary: 'Um tema refrescante com as frutas mais comuns do Brasil. Ajuda no reconhecimento visual e no vocabulário sobre alimentação saudável.',
+    color: 'red-500',
     borderColor: 'border-red-700'
   },
   {
@@ -28,7 +31,8 @@ export const themes = [
     name: 'Espaço Sideral',
     emoji: '🚀',
     description: 'Uma aventura incrível pelo universo!',
-    color: 'bg-indigo-500',
+    summary: 'Explore planetas, estrelas e foguetes! Este tema estimula a curiosidade científica e o reconhecimento de padrões através de elementos do cosmos.',
+    color: 'indigo-500',
     borderColor: 'border-indigo-700'
   },
   {
@@ -36,15 +40,17 @@ export const themes = [
     name: 'Objetos Escolares',
     emoji: '🎒',
     description: 'O que levamos na nossa mochila?',
-    color: 'bg-amber-500',
+    summary: 'Lápis, borracha, caderno e mochila. Reforce o vocabulário do ambiente escolar enquanto joga. Perfeito para integração em sala de aula.',
+    color: 'amber-500',
     borderColor: 'border-amber-700'
   },
   {
     id: 'classico',
     name: 'Dominó Clássico',
     emoji: '🎲',
-    description: 'O jogo tradicional com a peça vazia e números de 1 a 6.',
-    color: 'bg-slate-800',
+    description: 'O jogo tradicional com números de 0 a 6.',
+    summary: 'A experiência clássica do dominó com pontos (pips) pretos sobre fundo branco. Ideal para jogadores que preferem o estilo tradicional e para treinar contagem rápida.',
+    color: 'slate-800',
     borderColor: 'border-slate-950'
   }
 ];

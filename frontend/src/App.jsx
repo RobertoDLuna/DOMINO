@@ -4,6 +4,7 @@ import GameContainer from "./components/GameContainer";
 import AuthScreen from "./components/AuthScreen";
 import ChangePasswordScreen from "./components/ChangePasswordScreen";
 import AdminDashboard from "./components/AdminDashboard";
+import HomeScreen from "./components/HomeScreen";
 import AuthService from "./services/AuthService";
 
 function App() {
@@ -13,11 +14,18 @@ function App() {
   const [showAdminPanel, setShowAdminPanel] = useState(() => {
     return window.location.pathname.startsWith('/admin');
   });
+  const [selectedTheme, setSelectedTheme] = useState(null);
 
   useEffect(() => {
     const savedUser = AuthService.getCurrentUser();
     if (savedUser) setUser(savedUser);
     setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    const openAdmin = () => toggleAdminPanel(true);
+    window.addEventListener('openAdminPanel', openAdmin);
+    return () => window.removeEventListener('openAdminPanel', openAdmin);
   }, []);
 
   const handleAuthSuccess = (userData) => {
@@ -58,19 +66,21 @@ function App() {
   return (
     <>
       <GameProvider>
-         <GameContainer user={user} isGuest={guestMode} />
+        {selectedTheme ? (
+          <GameContainer 
+            user={user} 
+            isGuest={guestMode} 
+            initialTheme={selectedTheme}
+            onBack={() => setSelectedTheme(null)}
+          />
+        ) : (
+          <HomeScreen 
+            user={user} 
+            onSelectTheme={setSelectedTheme} 
+          />
+        )}
       </GameProvider>
       
-      {user?.role === 'ADMIN' && !showAdminPanel && (
-        <button 
-          onClick={() => toggleAdminPanel(true)}
-          className="fixed top-6 right-6 z-[100] bg-white/90 hover:bg-white text-emerald-900 px-5 py-3 rounded-2xl font-black text-xs uppercase tracking-widest shadow-[0_5px_20px_rgba(0,0,0,0.3)] border-2 border-[#FFCE00] backdrop-blur-md transition-all active:scale-95 flex items-center gap-2 group hover:shadow-[#FFCE00]/50"
-        >
-          <span>PAINEL ADMIN</span>
-          <span className="text-xl group-hover:scale-110 transition-transform">🛡️</span>
-        </button>
-      )}
-
       {showAdminPanel && user?.role === 'ADMIN' && (
         <AdminDashboard onBack={() => toggleAdminPanel(false)} />
       )}

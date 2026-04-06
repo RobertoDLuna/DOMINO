@@ -41,37 +41,37 @@ const upload = multer({
 router.get('/categories', ThemeController.getCategories);
 router.post('/categories', 
   authMiddleware, 
-  restrictRole(['PROFESSOR']), 
+  restrictRole(['PROFESSOR', 'ADMIN']), 
   upload.array('symbols', 6), 
   ThemeController.createCategory
 );
 router.delete('/categories/:id', 
   authMiddleware, 
-  restrictRole(['PROFESSOR']), 
+  restrictRole(['PROFESSOR', 'ADMIN']), 
   ThemeController.deleteCategory
 );
 
 router.post('/categories/subs', 
   authMiddleware, 
-  restrictRole(['PROFESSOR']), 
+  restrictRole(['PROFESSOR', 'ADMIN']), 
   ThemeController.createSubCategory
 );
 router.delete('/categories/subs/:id', 
   authMiddleware, 
-  restrictRole(['PROFESSOR']), 
+  restrictRole(['PROFESSOR', 'ADMIN']), 
   ThemeController.deleteSubCategory
 );
 
 router.get('/', ThemeController.listThemes);
 router.post('/', 
   authMiddleware, 
-  restrictRole(['PROFESSOR']), 
+  restrictRole(['PROFESSOR', 'ADMIN']), 
   upload.array('symbols', 6), 
   ThemeController.createTheme
 );
 router.delete('/:id', 
   authMiddleware, 
-  restrictRole(['PROFESSOR']), 
+  restrictRole(['PROFESSOR', 'ADMIN']), 
   ThemeController.deleteTheme
 );
 

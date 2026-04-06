@@ -81,7 +81,7 @@ const ThemeSelector = ({ selectedTheme, onSelect, onOpenCreator, canCreate }) =>
             `}
           >
             {/* Lixeira para temas customizados */}
-            {!theme.isDefault && (
+            {canCreate && !theme.isDefault && (
               <div 
                 onClick={(e) => handleDeleteTheme(e, theme)}
                 className="absolute top-2 left-2 w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center shadow-lg transform -translate-x-4 -translate-y-4 opacity-0 group-hover:opacity-100 group-hover:translate-x-0 group-hover:translate-y-0 transition-all z-20 hover:scale-110 hover:bg-red-600 border-2 border-white"

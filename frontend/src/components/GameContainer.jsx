@@ -27,7 +27,7 @@ export default function GameContainer({ user, isGuest, initialTheme, onBack }) {
     id: user?.id || localStorage.getItem("dominoPlayerId") || `guest-${Date.now()}`
   });
 
-  const canCreateThemes = user && user.role === 'PROFESSOR';
+  const canCreateThemes = user && (user.role === 'PROFESSOR' || user.role === 'ADMIN');
 
   const handleLogout = () => {
     AuthService.logout();

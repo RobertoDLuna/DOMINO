@@ -30,6 +30,10 @@ async function seed() {
 
   const categories = [
     {
+      name: 'Geral',
+      subs: commonSubs
+    },
+    {
       name: 'Educação Infantil',
       subs: commonSubs
     },

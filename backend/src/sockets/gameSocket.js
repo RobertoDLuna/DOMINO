@@ -172,7 +172,9 @@ module.exports = (io) => {
           if (trancamentoWinnerId) game.scores[trancamentoWinnerId] += 1;
           
           playerIds.forEach(pId => {
-            io.to(pId).emit("gameOver", { iWon: pId === winnerId, message: "Fim de jogo!" });
+            const isWinner = pId === winnerId;
+            const message = isWinner ? "Você venceu por menos pontos na mão!" : "O jogo trancou! Alguém tinha menos pontos.";
+            io.to(pId).emit("gameOver", { iWon: isWinner, message });
           });
           game.status = 'finished';
         } else {
@@ -197,8 +199,8 @@ module.exports = (io) => {
              game.scores[socket.id] += 3;
              io.to(roomId).emit("updateScores", game.scores);
              io.to(roomId).emit("updateBoard", { board: game.board, currentTurn: null });
-             socket.to(roomId).emit("gameOver", { iWon: false, message: "Fim de jogo!" });
-             socket.emit("gameOver", { iWon: true, message: "Parabéns! Você venceu!" });
+             socket.to(roomId).emit("gameOver", { iWon: false, message: "Alguém bateu o jogo!" });
+             socket.emit("gameOver", { iWon: true, message: "Parabéns! Você bateu e venceu!" });
              game.status = 'finished';
              await RedisService.setRoom(roomId, game);
              return;

@@ -29,10 +29,6 @@ export default function GameContainer({ user, isGuest, initialTheme, onBack }) {
 
   const canCreateThemes = user && (user.role === 'PROFESSOR' || user.role === 'ADMIN');
 
-  const handleLogout = () => {
-    AuthService.logout();
-    window.location.reload();
-  };
 
   const winnerId = scores && Object.keys(scores).length > 0
     ? Object.keys(scores).reduce((a, b) => (scores[a] || 0) >= (scores[b] || 0) ? a : b)
@@ -201,18 +197,8 @@ export default function GameContainer({ user, isGuest, initialTheme, onBack }) {
               <div className="mb-6 sm:mb-8 flex flex-col gap-2">
                 <div className="flex items-center gap-2 w-full">
                   <input type="text" placeholder="SEU NOME" value={playerInfo.name} disabled={!!user} onChange={(e) => setPlayerInfo({...playerInfo, name: e.target.value.toUpperCase()})} className="flex-1 bg-emerald-50 border-4 border-emerald-100 p-4 sm:p-5 rounded-[2rem] focus:outline-none focus:border-[#009660] placeholder-emerald-900/30 text-center text-xl sm:text-2xl font-black uppercase text-[#009660] transition-all min-w-0" />
-                  <button 
-                    onClick={handleLogout} 
-                    className="bg-red-50 text-red-500 p-4 rounded-2xl border-2 border-red-100 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center shrink-0" 
-                    title="Sair"
-                  >
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                      <polyline points="16 17 21 12 16 7" />
-                      <line x1="21" y1="12" x2="9" y2="12" />
-                    </svg>
-                  </button>
                 </div>
+
                 {isGuest && <p className="text-[10px] font-black uppercase text-emerald-900/40 tracking-widest">Modo Convidado</p>}
                 {user && <p className="text-[10px] font-black uppercase text-emerald-900/40 tracking-widest">{user.role} | {user.school || 'Externo'}</p>}
               </div>
@@ -220,8 +206,11 @@ export default function GameContainer({ user, isGuest, initialTheme, onBack }) {
               <div className="flex flex-col gap-4 sm:gap-5 pt-4 sm:pt-6 border-t-2 border-dashed border-gray-200">
                 <input type="text" placeholder="CÓDIGO DA SALA" value={roomIdInput} onChange={(e) => setRoomIdInput(e.target.value.toUpperCase())} className="w-full bg-emerald-50 border-4 border-emerald-100 p-4 sm:p-5 rounded-[2rem] focus:outline-none focus:border-[#009660] placeholder-emerald-900/30 text-center text-xl sm:text-2xl font-black uppercase text-[#009660] transition-all" />
                 <button onClick={handleJoinRoom} className="w-full bg-[#009660] hover:bg-[#00a86b] text-white font-black py-5 sm:py-6 rounded-3xl shadow-[0_8px_0_#006d46] transition-all transform hover:scale-105 active:translate-y-1 active:shadow-[0_4px_0_#006d46] text-xl sm:text-2xl uppercase tracking-tight border-b-2 border-emerald-400/20">Entrar no Jogo 🧩</button>
-                <button onClick={onBack} className="mt-8 text-white/40 hover:text-white font-black text-xs uppercase tracking-widest transition-colors flex items-center justify-center gap-2">
-                  <span>⬅️</span> VOLTAR PARA LISTA DE JOGOS
+                <button 
+                  onClick={onBack} 
+                  className="mt-6 text-white/60 hover:text-white font-black text-sm uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 hover:translate-y-[-2px] active:translate-y-0"
+                >
+                  VOLTAR PARA SELEÇÃO DE TEMAS
                 </button>
               </div>
             </div>
@@ -242,17 +231,6 @@ export default function GameContainer({ user, isGuest, initialTheme, onBack }) {
             <img src={logoPrefeitura} alt="Prefeitura" className="h-4 sm:h-8 w-auto object-contain pointer-events-none" />
           </div>
           <div className="absolute top-6 right-6 flex items-center gap-4">
-            <button 
-              onClick={handleLogout} 
-              className="bg-red-50 text-red-500 p-3 rounded-2xl border-2 border-red-100 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center shadow-lg" 
-              title="Sair para Login"
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                <polyline points="16 17 21 12 16 7" />
-                <line x1="21" y1="12" x2="9" y2="12" />
-              </svg>
-            </button>
           </div>
           <h1 className="text-3xl sm:text-4xl font-black drop-shadow-lg text-[#FFCE00] uppercase italic tracking-tighter text-center leading-none">
             {isRoomOwner ? "Configure sua Sala!" : "Aguardando amiguinhos..."}
@@ -538,7 +516,7 @@ export default function GameContainer({ user, isGuest, initialTheme, onBack }) {
                   </div>
                 )}
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 w-full">
+                <div className="flex flex-col gap-3 sm:gap-4 w-full">
                   {players.find(p => (p.id === myId || p.playerId === playerId))?.ready ? (
                     <div className="bg-emerald-100 text-emerald-700 px-6 py-4 rounded-2xl sm:rounded-3xl text-xl font-black flex items-center justify-center gap-3 border-2 border-emerald-200 shadow-inner">
                       <span>✅</span> VOCÊ ESTÁ PRONTO!

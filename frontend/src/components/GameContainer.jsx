@@ -208,7 +208,7 @@ export default function GameContainer({ user, isGuest, initialTheme, onBack }) {
                 <button onClick={handleJoinRoom} className="w-full bg-[#009660] hover:bg-[#00a86b] text-white font-black py-5 sm:py-6 rounded-3xl shadow-[0_8px_0_#006d46] transition-all transform hover:scale-105 active:translate-y-1 active:shadow-[0_4px_0_#006d46] text-xl sm:text-2xl uppercase tracking-tight border-b-2 border-emerald-400/20">Entrar no Jogo 🧩</button>
                 <button 
                   onClick={onBack} 
-                  className="mt-6 text-white/60 hover:text-white font-black text-sm uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 hover:translate-y-[-2px] active:translate-y-0"
+                  className="mt-6 text-emerald-900/40 hover:text-emerald-900 font-black text-sm uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 hover:translate-y-[-2px] active:translate-y-0"
                 >
                   VOLTAR PARA SELEÇÃO DE TEMAS
                 </button>

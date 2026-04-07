@@ -15,6 +15,7 @@ function App() {
     return window.location.pathname.startsWith('/admin');
   });
   const [selectedTheme, setSelectedTheme] = useState(null);
+  const [isJoiningRoom, setIsJoiningRoom] = useState(false);
 
   useEffect(() => {
     const savedUser = AuthService.getCurrentUser();
@@ -31,6 +32,7 @@ function App() {
   const handleAuthSuccess = (userData) => {
     setUser(userData);
     setGuestMode(false);
+    setIsJoiningRoom(false);
   };
 
   const handlePasswordChanged = (userData) => {
@@ -48,11 +50,12 @@ function App() {
 
   if (loading) return null;
 
-  if (!user && !guestMode) {
+  if (!user && !guestMode && !isJoiningRoom) {
     return (
       <AuthScreen 
         onAuthSuccess={handleAuthSuccess} 
         onGuestStart={() => setGuestMode(true)} 
+        onJoinRoom={() => setIsJoiningRoom(true)}
       />
     );
   }
@@ -66,20 +69,26 @@ function App() {
   return (
     <>
       <GameProvider>
-        {selectedTheme ? (
+        {(selectedTheme || isJoiningRoom) ? (
           <GameContainer 
             user={user} 
-            isGuest={guestMode} 
+            isGuest={guestMode || isJoiningRoom} 
             initialTheme={selectedTheme}
-            onBack={() => setSelectedTheme(null)}
+            onBack={() => { 
+                setSelectedTheme(null); 
+                setIsJoiningRoom(false); 
+                if (!user) setGuestMode(false); // Retorna para a AuthScreen se for convidado
+            }}
           />
         ) : (
           <HomeScreen 
             user={user} 
             onSelectTheme={setSelectedTheme} 
+            onJoinRoom={() => setIsJoiningRoom(true)}
           />
         )}
       </GameProvider>
+
       
       {showAdminPanel && user?.role === 'ADMIN' && (
         <AdminDashboard onBack={() => toggleAdminPanel(false)} />

@@ -3,7 +3,7 @@ import logoCampina from '../assets/logo-campina.png';
 import logoPrefeitura from '../assets/logo-prefeitura.png';
 import AuthService from "../services/AuthService";
 
-const AuthScreen = ({ onAuthSuccess, onGuestStart }) => {
+const AuthScreen = ({ onAuthSuccess, onGuestStart, onJoinRoom }) => {
   const [view, setView] = useState("initial"); // initial, register, login
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -102,6 +102,13 @@ const AuthScreen = ({ onAuthSuccess, onGuestStart }) => {
           >
             JOGAR SEM CONTA 🎮
           </button>
+
+          <button
+            onClick={onJoinRoom}
+            className="bg-amber-50 text-amber-600 py-4 px-8 rounded-2xl font-black text-base uppercase tracking-widest hover:bg-amber-100 transition-all active:scale-95 cursor-pointer border-2 border-amber-100"
+          >
+            ENTRAR EM SALA 🔑
+          </button>
           
           <p className="text-[9px] text-center font-black text-emerald-900/30 uppercase tracking-widest mt-1">
             Acesso limitado para convidados
@@ -110,6 +117,7 @@ const AuthScreen = ({ onAuthSuccess, onGuestStart }) => {
       </div>
     );
   }
+
 
   return (
     <div className="min-h-screen bg-[#009660] flex flex-col items-center justify-center p-6 font-sans overflow-hidden relative">

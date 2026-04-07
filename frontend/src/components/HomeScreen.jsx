@@ -117,7 +117,7 @@ const GameDetailsModal = ({ theme, onPlay, onClose }) => {
   );
 };
 
-const HomeScreen = ({ user, onSelectTheme }) => {
+const HomeScreen = ({ user, onSelectTheme, onJoinRoom }) => {
   const [themes, setThemes] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -297,6 +297,12 @@ const HomeScreen = ({ user, onSelectTheme }) => {
                 className="w-full bg-white border-2 border-emerald-100 p-4 pl-12 rounded-[2rem] focus:border-emerald-300 transition-all outline-none font-black text-sm text-emerald-900 uppercase placeholder:text-emerald-200"
               />
             </div>
+            <button
+              onClick={onJoinRoom}
+              className="bg-amber-400 text-amber-900 p-4 rounded-[1.5rem] font-black text-sm shadow-[0_6px_0_#d97706] hover:brightness-110 transition-all active:translate-y-1 active:shadow-none flex items-center gap-2 whitespace-nowrap"
+            >
+              <span>🔑</span> <span className="hidden sm:inline">ENTRAR EM SALA</span>
+            </button>
             {(user?.role === 'ADMIN' || user?.role === 'PROFESSOR') && (
               <button
                 onClick={() => setShowCreator(true)}
@@ -305,6 +311,7 @@ const HomeScreen = ({ user, onSelectTheme }) => {
                 <span>➕</span> <span className="hidden sm:inline">CRIAR NOVO</span>
               </button>
             )}
+
           </div>
         </header>
 

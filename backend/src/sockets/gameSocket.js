@@ -172,8 +172,17 @@ module.exports = (io) => {
           if (trancamentoWinnerId) game.scores[trancamentoWinnerId] += 1;
           
           playerIds.forEach(pId => {
-            const isWinner = pId === winnerId;
-            const message = isWinner ? "Você venceu por menos pontos na mão!" : "O jogo trancou! Alguém tinha menos pontos.";
+            const isWinner = winnerId && pId === winnerId;
+            let message = "";
+            
+            if (isWinner) {
+              message = "Você venceu por menos pontos na mão!";
+            } else if (!winnerId) {
+              message = "O jogo trancou e houve um empate nos pontos!";
+            } else {
+              message = "O jogo trancou! Alguém tinha menos pontos.";
+            }
+
             io.to(pId).emit("gameOver", { iWon: isWinner, message });
           });
           game.status = 'finished';

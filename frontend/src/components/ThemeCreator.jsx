@@ -439,9 +439,14 @@ const ThemeCreator = ({ onThemeCreated, onClose }) => {
                   <div key={i} className={`w-2 h-2 rounded-full transition-all ${s ? 'bg-emerald-400' : 'bg-gray-200'}`} />
                 ))}
               </div>
-              <p className="text-[9px] text-center mt-1.5 font-black text-emerald-900/30 uppercase tracking-widest italic">
-                O ponto '0' (zero) será vazio por padrão
-              </p>
+              <div className="mt-2 space-y-1">
+                <p className="text-[9px] text-center font-black text-emerald-900/30 uppercase tracking-widest italic leading-tight">
+                  O ponto '0' (zero) será vazio por padrão
+                </p>
+                <p className="text-[9px] text-center font-black text-emerald-900/40 uppercase tracking-widest italic leading-tight">
+                  Cada imagem acima vale seu respectivo valor (1 a 6) para o cálculo de pontos no jogo
+                </p>
+              </div>
             </section>
           </div>
         </div>

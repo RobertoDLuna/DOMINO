@@ -30,21 +30,43 @@ class ScoringService {
    */
   static getTrancamentoWinner(game) {
     let winnerId = null;
-    let minPieces = Infinity;
+    let minPoints = Infinity;
     let isTie = false;
 
-    game.players.forEach((pId) => {
-      const handLen = game.hands[pId] ? game.hands[pId].length : 0;
-      if (handLen < minPieces) {
-        minPieces = handLen;
+    game.players.forEach((player) => {
+      const pId = typeof player === 'string' ? player : player.id;
+      const hand = game.hands[pId] || [];
+      
+      // Calculate total points in hand
+      const totalPoints = hand.reduce((sum, piece) => {
+        return sum + (piece.vA || 0) + (piece.vB || 0);
+      }, 0);
+
+      console.log(`📊 Jogador ${pId} tem ${totalPoints} pontos na mão (${hand.length} peças).`);
+
+      if (totalPoints < minPoints) {
+        minPoints = totalPoints;
         winnerId = pId;
         isTie = false;
-      } else if (handLen === minPieces) {
-        isTie = true;
+      } else if (totalPoints === minPoints) {
+        // Regra de desempate se os pontos forem iguais: quem tem menos peças vence?
+        // Se ainda assim for igual, é empate.
+        const currentWinnerHandLen = game.hands[winnerId]?.length || 0;
+        if (hand.length < currentWinnerHandLen) {
+            winnerId = pId;
+            isTie = false;
+        } else if (hand.length === currentWinnerHandLen) {
+            isTie = true;
+        }
       }
     });
 
-    if (isTie) return null;
+    if (isTie) {
+        console.log("🤝 Empate absoluto no trancamento (pontos e peças iguais).");
+        return null;
+    }
+    
+    console.log(`🏆 Vencedor do trancamento: ${winnerId} com ${minPoints} pontos.`);
     return winnerId;
   }
 }

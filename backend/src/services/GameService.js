@@ -52,6 +52,8 @@ class GameService {
           id: `p-${i}-${j}`, 
           ladoA: images[i], 
           ladoB: images[j],
+          vA: i,
+          vB: j,
           theme: theme.name 
         });
       }
@@ -111,19 +113,7 @@ class GameService {
    * Determines the winner when a deadlock occurs (player with fewer pieces).
    */
   getWinnerOnDeadlock(game) {
-    let winner = typeof game.players[0] === 'string' ? game.players[0] : game.players[0].id;
-    let minPieces = game.hands[winner] ? game.hands[winner].length : 999;
-
-    game.players.forEach(p => {
-      const pId = typeof p === 'string' ? p : p.id;
-      const handLen = game.hands[pId] ? game.hands[pId].length : 999;
-      if (handLen < minPieces) {
-        minPieces = handLen;
-        winner = pId;
-      }
-    });
-
-    return winner;
+    return ScoringService.getTrancamentoWinner(game);
   }
 
   /**
@@ -151,14 +141,14 @@ class GameService {
         if (piece.ladoB === leftEnd) {
           canPlay = true;
         } else if (piece.ladoA === leftEnd) {
-          finalPiece = { ...piece, ladoA: piece.ladoB, ladoB: piece.ladoA };
+          finalPiece = { ...piece, ladoA: piece.ladoB, ladoB: piece.ladoA, vA: piece.vB, vB: piece.vA };
           canPlay = true;
         }
       } else if (side === 'right') {
         if (piece.ladoA === rightEnd) {
           canPlay = true;
         } else if (piece.ladoB === rightEnd) {
-          finalPiece = { ...piece, ladoA: piece.ladoB, ladoB: piece.ladoA };
+          finalPiece = { ...piece, ladoA: piece.ladoB, ladoB: piece.ladoA, vA: piece.vB, vB: piece.vA };
           canPlay = true;
         }
       }

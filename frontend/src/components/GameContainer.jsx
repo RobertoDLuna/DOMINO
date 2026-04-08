@@ -15,7 +15,7 @@ import logoPrefeitura from '../assets/logo-prefeitura.png';
 
 export default function GameContainer({ user, isGuest, initialTheme, onBack }) {
   const {
-    room, players, gameState, myHand, board, currentTurn,
+    room, players, gameState, myHand, board, currentTurn, startingPieceId,
     createRoom, joinRoom, leaveRoom, startGame, makeMove, passTurn, forceEndGame, updateMaxPlayers, playAgain,
     iWon, gameOverMsg, scores, currentTheme, maxPlayers, myId, playerId, isConnected
   } = useGame();
@@ -119,6 +119,9 @@ export default function GameContainer({ user, isGuest, initialTheme, onBack }) {
   }, [gameState, iWon]);
 
   const handleDragStart = (pieceId) => {
+    if (board.length === 0 && startingPieceId && pieceId !== startingPieceId) {
+      return; // Bloqueia o drag se não for a peça obrigatória inicial
+    }
     setDraggingPiece(pieceId);
   };
 
@@ -131,6 +134,12 @@ export default function GameContainer({ user, isGuest, initialTheme, onBack }) {
 
   const handlePieceClick = (piece) => {
     if (!isMyTurn) return;
+    
+    // Bloqueia qualquer peça que não seja a carroça inicial se o tabuleiro for vazio
+    if (board.length === 0 && startingPieceId && piece.id !== startingPieceId) {
+      return;
+    }
+
     if (selectedPiece?.id === piece.id) {
       setSelectedPiece(null);
       return;
@@ -405,9 +414,12 @@ export default function GameContainer({ user, isGuest, initialTheme, onBack }) {
 
         <div className={`bg-white/95 p-1.5 sm:p-3 shadow-[0_-10px_60px_rgba(0,0,0,0.05)] relative z-30 border-t border-emerald-100 flex flex-col sm:flex-row items-center justify-between gap-2 overflow-visible ${gameState === 'finished' ? 'blur-md translate-y-full' : ''} transition-all duration-1000`}>
           <div className="flex-1 flex justify-start sm:justify-center gap-12 sm:gap-16 overflow-x-auto py-8 sm:py-12 scrollbar-hide w-full max-w-[100vw] sm:max-w-none mx-auto min-h-[160px] sm:min-h-[220px] items-center px-10">
-            {myHand.map((piece) => (
-              <Piece key={piece.id} piece={piece} draggable={isMyTurn} selected={selectedPiece?.id === piece.id} onDragStart={() => handleDragStart(piece.id)} onClick={() => handlePieceClick(piece)} className={`${!isMyTurn ? 'opacity-30 grayscale scale-100 pointer-events-none' : 'scale-110 sm:scale-140'}`} />
-            ))}
+            {myHand.map((piece) => {
+              const isFirstPlayLocked = board.length === 0 && startingPieceId && piece.id !== startingPieceId;
+              return (
+                <Piece key={piece.id} piece={piece} draggable={isMyTurn && !isFirstPlayLocked} selected={selectedPiece?.id === piece.id} onDragStart={(e) => { if (!isFirstPlayLocked) handleDragStart(piece.id); }} onClick={() => handlePieceClick(piece)} className={`${(!isMyTurn || isFirstPlayLocked) ? 'opacity-30 grayscale scale-100 pointer-events-none' : 'scale-110 sm:scale-140'} ${board.length === 0 && piece.id === startingPieceId && isMyTurn ? 'ring-4 ring-yellow-400 animate-pulse' : ''}`} />
+              );
+            })}
           </div>
         </div>
 

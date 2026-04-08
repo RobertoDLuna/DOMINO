@@ -70,14 +70,45 @@ class GameService {
       playerScores[pId] = 0;
     });
 
-    const firstPlayerId = typeof players[0] === 'string' ? players[0] : players[0].id;
+    let startingPlayerId = typeof players[0] === 'string' ? players[0] : players[0].id;
+    let startingPieceId = null;
+    let maxDouble = -1;
+    let maxPieceValueSum = -1;
+    let fallbackPlayerId = startingPlayerId;
+    let fallbackPieceId = null;
+
+    Object.entries(playerHands).forEach(([pId, hand]) => {
+      hand.forEach(piece => {
+        // Encontra a maior carroça
+        if (piece.vA === piece.vB && piece.vA > maxDouble) {
+          maxDouble = piece.vA;
+          startingPlayerId = pId;
+          startingPieceId = piece.id;
+        }
+        
+        // Em paralelo, calculamos fallback caso ngm tire carroça na distribuição
+        const pieceSum = piece.vA + piece.vB;
+        if (maxDouble === -1 && pieceSum > maxPieceValueSum) {
+          maxPieceValueSum = pieceSum;
+          fallbackPlayerId = pId;
+          fallbackPieceId = piece.id;
+        }
+      });
+    });
+
+    // Se nenhuma carroça foi distribuída (raro mas possível em menos de 4 jogadores), usa o fallback
+    if (maxDouble === -1) {
+      startingPlayerId = fallbackPlayerId;
+      startingPieceId = fallbackPieceId;
+    }
 
     return {
       board: [],
       hands: playerHands,
       scores: playerScores,
       pile: pieces,
-      currentTurn: firstPlayerId,
+      currentTurn: startingPlayerId,
+      startingPieceId: startingPieceId, // Armazena qual peça DEVE ser a primeira jogada
       players: players,
       theme: theme, // Store theme for UI info
       status: 'playing'
@@ -132,6 +163,10 @@ class GameService {
     let finalPiece = { ...piece };
 
     if (game.board.length === 0) {
+      // Primeira jogada do jogo: DEVE ser obrigatoriamente a peça que definiu o início
+      if (game.startingPieceId && game.startingPieceId !== piece.id) {
+        return { canPlay: false, error: 'Você deve começar o jogo com a maior carroça que possui!' };
+      }
       canPlay = true;
     } else {
       const leftEnd = game.board[0].ladoA;

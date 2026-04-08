@@ -23,15 +23,21 @@ export default function Piece({
   // Empty string = same origin (works in dev via Vite proxy AND in production)
   const API_BASE = import.meta.env.VITE_API_URL?.replace('/api', '') || '';
 
-  const renderSide = (symbol) => {
+  const renderSide = (symbol, value) => {
     if (typeof symbol === 'string' && (symbol.startsWith('/uploads') || symbol.startsWith('http'))) {
       const src = symbol.startsWith('http') ? symbol : `${API_BASE}${symbol}`;
       return (
-        <img
-          src={src}
-          alt="Symbol"
-          className="w-full h-full object-cover p-1.5 sm:p-2.5 drop-shadow-sm transition-transform hover:scale-110"
-        />
+        <div className="relative w-full h-full p-1.5 sm:p-2.5 flex items-center justify-center">
+          <img
+            src={src}
+            alt="Symbol"
+            className="w-full h-full object-cover drop-shadow-sm transition-transform hover:scale-110"
+          />
+          {/* Indicador visual de valor para temas com fotos */}
+          <div className="absolute bottom-1 right-1 bg-black/60 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full pointer-events-none shadow-sm">
+            {value}
+          </div>
+        </div>
       );
     }
     return symbol;
@@ -61,7 +67,7 @@ export default function Piece({
     >
       {/* Lado A */}
       <div className={`flex-1 flex items-center justify-center ${horizontal ? 'text-5xl' : 'text-4xl'} select-none w-full h-full text-center text-slate-800`}>
-        {renderSide(iconA)}
+        {renderSide(iconA, reverse ? piece.vB : piece.vA)}
       </div>
 
       {/* Divisória Central 'Groove' */}
@@ -72,7 +78,7 @@ export default function Piece({
 
       {/* Lado B */}
       <div className={`flex-1 flex items-center justify-center ${horizontal ? 'text-5xl' : 'text-4xl'} select-none w-full h-full text-center text-slate-800`}>
-        {renderSide(iconB)}
+        {renderSide(iconB, reverse ? piece.vA : piece.vB)}
       </div>
 
       {/* Brilho sutil no topo para efeito 3D */}

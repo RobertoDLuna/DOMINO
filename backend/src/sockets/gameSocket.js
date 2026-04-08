@@ -83,6 +83,7 @@ module.exports = (io) => {
             socket.emit("gameStarted", {
               hand: room.hands[socket.id],
               currentTurn: room.currentTurn,
+              startingPieceId: room.startingPieceId,
               board: room.board,
               scores: room.scores,
               theme: room.theme
@@ -125,6 +126,7 @@ module.exports = (io) => {
             io.to(pId).emit("gameStarted", {
               hand: updatedRoom.hands[pId],
               currentTurn: updatedRoom.currentTurn,
+              startingPieceId: updatedRoom.startingPieceId,
               board: updatedRoom.board,
               scores: updatedRoom.scores,
               theme: updatedRoom.theme
@@ -202,6 +204,11 @@ module.exports = (io) => {
         if (!game || game.currentTurn !== socket.id) return;
 
         const moveResult = GameService.processMove(game, socket.id, pieceId, side);
+        
+        if (!moveResult.canPlay && moveResult.error) {
+          return socket.emit("error", { message: moveResult.error });
+        }
+
         if (moveResult.canPlay) {
           socket.emit("updateHand", game.hands[socket.id]);
           if (moveResult.isOver) {

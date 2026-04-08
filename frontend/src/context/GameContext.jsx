@@ -10,6 +10,7 @@ export const GameProvider = ({ children }) => {
   const [myHand, setMyHand] = useState([]);
   const [board, setBoard] = useState([]);
   const [currentTurn, setCurrentTurn] = useState(null);
+  const [startingPieceId, setStartingPieceId] = useState(null);
   const [myId, setMyId] = useState(null);
   const [playerId, setPlayerId] = useState(() => {
     const saved = localStorage.getItem('domino_player_id');
@@ -67,9 +68,10 @@ export const GameProvider = ({ children }) => {
       setPlayers(updatedPlayers);
     });
 
-    socket.on('gameStarted', ({ hand, currentTurn, board, scores, theme }) => {
+    socket.on('gameStarted', ({ hand, currentTurn, startingPieceId, board, scores, theme }) => {
       setMyHand(hand || []); // Garantir array
       setCurrentTurn(currentTurn);
+      setStartingPieceId(startingPieceId);
       setBoard(board || []); // Garantir array
       setScores(scores || {});
       setCurrentTheme(theme);
@@ -217,6 +219,7 @@ export const GameProvider = ({ children }) => {
     myHand,
     board,
     currentTurn,
+    startingPieceId,
     createRoom,
     joinRoom,
     leaveRoom,

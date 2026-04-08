@@ -200,10 +200,10 @@ export default function GameContainer({ user, isGuest, initialTheme, onBack }) {
             {isConnected ? 'Servidor Conectado' : 'Conectando ao Servidor...'}
           </p>
         </header>
-        <div className="flex-1 flex flex-col items-center justify-center z-10 w-full overflow-y-auto scrollbar-hide py-8">
-          <div className="w-full max-w-sm lg:max-w-4xl flex flex-col items-center gap-8">
-            <div className="w-full bg-white/0 sm:bg-white sm:p-12 rounded-[3.5rem] sm:shadow-[0_25px_80px_rgba(0,0,0,0.3)] text-center sm:border-b-[12px] sm:border-emerald-900/10 overflow-hidden">
-              <div className="mb-6 sm:mb-8 flex flex-col gap-2">
+        <div className="flex-1 flex flex-col items-center justify-center z-10 w-full overflow-y-auto scrollbar-hide py-4 sm:py-6">
+          <div className="w-full max-w-sm lg:max-w-[50vw] flex flex-col items-center gap-4 sm:gap-6">
+            <div className="w-full bg-white/0 sm:bg-white sm:p-10 rounded-[3.5rem] sm:shadow-[0_25px_80px_rgba(0,0,0,0.3)] text-center sm:border-b-[12px] sm:border-emerald-900/10 overflow-hidden">
+              <div className="mb-4 sm:mb-6 flex flex-col gap-2">
                 <div className="flex items-center gap-2 w-full">
                   <input type="text" placeholder="SEU NOME" value={playerInfo.name} disabled={!!user} onChange={(e) => setPlayerInfo({...playerInfo, name: e.target.value.toUpperCase()})} className="flex-1 bg-emerald-50 border-4 border-emerald-100 p-4 sm:p-5 rounded-[2rem] focus:outline-none focus:border-[#009660] placeholder-emerald-900/30 text-center text-xl sm:text-2xl font-black uppercase text-[#009660] transition-all min-w-0" />
                 </div>
@@ -211,13 +211,13 @@ export default function GameContainer({ user, isGuest, initialTheme, onBack }) {
                 {isGuest && <p className="text-[10px] font-black uppercase text-emerald-900/40 tracking-widest">Modo Convidado</p>}
                 {user && <p className="text-[10px] font-black uppercase text-emerald-900/40 tracking-widest">{user.role} | {user.school || 'Externo'}</p>}
               </div>
-              <button onClick={handleCreateRoom} className="w-full bg-[#FFCE00] hover:bg-[#ffe050] text-[#009660] font-black py-5 sm:py-6 rounded-3xl shadow-[0_8px_0_#d1a900] transition-all transform hover:scale-105 active:translate-y-1 active:shadow-[0_4px_0_#d1a900] mb-6 sm:mb-8 text-xl sm:text-2xl uppercase tracking-tight">Criar Sala 🏫</button>
-              <div className="flex flex-col gap-4 sm:gap-5 pt-4 sm:pt-6 border-t-2 border-dashed border-gray-200">
+              <button onClick={handleCreateRoom} className="w-full bg-[#FFCE00] hover:bg-[#ffe050] text-[#009660] font-black py-5 sm:py-6 rounded-3xl shadow-[0_8px_0_#d1a900] transition-all transform hover:scale-105 active:translate-y-1 active:shadow-[0_4px_0_#d1a900] mb-4 sm:mb-6 text-xl sm:text-2xl uppercase tracking-tight">Criar Sala 🏫</button>
+              <div className="flex flex-col gap-4 pt-3 sm:pt-4 border-t-2 border-dashed border-gray-200">
                 <input type="text" placeholder="CÓDIGO DA SALA" value={roomIdInput} onChange={(e) => setRoomIdInput(e.target.value.toUpperCase())} className="w-full bg-emerald-50 border-4 border-emerald-100 p-4 sm:p-5 rounded-[2rem] focus:outline-none focus:border-[#009660] placeholder-emerald-900/30 text-center text-xl sm:text-2xl font-black uppercase text-[#009660] transition-all" />
                 <button onClick={handleJoinRoom} className="w-full bg-[#009660] hover:bg-[#00a86b] text-white font-black py-5 sm:py-6 rounded-3xl shadow-[0_8px_0_#006d46] transition-all transform hover:scale-105 active:translate-y-1 active:shadow-[0_4px_0_#006d46] text-xl sm:text-2xl uppercase tracking-tight border-b-2 border-emerald-400/20">Entrar no Jogo 🧩</button>
                 <button 
                   onClick={onBack} 
-                  className="mt-6 text-emerald-900/40 hover:text-emerald-900 font-black text-sm uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 hover:translate-y-[-2px] active:translate-y-0"
+                  className="mt-4 text-emerald-900/40 hover:text-emerald-900 font-black text-sm uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 hover:translate-y-[-2px] active:translate-y-0"
                 >
                   VOLTAR PARA SELEÇÃO DE TEMAS
                 </button>

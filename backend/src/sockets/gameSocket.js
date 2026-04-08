@@ -286,14 +286,45 @@ module.exports = (io) => {
     });
 
     socket.on("disconnect", async () => {
+      const disconnectedSocketId = socket.id;
       try {
         const allRooms = await RedisService.getAllRooms();
         for (const roomId in allRooms) {
           const room = allRooms[roomId];
-          const player = room.players.find(p => p.id === socket.id);
-          if (player) console.log(`🔌 ${player.playerId} desconectado temporariamente.`);
+          const playerIdx = room.players.findIndex(p => p.id === disconnectedSocketId);
+          
+          if (playerIdx !== -1) {
+            const player = room.players[playerIdx];
+            console.log(`🔌 ${player.playerId} desconectado da sala ${roomId}. Aguardando 1 min para reconexão...`);
+            
+            // Se o jogo não estiver rolando, não precisa encerrar forçadamente com timer
+            if (room.status !== 'playing') continue;
+
+            // Inicia o timer de 1 minuto
+            setTimeout(async () => {
+              try {
+                const updatedRoom = await RedisService.getRoom(roomId);
+                if (!updatedRoom || updatedRoom.status !== 'playing') return;
+
+                // Verifica se o jogador ainda está com o socket antigo (não atualizou para um novo socket id via joinRoom)
+                const currentPlayer = updatedRoom.players.find(p => p.playerId === player.playerId);
+                
+                if (currentPlayer && currentPlayer.id === disconnectedSocketId) {
+                  console.log(`⏰ Tempo de reconexão esgotado para ${player.playerId} na sala ${roomId}.`);
+                  io.to(roomId).emit("gameForcedEnd", { 
+                    message: `A partida foi encerrada porque ${player.name} saiu e não voltou a tempo.` 
+                  });
+                  await RedisService.deleteRoom(roomId);
+                }
+              } catch (err) {
+                console.error("❌ Erro no timeout de desconexão:", err);
+              }
+            }, 60000);
+          }
         }
-      } catch (e) { console.warn("Erro no disconnect async:", e.message); }
+      } catch (e) { 
+        console.warn("⚠️ Erro no disconnect async:", e.message); 
+      }
     });
   });
 };

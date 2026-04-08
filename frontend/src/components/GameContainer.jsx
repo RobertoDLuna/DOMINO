@@ -233,38 +233,34 @@ export default function GameContainer({ user, isGuest, initialTheme, onBack }) {
   if (room && gameState === "lobby") {
     return (
       <div className="flex flex-col h-screen bg-[#009660] text-white font-sans p-4 sm:p-8 overflow-hidden relative">
-        <header className="flex flex-col items-center flex-shrink-0 z-10 pt-4 sm:pt-0">
-          <div className="flex items-center gap-4 sm:gap-6 mb-4 bg-white px-5 py-2 sm:py-3 rounded-[2rem] shadow-lg border-4 border-emerald-900/10">
-            <img src={logoCampina} alt="Seduc" className="h-4 sm:h-8 w-auto object-contain pointer-events-none" />
-            <div className="w-px h-4 sm:h-6 bg-gray-200 self-center"></div>
-            <img src={logoPrefeitura} alt="Prefeitura" className="h-4 sm:h-8 w-auto object-contain pointer-events-none" />
+        <header className="flex flex-col items-center flex-shrink-0 z-10 pt-2 sm:pt-4">
+          <div className="flex items-center gap-4 sm:gap-8 mb-4 bg-white px-8 py-3 rounded-[3rem] shadow-xl border-4 border-emerald-900/10 transition-all hover:scale-105">
+            <img src={logoCampina} alt="Seduc" className="h-10 sm:h-16 w-auto object-contain pointer-events-none" />
+            <div className="w-px h-8 sm:h-12 bg-gray-200 self-center"></div>
+            <img src={logoPrefeitura} alt="Prefeitura" className="h-10 sm:h-16 w-auto object-contain pointer-events-none" />
           </div>
           <div className="absolute top-6 right-6 flex items-center gap-4">
           </div>
           <h1 className="text-3xl sm:text-4xl font-black drop-shadow-lg text-[#FFCE00] uppercase italic tracking-tighter text-center leading-none">
             {isRoomOwner ? "Configure sua Sala!" : "Aguardando amiguinhos..."}
           </h1>
-          <div className="mt-2 flex flex-col sm:flex-row items-center gap-3">
-            <div className="bg-white/10 px-4 py-1 rounded-full border border-white/20">
-              <span className="text-xs font-black uppercase tracking-widest">{players.length} / {maxPlayers} JOGADORES</span>
-            </div>
-          </div>
+
           {room && !showCreator && (
-            <div id="room-code-display" className="mt-4 bg-emerald-950/60 px-6 py-3 rounded-2xl border-4 border-[#FFCE00]/30 flex flex-col items-center gap-1 shadow-[0_10px_40px_rgba(0,0,0,0.3)] transform hover:scale-105 transition-all">
+            <div id="room-code-display" className="mt-2 bg-emerald-950/60 px-6 py-2 rounded-2xl border-4 border-[#FFCE00]/30 flex flex-col items-center gap-1 shadow-[0_10px_40px_rgba(0,0,0,0.3)] transform hover:scale-105 transition-all">
               <span className="text-[10px] sm:text-xs font-black uppercase opacity-60 tracking-[0.2em] text-[#FFCE00]">CÓDIGO DA SALA</span>
               <span className="text-3xl sm:text-5xl font-mono font-black text-white tracking-[0.2em] select-all drop-shadow-lg">{room}</span>
             </div>
           )}
         </header>
-        <div className="flex-1 flex flex-col items-center justify-start z-10 w-full overflow-y-auto scrollbar-hide py-6 pb-20 h-full">
-          <div className="w-full max-w-lg lg:max-w-4xl flex flex-col items-center gap-6 sm:gap-4">
+        <div className="flex-1 flex-col items-center justify-start z-10 w-full overflow-y-auto scrollbar-hide py-3 pb-10 h-full flex">
+          <div className="w-full max-w-[600px] flex flex-col items-center gap-4">
             {isRoomOwner ? (
               <div className="w-full flex flex-col gap-6">
-                <div className="bg-white/10 p-4 rounded-[2rem] border border-white/20 backdrop-blur-sm">
-                  <p className="text-[10px] font-black uppercase tracking-widest mb-3 opacity-60 text-center">Capacidade da Sala</p>
-                  <div className="flex justify-center gap-4">
+                <div className="bg-white/10 p-3 sm:p-4 rounded-[2rem] border border-white/20 backdrop-blur-sm">
+                  <p className="text-[10px] font-black uppercase tracking-widest mb-2 opacity-60 text-center">Capacidade da Sala</p>
+                  <div className="flex justify-center gap-3">
                     {[2, 3, 4].map(num => (
-                      <button key={num} onClick={() => updateMaxPlayers(num)} className={`w-12 h-12 rounded-full font-black text-xl transition-all shadow-lg border-2 ${maxPlayers === num ? 'bg-[#FFCE00] text-[#009660] border-white scale-110' : 'bg-white/20 text-white border-transparent opacity-60 hover:opacity-100'}`}>{num}</button>
+                      <button key={num} onClick={() => updateMaxPlayers(num)} className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full font-black text-lg sm:text-xl transition-all shadow-lg border-2 ${maxPlayers === num ? 'bg-[#FFCE00] text-[#009660] border-white scale-110' : 'bg-white/20 text-white border-transparent opacity-60 hover:opacity-100'}`}>{num}</button>
                     ))}
                   </div>
                 </div>
@@ -284,51 +280,56 @@ export default function GameContainer({ user, isGuest, initialTheme, onBack }) {
 
             {!showCreator && (
               <>
-                <div className="w-full max-w-sm flex flex-col gap-5 mt-4">
-                  {/* Selected Theme Badge */}
+                <div className="w-full max-w-[600px] flex flex-col gap-5 mt-4">
+                  {/* Selected Theme Badge - Centralizado */}
                   {initialTheme && (
-                    <div className="bg-white/10 backdrop-blur-md p-4 rounded-3xl border-2 border-white/10 flex items-center gap-4 animate-in fade-in zoom-in duration-500 shadow-xl">
-                      <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-4xl shadow-lg shrink-0">
+                    <div className="bg-white/10 backdrop-blur-md p-4 rounded-3xl border-2 border-white/10 flex flex-col items-center gap-3 shadow-xl w-full">
+                      <div className="w-20 h-20 bg-white rounded-3xl flex items-center justify-center text-5xl shadow-lg shrink-0">
                         {initialTheme.emoji || '🎨'}
                       </div>
-                      <div className="text-left overflow-hidden">
-                        <p className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-0.5 leading-none">Tema Ativo</p>
-                        <h4 className="text-xl font-black text-[#FFCE00] uppercase italic tracking-tighter truncate">{initialTheme.name}</h4>
-                        <p className="text-[10px] font-black text-white/60 truncate">{initialTheme.category?.name || 'GERAL'}</p>
+                      <div className="text-center">
+                        <p className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em] mb-1">Tema Ativo</p>
+                        <h4 className="text-2xl font-black text-[#FFCE00] uppercase italic tracking-tighter">{initialTheme.name}</h4>
+                        <p className="text-[10px] font-black text-white/60">{initialTheme.category?.name || 'GERAL'}</p>
                       </div>
                     </div>
                   )}
 
-                  {players.length >= maxPlayers ? (
-                    isRoomOwner && (
-                      <button onClick={handleStartGame} className="bg-[#FFCE00] hover:bg-[#ffe050] text-[#009660] px-10 py-5 sm:px-12 sm:py-6 rounded-[2rem] sm:rounded-[3rem] font-black text-2xl sm:text-3xl shadow-[0_8px_0_#d1a900] animate-bounce-slow transition-all active:translate-y-1 active:shadow-[0_4px_0_#d1a900] border-b-2 border-white/20 uppercase">JOGAR! 🚀</button>
-                    )
-                  ) : (
-                    <div className="bg-black/20 p-4 sm:p-5 rounded-3xl border border-white/10">
-                      <p className="text-white font-black text-sm sm:text-base uppercase tracking-widest animate-pulse italic text-center">Aguardando amiguinhos ({players.length}/{maxPlayers})</p>
+                  {players.length < maxPlayers && (
+                    <div className="bg-black/20 p-4 sm:p-5 rounded-3xl border border-white/10 w-full text-center">
+                      <p className="text-white font-black text-sm sm:text-base uppercase tracking-widest animate-pulse italic">
+                        Aguardando participantes ({players.length}/{maxPlayers})
+                      </p>
                     </div>
                   )}
 
-                  <div className="flex flex-col gap-3">
-                    <button onClick={leaveRoom} className="w-full bg-white group hover:bg-[#FFCE00] px-6 py-4 rounded-3xl shadow-lg transition-all flex items-center justify-center gap-3 border-b-4 border-gray-200 hover:border-yellow-600 active:translate-y-0.5 active:border-b-0">
-                      <span className="text-xl group-hover:scale-125 transition-transform">🏠</span>
-                      <span className="text-[#009660] font-black text-base uppercase tracking-tight">Sair da Sala</span>
+                  <div className="bg-white/5 backdrop-blur-sm p-5 rounded-[2.5rem] border-2 border-white/10 w-full shadow-2xl mt-2">
+                    <p className="text-[10px] font-black text-white/40 uppercase tracking-[0.3em] text-center mb-4 border-b border-white/10 pb-2">Participantes na Mesa</p>
+                    <div className="flex flex-wrap justify-center gap-3">
+                      {players.map((p, i) => (
+                        <div key={i} className={`px-4 py-2 rounded-2xl shadow-lg transition-all flex items-center gap-3 border-b-4 ${p.id === myId ? 'bg-[#FFCE00] text-[#009660] border-yellow-600' : 'bg-white/90 text-emerald-900 border-gray-300'}`}>
+                          <span className="text-xl">{p.id === myId ? '🎓' : '🎒'}</span>
+                          <span className="font-black text-xs uppercase tracking-tight">{p.name || `Jogador ${i + 1}`}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-row gap-4 w-full">
+                    <button onClick={leaveRoom} className="flex-1 bg-white group hover:bg-[#FFCE00] px-4 py-4 rounded-2xl shadow-lg transition-all flex items-center justify-center gap-3 border-b-4 border-gray-200 active:translate-y-0.5">
+                      <span className="text-2xl">🏠</span>
+                      <span className="text-[#009660] font-black text-sm uppercase tracking-tight">Sair</span>
                     </button>
                     
-                    <button onClick={onBack} className="w-full bg-emerald-700/50 hover:bg-emerald-700 text-white px-6 py-3 rounded-2xl transition-all border-b-4 border-emerald-900/40 flex items-center justify-center gap-3 active:translate-y-0.5 active:border-b-0">
-                      <span className="text-lg">🔄</span>
-                      <span className="font-black text-xs uppercase tracking-widest leading-none">Trocar Tema ou Jogo</span>
+                    <button onClick={onBack} className="flex-1 bg-emerald-700/50 hover:bg-emerald-700 text-white px-4 py-4 rounded-2xl transition-all border-b-4 border-emerald-900/40 flex items-center justify-center gap-3 active:translate-y-0.5">
+                      <span className="text-xl">🔄</span>
+                      <span className="font-black text-xs uppercase tracking-widest leading-none">Trocar Tema</span>
                     </button>
                   </div>
-                </div>
 
-                <div id="avatar-guide-container" className="flex flex-wrap justify-center gap-2 sm:gap-3 w-full mt-4">
-                  {players.map((p, i) => (
-                    <div key={i} className={`px-4 sm:px-6 py-2 sm:py-3 rounded-[1.5rem] shadow-xl transition-all transform flex items-center gap-3 ${p.id === myId ? 'bg-[#FFCE00] text-[#009660] border-b-4 border-yellow-600' : 'bg-white text-emerald-900 border-b-4 border-gray-200'}`}>
-                      <span className="text-lg sm:text-xl">{p.id === myId ? '🎓' : '🎒'}</span>
-                      <span className="font-black text-xs sm:text-sm truncate max-w-[80px] sm:max-w-[120px]">{p.name || `JOGADOR ${i + 1}`}</span>
-                    </div>
-                  ))}
+                  {players.length >= maxPlayers && isRoomOwner && (
+                    <button onClick={handleStartGame} className="w-full bg-[#FFCE00] hover:bg-[#ffe050] text-[#009660] py-4 rounded-3xl font-black text-2xl shadow-[0_6px_0_#d1a900] transition-all active:translate-y-1 active:shadow-[0_3px_0_#d1a900] border-b-2 border-white/20 uppercase animate-bounce-slow">JOGAR! 🚀</button>
+                  )}
                 </div>
               </>
             )}

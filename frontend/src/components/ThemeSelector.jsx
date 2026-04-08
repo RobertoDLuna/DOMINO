@@ -52,8 +52,8 @@ const ThemeSelector = ({ selectedTheme, onSelect, onOpenCreator, canCreate }) =>
   ];
 
   return (
-    <div className="w-full mt-6 bg-white/10 backdrop-blur-md p-4 sm:p-6 rounded-3xl border-2 border-white/20 shadow-xl animate-in fade-in slide-in-from-bottom-4 duration-500 relative overflow-visible">
-      <div className="flex justify-between items-center mb-4">
+    <div className="w-full mt-3 bg-white/10 backdrop-blur-md p-3 sm:p-4 rounded-3xl border-2 border-white/20 shadow-xl relative">
+      <div className="flex justify-between items-center mb-2 px-2">
         <h3 className="text-white font-black text-[10px] sm:text-xs uppercase tracking-[0.2em] opacity-80 ml-2">
           ESCOLHA A MATÉRIA DE HOJE:
         </h3>
@@ -67,14 +67,14 @@ const ThemeSelector = ({ selectedTheme, onSelect, onOpenCreator, canCreate }) =>
         )}
       </div>
       
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-6 p-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3 p-1">
         {allThemes.map((theme) => (
           <button
             key={theme.id}
             onClick={() => onSelect(theme.id)}
             style={{ backgroundColor: !theme.isDefault ? theme.color : undefined }}
             className={`
-              flex flex-col items-center justify-center p-3 sm:p-4 rounded-3xl transition-all relative group min-h-[100px]
+              flex flex-col items-center justify-center p-2 rounded-2xl transition-all relative group min-h-[80px]
               ${selectedTheme === theme.id 
                 ? (theme.isDefault ? `${theme.color} scale-105 shadow-2xl border-b-4 ${theme.borderColor} ring-4 ring-white/50` : 'scale-105 shadow-2xl border-b-4 ring-4 ring-white/50')
                 : 'bg-white/10 hover:bg-white/20 border-b-4 border-transparent active:scale-95'}
@@ -113,8 +113,8 @@ const ThemeSelector = ({ selectedTheme, onSelect, onOpenCreator, canCreate }) =>
       </div>
       
       {selectedTheme && (
-        <div className="mt-4 text-center animate-in fade-in slide-in-from-top-2">
-          <p className="text-white font-bold text-xs sm:text-sm italic opacity-80">
+        <div className="mt-3 text-center animate-in fade-in slide-in-from-top-1">
+          <p className="text-white font-bold text-[9px] sm:text-[10px] italic opacity-80 px-4">
             "{allThemes.find(t => t.id === selectedTheme)?.description}"
           </p>
         </div>

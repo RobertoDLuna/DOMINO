@@ -24,6 +24,12 @@ export default function Piece({
   const API_BASE = import.meta.env.VITE_API_URL?.replace('/api', '') || '';
 
   const renderSide = (symbol, value) => {
+    const renderIndicator = () => (
+      <div className="absolute bottom-1 right-1 bg-black/60 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full pointer-events-none shadow-sm z-10">
+        {value}
+      </div>
+    );
+
     if (typeof symbol === 'string' && (symbol.startsWith('/uploads') || symbol.startsWith('http'))) {
       const src = symbol.startsWith('http') ? symbol : `${API_BASE}${symbol}`;
       return (
@@ -33,14 +39,18 @@ export default function Piece({
             alt="Symbol"
             className="w-full h-full object-cover drop-shadow-sm transition-transform hover:scale-110"
           />
-          {/* Indicador visual de valor para temas com fotos */}
-          <div className="absolute bottom-1 right-1 bg-black/60 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full pointer-events-none shadow-sm">
-            {value}
-          </div>
+          {renderIndicator()}
         </div>
       );
     }
-    return symbol;
+    
+    // Para temas não-imagem (padrões ou emojis)
+    return (
+      <div className="relative w-full h-full flex items-center justify-center">
+        {symbol}
+        {renderIndicator()}
+      </div>
+    );
   };
 
 

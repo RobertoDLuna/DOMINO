@@ -25,7 +25,7 @@ export default function Piece({
 
   const renderSide = (symbol, value) => {
     const renderIndicator = () => (
-      <div className="absolute bottom-1 right-1 bg-black/60 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full pointer-events-none shadow-sm z-10">
+      <div className="absolute bottom-0.5 right-0.5 bg-black/70 text-white text-[9px] font-black w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center rounded-full pointer-events-none shadow-md z-10 border border-white/10">
         {value}
       </div>
     );

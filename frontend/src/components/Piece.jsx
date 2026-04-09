@@ -25,6 +25,7 @@ export default function Piece({
 
   const renderSide = (symbol, value) => {
     const isImage = typeof symbol === 'string' && (symbol.startsWith('/uploads') || symbol.startsWith('http'));
+    
     const renderIndicator = () => (
       <div className="absolute bottom-0.5 right-0.5 bg-black/70 text-white text-[9px] font-black w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center rounded-full pointer-events-none shadow-md z-10 border border-white/10">
         {value}
@@ -39,13 +40,24 @@ export default function Piece({
               src={symbol.startsWith('http') ? symbol : `${API_BASE}${symbol}`} 
               alt={`Lado ${value}`}
               className="max-w-[95%] max-h-[95%] object-contain drop-shadow-md"
+              onError={(e) => {
+                console.warn("Failed to load image for piece, falling back to dots", symbol);
+                e.target.style.display = 'none';
+                e.target.parentElement.classList.add('fallback-dots');
+              }}
             />
           </div>
         ) : (
-          <div className={`grid grid-cols-2 gap-0.5 sm:gap-1 p-1 ${horizontal ? 'rotate-0' : 'rotate-90'}`}>
-            {[...Array(value)].map((_, i) => (
-              <div key={i} className="w-1.5 h-1.5 sm:w-2.5 sm:h-2.5 rounded-full bg-slate-700 shadow-sm" />
-            ))}
+          <div className={`flex items-center justify-center ${horizontal ? 'rotate-0' : 'rotate-90'}`}>
+            {symbol ? (
+              <span className="text-3xl sm:text-4xl select-none">{symbol}</span>
+            ) : (
+              <div className="grid grid-cols-2 gap-0.5 sm:gap-1 p-1">
+                {[...Array(value)].map((_, i) => (
+                  <div key={i} className="w-1.5 h-1.5 sm:w-2.5 sm:h-2.5 rounded-full bg-slate-700 shadow-sm" />
+                ))}
+              </div>
+            )}
           </div>
         )}
         {renderIndicator()}

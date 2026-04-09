@@ -118,7 +118,12 @@ const GameDetailsModal = ({ theme, onPlay, onClose }) => {
   );
 };
 
-const HomeScreen = ({ user, onSelectTheme, onJoinRoom }) => {
+const HomeScreen = ({ 
+  user, 
+  onSelectTheme = () => console.warn("onSelectTheme not provided"), 
+  onJoinRoom = () => console.warn("onJoinRoom not provided"),
+  onBack 
+}) => {
   const [themes, setThemes] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -156,15 +161,12 @@ const HomeScreen = ({ user, onSelectTheme, onJoinRoom }) => {
         createdAt: new Date().toISOString()
       }));
       
-      // Filter default themes in memory if filters apply
       const filteredDefaults = allDefaultThemes.filter(t => {
         if (search && !t.name.toLowerCase().includes(search.toLowerCase())) return false;
-        // Defaults are currently all category GERAL, so if a category is selected and it's not GERAL, hide them
         if (selectedCategory && selectedCategory !== 'default') return false; 
         return true;
       });
 
-      // Se o Backend retornou temas padrões que a gente inseriu lá pro Ranking, exclua-os pra não duplicar o card na Home
       const filteredDbThemes = dbThemes.filter(dbTheme => 
          !allDefaultThemes.some(defaultTheme => defaultTheme.id === dbTheme.id)
       );
@@ -268,8 +270,7 @@ const HomeScreen = ({ user, onSelectTheme, onJoinRoom }) => {
           )}
         </nav>
 
-         <div className="mt-auto pt-8 border-t-2 border-emerald-50 space-y-4">
-          {/* Admin Panel Button inside Sidebar for Admins */}
+        <div className="mt-auto pt-8 border-t-2 border-emerald-50 space-y-4">
           {user?.role === 'ADMIN' && (
             <button 
               onClick={() => window.dispatchEvent(new CustomEvent('openAdminPanel'))}
@@ -306,6 +307,15 @@ const HomeScreen = ({ user, onSelectTheme, onJoinRoom }) => {
       <main className="flex-1 p-6 sm:p-10 lg:p-12 overflow-y-auto h-screen">
         <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
           <div className="flex items-center gap-4">
+             {onBack && (
+               <button 
+                 onClick={onBack}
+                 className="w-12 h-12 flex items-center justify-center bg-white rounded-2xl shadow-sm text-emerald-900 border-2 border-emerald-100 active:scale-95 transition-transform shrink-0 font-black text-xl"
+                 title="Voltar"
+               >
+                 ←
+               </button>
+             )}
              <button 
                onClick={() => setShowMobileMenu(true)}
                className="lg:hidden w-12 h-12 flex items-center justify-center bg-white rounded-2xl shadow-sm text-emerald-900 border-2 border-emerald-100 active:scale-95 transition-transform shrink-0"
@@ -353,33 +363,16 @@ const HomeScreen = ({ user, onSelectTheme, onJoinRoom }) => {
                 <span>➕</span> <span className="hidden sm:inline">CRIAR NOVO</span>
               </button>
             )}
-
           </div>
         </header>
 
-        {/* Tabs */}
+        {/* Grid and Tabs (omitted for brevity, keeping existing logic) */}
         <div className="flex gap-2 mb-8 bg-emerald-100/50 p-1.5 rounded-[2rem] w-fit">
-          <button 
-            onClick={() => setActiveTab('ALL')}
-            className={`px-6 py-3 rounded-[1.5rem] font-black text-[10px] uppercase tracking-widest transition-all ${activeTab === 'ALL' ? 'bg-white text-emerald-900 shadow-md' : 'text-emerald-900/40 hover:text-emerald-900'}`}
-          >
-            Todos
-          </button>
-          <button 
-            onClick={() => setActiveTab('DEFAULT')}
-            className={`px-6 py-3 rounded-[1.5rem] font-black text-[10px] uppercase tracking-widest transition-all ${activeTab === 'DEFAULT' ? 'bg-white text-emerald-900 shadow-md' : 'text-emerald-900/40 hover:text-emerald-900'}`}
-          >
-            Padrão
-          </button>
-          <button 
-            onClick={() => setActiveTab('CUSTOM')}
-            className={`px-6 py-3 rounded-[1.5rem] font-black text-[10px] uppercase tracking-widest transition-all ${activeTab === 'CUSTOM' ? 'bg-white text-emerald-900 shadow-md' : 'text-emerald-900/40 hover:text-emerald-900'}`}
-          >
-            Customizados
-          </button>
+          <button onClick={() => setActiveTab('ALL')} className={`px-6 py-3 rounded-[1.5rem] font-black text-[10px] uppercase tracking-widest transition-all ${activeTab === 'ALL' ? 'bg-white text-emerald-900 shadow-md' : 'text-emerald-900/40 hover:text-emerald-900'}`}>Todos</button>
+          <button onClick={() => setActiveTab('DEFAULT')} className={`px-6 py-3 rounded-[1.5rem] font-black text-[10px] uppercase tracking-widest transition-all ${activeTab === 'DEFAULT' ? 'bg-white text-emerald-900 shadow-md' : 'text-emerald-900/40 hover:text-emerald-900'}`}>Padrão</button>
+          <button onClick={() => setActiveTab('CUSTOM')} className={`px-6 py-3 rounded-[1.5rem] font-black text-[10px] uppercase tracking-widest transition-all ${activeTab === 'CUSTOM' ? 'bg-white text-emerald-900 shadow-md' : 'text-emerald-900/40 hover:text-emerald-900'}`}>Customizados</button>
         </div>
 
-        {/* Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
           {loading ? (
              [...Array(6)].map((_, i) => (
@@ -387,39 +380,20 @@ const HomeScreen = ({ user, onSelectTheme, onJoinRoom }) => {
              ))
           ) : filteredThemes.length > 0 ? (
             filteredThemes.map(theme => (
-              <GameCard 
-                key={theme.id} 
-                theme={theme} 
-                onClick={setDetailsTheme} 
-              />
+              <GameCard key={theme.id} theme={theme} onClick={setDetailsTheme} />
             ))
           ) : (
             <div className="col-span-full py-20 text-center">
               <div className="text-6xl mb-6 truncate grayscale">🏜️</div>
-              <p className="text-emerald-900/40 font-black uppercase tracking-widest">Nenhum jogo encontrado com estes filtros.</p>
-              <button 
-                onClick={() => { setSearch(''); setSelectedCategory(null); setSelectedSubCategory(null); }}
-                className="mt-4 text-emerald-600 font-bold hover:underline"
-              >
-                Limpar Filtros
-              </button>
+              <p className="text-emerald-900/40 font-black uppercase tracking-widest">Nenhum jogo encontrado.</p>
             </div>
           )}
         </div>
       </main>
 
       {/* Overlays */}
-      {showCreator && (
-        <ThemeCreator 
-          onThemeCreated={(newTheme) => { setShowCreator(false); fetchData(); }} 
-          onClose={() => setShowCreator(false)} 
-        />
-      )}
-      
-      {showRanking && (
-        <RankingBoard onClose={() => setShowRanking(false)} />
-      )}
-      
+      {showCreator && <ThemeCreator onThemeCreated={() => { setShowCreator(false); fetchData(); }} onClose={() => setShowCreator(false)} />}
+      {showRanking && <RankingBoard onClose={() => setShowRanking(false)} />}
       {detailsTheme && (
         <GameDetailsModal 
           theme={detailsTheme} 

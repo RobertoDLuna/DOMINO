@@ -20,11 +20,21 @@ export default function GameContainer({ user, isGuest, initialTheme, onBack }) {
   const {
     room, players, gameState, myHand, board, currentTurn, startingPieceId,
     createRoom, joinRoom, leaveRoom, startGame, makeMove, passTurn, forceEndGame, updateMaxPlayers, playAgain,
-    iWon, gameOverMsg, scores, currentTheme, lobbyTheme, maxPlayers, myId, playerId, isConnected, selectTheme, isSelectingTheme, setSelectingTheme
+    iWon, gameOverMsg, scores, currentTheme, lobbyTheme, maxPlayers, myId, playerId, isConnected, selectTheme, isSelectingTheme, setSelectingTheme: setGlobalSelectingTheme
   } = useGame();
 
   const [selectedTheme, setSelectedTheme] = useState(initialTheme?.id || lobbyTheme || 'animais');
   const [showCreator, setShowCreator] = useState(false);
+  const [selectingTheme, setSelectingTheme] = useState(isSelectingTheme || false);
+
+  // Sync with global context (server updates)
+  useEffect(() => {
+    if (lobbyTheme) setSelectedTheme(lobbyTheme);
+  }, [lobbyTheme]);
+
+  useEffect(() => {
+    setSelectingTheme(isSelectingTheme);
+  }, [isSelectingTheme]);
   const [dbThemes, setDbThemes] = useState([]);
 
   useEffect(() => {
@@ -496,11 +506,16 @@ export default function GameContainer({ user, isGuest, initialTheme, onBack }) {
             onSelectTheme={(theme) => {
               handleThemeSelect(theme.id);
               setShowThemeSelector(false);
-              setSelectingTheme(false);
+              setGlobalSelectingTheme(false);
             }} 
+            onJoinRoom={() => {
+              // Já estamos em uma sala, mas caso precise trocar de sala
+              setShowThemeSelector(false);
+              setGlobalSelectingTheme(false);
+            }}
             onBack={() => {
               setShowThemeSelector(false);
-              setSelectingTheme(false);
+              setGlobalSelectingTheme(false);
             }}
           />
         )}
@@ -725,6 +740,22 @@ export default function GameContainer({ user, isGuest, initialTheme, onBack }) {
               </div>
             </div>
           </div>
+        )}
+
+        {showCreator && (
+          <ThemeCreator 
+            onClose={() => {
+              setShowCreator(false);
+              document.body.classList.remove('modal-open');
+            }}
+            onThemeCreated={(newTheme) => {
+              setShowCreator(false);
+              document.body.classList.remove('modal-open');
+              if (newTheme) {
+                handleThemeSelect(newTheme.id);
+              }
+            }}
+          />
         )}
       </div>
     );

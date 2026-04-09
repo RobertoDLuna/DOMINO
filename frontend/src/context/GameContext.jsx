@@ -34,9 +34,28 @@ export const GameProvider = ({ children }) => {
   const [iWon, setIWon] = useState(false);
   const [scores, setScores] = useState({});
   const [currentTheme, setCurrentTheme] = useState(null);
+  const [lobbyTheme, setLobbyTheme] = useState(null);
   const [maxPlayers, setMaxPlayers] = useState(2);
   const [isConnected, setIsConnected] = useState(socket.connected);
+  const [isSelectingTheme, setIsSelectingTheme] = useState(false);
   const isManualJoinRef = useRef(false);
+
+  // Função centralizada para limpar todo o estado da sala/jogo
+  const resetRoomState = () => {
+    console.log("🧹 Resetando estado global do jogo...");
+    setRoom(null);
+    localStorage.removeItem('domino_current_room');
+    setPlayers([]);
+    setGameState('lobby');
+    setMyHand([]);
+    setBoard([]);
+    setWinner(null);
+    setGameOverMsg("");
+    setCurrentTheme(null);
+    setLobbyTheme(null);
+    setMaxPlayers(2);
+    setIsSelectingTheme(false);
+  };
 
   useEffect(() => {
     // Se já estiver conectado, pega o ID imediatamente
@@ -68,9 +87,10 @@ export const GameProvider = ({ children }) => {
       localStorage.setItem('domino_current_room', roomId);
     });
 
-    socket.on('joinedSuccess', ({ roomId, status }) => {
+    socket.on('joinedSuccess', ({ roomId, status, themeId }) => {
       setRoom(roomId);
       localStorage.setItem('domino_current_room', roomId);
+      if (themeId) setLobbyTheme(themeId);
     });
 
     socket.on('playerJoined', (updatedPlayers) => {
@@ -112,22 +132,23 @@ export const GameProvider = ({ children }) => {
       setGameState('finished');
     });
 
-    socket.on('roomUpdated', ({ maxPlayers }) => {
-      console.log('📏 Sala atualizada:', { maxPlayers });
+    socket.on('roomUpdated', ({ maxPlayers, themeId }) => {
+      console.log('📏 Sala atualizada:', { maxPlayers, themeId });
       if (maxPlayers) setMaxPlayers(maxPlayers);
+      if (themeId) {
+        setLobbyTheme(themeId);
+        setIsSelectingTheme(false); // Sempre que o tema muda, assume-se que a seleção acabou
+      }
+    });
+
+    socket.on('selectingThemeStatus', ({ status }) => {
+      console.log('👀 Status de seleção de tema:', status);
+      setIsSelectingTheme(status);
     });
 
     const handleForcedEnd = ({ message }) => {
       console.warn('⚠️ Partida encerrada forçadamente:', message);
-      setRoom(null);
-      localStorage.removeItem('domino_current_room');
-      setPlayers([]);
-      setGameState('lobby');
-      setMyHand([]);
-      setBoard([]);
-      setWinner(null);
-      setGameOverMsg("");
-      setCurrentTheme(null);
+      resetRoomState();
       if (message) alert(message);
     };
 
@@ -139,8 +160,7 @@ export const GameProvider = ({ children }) => {
       if (message === "Sala não encontrada.") {
         if (isManualJoinRef.current) alert(message);
         console.warn('🧹 Limpando sala inválida do cache.');
-        setRoom(null);
-        localStorage.removeItem('domino_current_room');
+        resetRoomState();
       } else {
         alert(message);
       }
@@ -149,21 +169,33 @@ export const GameProvider = ({ children }) => {
     });
 
     return () => {
-      socket.off('error');
-      socket.off('gameOver');
-      socket.off('gameForcedEnd');
+      console.log("🚿 Limpando listeners do socket...");
+      socket.off('connect');
+      socket.off('disconnect');
+      socket.off('roomCreated');
+      socket.off('joinedSuccess');
+      socket.off('playerJoined');
+      socket.off('gameStarted');
       socket.off('updateBoard');
       socket.off('updateHand');
       socket.off('updateScores');
+      socket.off('gameOver');
+      socket.off('roomUpdated');
+      socket.off('selectingThemeStatus');
+      socket.off('gameForcedEnd');
+      socket.off('error');
     };
   }, []);
 
-  const createRoom = (playerName) => {
-    socket.emit('createRoom', { playerId, playerName });
+  const createRoom = (playerName, themeId) => {
+    resetRoomState(); // Garante limpeza total antes de nova criação
+    setLobbyTheme(themeId || 'animais');
+    socket.emit('createRoom', { playerId, playerName, themeId });
   };
 
   const joinRoom = (roomId, playerName) => {
     if (!roomId) return alert("Por favor, digite o código da sala.");
+    resetRoomState(); // Garante limpeza total antes de nova entrada
     const id = roomId.trim().toUpperCase();
     isManualJoinRef.current = true;
     socket.emit('joinRoom', { roomId: id, playerId, playerName });
@@ -176,15 +208,7 @@ export const GameProvider = ({ children }) => {
   const leaveRoom = () => {
     if (room) {
       socket.emit('leaveRoom', { roomId: room });
-      setRoom(null);
-      localStorage.removeItem('domino_current_room');
-      setPlayers([]);
-      setGameState('lobby');
-      setMyHand([]);
-      setBoard([]);
-      setWinner(null);
-      setGameOverMsg("");
-      setCurrentTheme(null);
+      resetRoomState();
     }
   };
 
@@ -206,20 +230,39 @@ export const GameProvider = ({ children }) => {
     if (room) {
       socket.emit('forceEndGame', { room });
       // Reset local state immediately for the initiator
-      setRoom(null);
-      localStorage.removeItem('domino_current_room');
-      setPlayers([]);
-      setGameState('lobby');
-      setMyHand([]);
-      setBoard([]);
-      setCurrentTheme(null);
+      resetRoomState();
     }
   };
 
   const updateMaxPlayers = (count) => {
     if (room) {
-      socket.emit('updateMaxPlayers', { room, maxPlayers: count });
+      socket.emit('selectMaxPlayers', { roomId: room, maxPlayers: count });
     }
+  };
+
+  const selectTheme = (themeId) => {
+    if (room) {
+      setLobbyTheme(themeId);
+      setIsSelectingTheme(false);
+      socket.emit('selectTheme', { roomId: room, themeId });
+    }
+  };
+
+  const setSelectingTheme = (status) => {
+    if (room) {
+      setIsSelectingTheme(status);
+      socket.emit('setSelectingTheme', { roomId: room, status });
+    }
+  };
+
+  const handleMaxPlayersSelect = (num) => {
+    setMaxPlayers(num);
+    updateMaxPlayers(num);
+  };
+
+  const handleThemeSelect = (themeId) => {
+    setLobbyTheme(themeId);
+    selectTheme(themeId);
   };
 
   const value = {
@@ -241,11 +284,15 @@ export const GameProvider = ({ children }) => {
     gameOverMsg,
     scores,
     currentTheme,
+    lobbyTheme,
     maxPlayers,
     setGameState,
     forceEndGame,
     playAgain,
     updateMaxPlayers,
+    selectTheme,
+    isSelectingTheme,
+    setSelectingTheme,
     myId, // <--- EXPORTANDO ID
     playerId,
     isConnected,

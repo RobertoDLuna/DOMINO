@@ -239,6 +239,21 @@ class ThemeController {
       res.status(500).json({ error: "Erro ao excluir disciplina no banco." });
     }
   }
+
+  async getTheme(req, res) {
+    const { id } = req.params;
+    try {
+      const prisma = getPrisma();
+      const theme = await prisma.theme.findUnique({
+        where: { id },
+        include: { category: true, subcategory: true }
+      });
+      if (!theme) return res.status(404).json({ error: "Tema não encontrado." });
+      res.json(theme);
+    } catch (error) {
+      res.status(500).json({ error: "Erro ao buscar tema." });
+    }
+  }
 }
 
 module.exports = new ThemeController();

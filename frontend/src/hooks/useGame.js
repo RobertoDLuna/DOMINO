@@ -25,12 +25,14 @@ const useGame = () => {
         winner,
         scores,
         currentTheme,
+        lobbyTheme,
         maxPlayers,
         myId,
         playerId,
         forceEndGame,
         playAgain,
         updateMaxPlayers,
+        selectTheme,
         isConnected
     } = useGameContext();
 
@@ -60,9 +62,11 @@ const useGame = () => {
         winner,
         scores,
         currentTheme,
+        lobbyTheme,
         maxPlayers,
         myId,
         playerId,
+        selectTheme,
         isConnected
     };
 };

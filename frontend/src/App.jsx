@@ -6,8 +6,10 @@ import ChangePasswordScreen from "./components/ChangePasswordScreen";
 import AdminDashboard from "./components/AdminDashboard";
 import HomeScreen from "./components/HomeScreen";
 import AuthService from "./services/AuthService";
+import { useGameContext } from "./context/GameContext";
 
 function App() {
+  const { room, gameState, leaveRoom } = useGameContext();
   const [user, setUser] = useState(null);
   const [guestMode, setGuestMode] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -15,7 +17,9 @@ function App() {
     return window.location.pathname.startsWith('/admin');
   });
   const [selectedTheme, setSelectedTheme] = useState(null);
-  const [isJoiningRoom, setIsJoiningRoom] = useState(false);
+  // Checks if we should be in a game screen even if context hasn't updated yet
+  const [manualJoin, setManualJoin] = useState(false);
+  const isInRoomSession = !!room || !!localStorage.getItem('domino_current_room') || manualJoin;
 
   useEffect(() => {
     const savedUser = AuthService.getCurrentUser();
@@ -32,7 +36,7 @@ function App() {
   const handleAuthSuccess = (userData) => {
     setUser(userData);
     setGuestMode(false);
-    setIsJoiningRoom(false);
+    setManualJoin(false);
   };
 
   const handlePasswordChanged = (userData) => {
@@ -50,12 +54,12 @@ function App() {
 
   if (loading) return null;
 
-  if (!user && !guestMode && !isJoiningRoom) {
+  if (!user && !guestMode && !isInRoomSession) {
     return (
       <AuthScreen 
         onAuthSuccess={handleAuthSuccess} 
         onGuestStart={() => setGuestMode(true)} 
-        onJoinRoom={() => setIsJoiningRoom(true)}
+        onJoinRoom={() => setManualJoin(true)}
       />
     );
   }
@@ -68,26 +72,25 @@ function App() {
 
   return (
     <>
-      <GameProvider>
-        {(selectedTheme || isJoiningRoom) ? (
-          <GameContainer 
-            user={user} 
-            isGuest={guestMode || isJoiningRoom} 
-            initialTheme={selectedTheme}
-            onBack={() => { 
-                setSelectedTheme(null); 
-                setIsJoiningRoom(false); 
-                if (!user) setGuestMode(false); // Retorna para a AuthScreen se for convidado
-            }}
-          />
-        ) : (
-          <HomeScreen 
-            user={user} 
-            onSelectTheme={setSelectedTheme} 
-            onJoinRoom={() => setIsJoiningRoom(true)}
-          />
-        )}
-      </GameProvider>
+      {(selectedTheme || isInRoomSession) ? (
+        <GameContainer 
+          user={user} 
+          isGuest={guestMode || (isInRoomSession && !user)} 
+          initialTheme={selectedTheme}
+          onBack={() => { 
+              setSelectedTheme(null); 
+              setManualJoin(false);
+              leaveRoom(); 
+              if (!user) setGuestMode(false); 
+          }}
+        />
+      ) : (
+        <HomeScreen 
+          user={user} 
+          onSelectTheme={setSelectedTheme} 
+          onJoinRoom={() => setManualJoin(true)}
+        />
+      )}
 
       
       {showAdminPanel && user?.role === 'ADMIN' && (

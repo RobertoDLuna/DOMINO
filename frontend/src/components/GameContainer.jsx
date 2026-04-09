@@ -6,9 +6,12 @@ import SnakeBoard from "./SnakeBoard";
 import AvatarGuide from "./AvatarGuide";
 import ThemeSelector from "./ThemeSelector";
 import ThemeCreator from "./ThemeCreator";
+import HomeScreen from "./HomeScreen";
 import AdminDashboard from "./AdminDashboard";
 import SoundService from "../services/SoundService";
 import AuthService from "../services/AuthService";
+import ThemeService from "../services/ThemeService";
+import { themes as defaultThemes } from "../config/themes";
 
 import logoCampina from '../assets/logo-campina.png';
 import logoPrefeitura from '../assets/logo-prefeitura.png';
@@ -17,10 +20,103 @@ export default function GameContainer({ user, isGuest, initialTheme, onBack }) {
   const {
     room, players, gameState, myHand, board, currentTurn, startingPieceId,
     createRoom, joinRoom, leaveRoom, startGame, makeMove, passTurn, forceEndGame, updateMaxPlayers, playAgain,
-    iWon, gameOverMsg, scores, currentTheme, maxPlayers, myId, playerId, isConnected
+    iWon, gameOverMsg, scores, currentTheme, lobbyTheme, maxPlayers, myId, playerId, isConnected, selectTheme, isSelectingTheme, setSelectingTheme
   } = useGame();
 
-  const [showAdmin, setShowAdmin] = useState(false);
+  const [selectedTheme, setSelectedTheme] = useState(initialTheme?.id || lobbyTheme || 'animais');
+  const [showCreator, setShowCreator] = useState(false);
+  const [dbThemes, setDbThemes] = useState([]);
+
+  useEffect(() => {
+    const fetchThemes = async () => {
+      try {
+        const themes = await ThemeService.getThemes(localStorage.getItem('dominoPlayerId'));
+        setDbThemes(prev => {
+          // Mescla temas mantendo os que já foram buscados manualmente (como o tema da sala)
+          const merged = [...prev];
+          themes.forEach(t => {
+            if (!merged.some(m => m.id === t.id)) merged.push(t);
+          });
+          return merged;
+        });
+      } catch (err) {}
+    };
+    fetchThemes();
+  }, []);
+
+  // Sincroniza o ID selecionado com o lobby vindo do contexto
+  useEffect(() => {
+    // Se o servidor enviou um tema para o lobby, ele tem prioridade total
+    if (lobbyTheme && lobbyTheme !== selectedTheme) {
+      console.log('🎨 Sincronizando tema do lobby:', lobbyTheme);
+      setSelectedTheme(lobbyTheme);
+    }
+  }, [lobbyTheme]);
+
+  // Se o tema inicial veio da Home e ainda não temos nada no lobby
+  useEffect(() => {
+    if (initialTheme?.id && !lobbyTheme && !selectedTheme) {
+      setSelectedTheme(initialTheme.id);
+    }
+  }, [initialTheme, lobbyTheme, selectedTheme]);
+
+  useEffect(() => {
+    // Busca dados extras se for um tema de banco e não estiver carregado
+    const fetchUnknownTheme = async () => {
+      const targetId = lobbyTheme || selectedTheme;
+      if (!targetId) return;
+      
+      const isDefault = defaultThemes.some(t => t.id === targetId);
+      if (isDefault) return;
+
+      const isAlreadyInDb = dbThemes.some(t => t.id === targetId);
+      if (isAlreadyInDb) return;
+
+      try {
+        const themeInfo = await ThemeService.getThemeInfo(targetId);
+        if (themeInfo) {
+          setDbThemes(prev => {
+            if (prev.some(t => t.id === themeInfo.id)) return prev;
+            return [...prev, themeInfo];
+          });
+        }
+      } catch (err) {
+        console.error("Erro ao buscar tema desconhecido:", err);
+      }
+    };
+    
+    fetchUnknownTheme();
+  }, [lobbyTheme, selectedTheme, dbThemes]);
+
+  const allThemes = [
+    ...defaultThemes.map(t => ({ ...t, isDefault: true })),
+    ...dbThemes.map(t => ({ 
+      id: t.id, 
+      name: t.name, 
+      emoji: '🎨', 
+      description: t.description || 'Tema customizado 🎲',
+      isDefault: false 
+    }))
+  ];
+
+  // Busca robusta do tema atual
+  const currentLobbyTheme = React.useMemo(() => {
+    const targetId = (lobbyTheme || selectedTheme || '').toString().trim();
+    if (!targetId) return null;
+    
+    // Tenta encontrar nos temas da memória (padrões + banco)
+    return allThemes.find(t => t.id.toString() === targetId);
+  }, [lobbyTheme, selectedTheme, allThemes]);
+
+  const handleThemeSelect = (themeId) => {
+    setSelectedTheme(themeId);
+    selectTheme(themeId);
+  };
+
+  const handleMaxPlayersSelect = (num) => {
+    updateMaxPlayers(num);
+  };
+
   const [playerInfo, setPlayerInfo] = useState({
     name: user?.fullName || localStorage.getItem("dominoPlayerName") || "",
     avatar: localStorage.getItem("dominoPlayerAvatar") || "0",
@@ -29,6 +125,13 @@ export default function GameContainer({ user, isGuest, initialTheme, onBack }) {
 
   const canCreateThemes = user && (user.role === 'PROFESSOR' || user.role === 'ADMIN');
 
+  const [timer, setTimer] = useState(30);
+  const [showAvatar, setShowAvatar] = useState(false);
+  const [selectedPiece, setSelectedPiece] = useState(null);
+  const [sideModal, setSideModal] = useState(null);
+  const [isMuted, setIsMuted] = useState(() => SoundService.muted);
+  const [showEndConfirm, setShowEndConfirm] = useState(false);
+  const [showThemeSelector, setShowThemeSelector] = useState(false);
 
   const winnerId = scores && Object.keys(scores).length > 0
     ? Object.keys(scores).reduce((a, b) => (scores[a] || 0) >= (scores[b] || 0) ? a : b)
@@ -55,24 +158,20 @@ export default function GameContainer({ user, isGuest, initialTheme, onBack }) {
   };
 
   const handleCreateRoom = () => {
-    createRoom(playerInfo.name || "JOGADOR");
+    createRoom(playerInfo.name || "JOGADOR", selectedTheme);
   };
 
   const handleJoinRoom = () => {
     joinRoom(roomIdInput, playerInfo.name || "JOGADOR");
   };
 
-  const [selectedTheme, setSelectedTheme] = useState(initialTheme?.id || 'animais');
-  const [showCreator, setShowCreator] = useState(false);
-  const [timer, setTimer] = useState(30);
-  const [showAvatar, setShowAvatar] = useState(false);
-  const [selectedPiece, setSelectedPiece] = useState(null);
-  const [sideModal, setSideModal] = useState(null);
-  const [isMuted, setIsMuted] = useState(() => SoundService.muted);
-  const [showEndConfirm, setShowEndConfirm] = useState(false);
-
   const isMyTurn = currentTurn === myId;
-  const isRoomOwner = players.length > 0 && players[0].id === myId;
+  const isRoomOwner = players.length > 0 && (players[0].id === myId || players[0].playerId === playerId);
+
+  const handleStartGame = () => {
+    const themeToUse = selectedTheme || lobbyTheme || 'animais';
+    startGame(themeToUse);
+  };
 
   useEffect(() => {
     let interval;
@@ -176,9 +275,7 @@ export default function GameContainer({ user, isGuest, initialTheme, onBack }) {
     }
   };
 
-  const handleStartGame = () => {
-    startGame(selectedTheme);
-  };
+
 
   // 1. LOBBY - MAIN SCREEN
   if (gameState === "lobby" && !room) {
@@ -262,10 +359,30 @@ export default function GameContainer({ user, isGuest, initialTheme, onBack }) {
                     ))}
                   </div>
                 </div>
-                {!initialTheme && (
+                {/* Owner Theme Visibility */}
+                {(initialTheme || selectedTheme) && !showCreator && (
+                  <div className="bg-white/10 backdrop-blur-md p-6 rounded-[2.5rem] border-2 border-white/20 flex flex-col items-center gap-3 shadow-[0_20px_50px_rgba(0,0,0,0.2)] w-full animate-in zoom-in duration-300">
+                    <div className="w-20 h-20 bg-white rounded-3xl flex items-center justify-center text-5xl shadow-2xl shrink-0">
+                      {(initialTheme || currentLobbyTheme)?.emoji || '🎨'}
+                    </div>
+                    <div className="text-center">
+                      <p className="text-[10px] font-black text-[#FFCE00] uppercase tracking-[0.4em] mb-1 leading-none opacity-80 text-center w-full">Configuração Ativa</p>
+                      <h4 className="text-2xl font-black text-white uppercase italic tracking-tighter leading-none drop-shadow-md">
+                        {(initialTheme || currentLobbyTheme)?.name || 'Carregando...'}
+                      </h4>
+                      <p className="text-[10px] font-medium text-white/50 mt-2 italic px-4">
+                        "{(initialTheme || currentLobbyTheme)?.description || 'Carregando detalhes...'}"
+                      </p>
+                    </div>
+                  </div>
+                )}
+                
+                {!initialTheme && !selectedTheme && (
                   <ThemeSelector
                     selectedTheme={selectedTheme}
-                    onSelect={setSelectedTheme}
+                    onSelect={(id) => {
+                      handleThemeSelect(id);
+                    }}
                     canCreate={canCreateThemes}
                     onOpenCreator={() => {
                       setShowCreator(true);
@@ -274,25 +391,56 @@ export default function GameContainer({ user, isGuest, initialTheme, onBack }) {
                   />
                 )}
               </div>
-            ) : null}
-
-            {!showCreator && (
-              <>
-                <div className="w-full max-w-[550px] flex flex-col gap-3 mt-2">
-                  {/* Selected Theme Badge - Centralizado */}
-                  {initialTheme && (
-                    <div className="bg-white/10 backdrop-blur-md p-3 rounded-[2rem] border-2 border-white/10 flex flex-col items-center gap-2 shadow-xl w-full">
-                      <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-4xl shadow-lg shrink-0">
-                        {initialTheme.emoji || '🎨'}
-                      </div>
-                      <div className="text-center">
-                        <p className="text-[9px] font-black text-white/40 uppercase tracking-[0.2em] mb-0.5 leading-none">Tema Ativo</p>
-                        <h4 className="text-xl font-black text-[#FFCE00] uppercase italic tracking-tighter leading-none">{initialTheme.name}</h4>
-                        <p className="text-[9px] font-black text-white/60 leading-none">{initialTheme.category?.name || 'GERAL'}</p>
+            ) : (
+              <div className="w-full flex flex-col gap-6">
+                {isSelectingTheme ? (
+                  <div className="flex flex-col items-center justify-center p-10 animate-in fade-in zoom-in duration-500 bg-white/10 backdrop-blur-md rounded-[3rem] border-4 border-white/20 shadow-2xl">
+                    <div className="w-32 h-32 bg-white rounded-full flex items-center justify-center mb-6 border-4 border-emerald-400/30 animate-bounce-slow shadow-xl">
+                      <span className="text-6xl">🎨</span>
+                    </div>
+                    <h3 className="text-2xl font-black text-white uppercase italic tracking-tighter text-center mb-2 drop-shadow-lg">Shhh! Preparando o desafio...</h3>
+                    <p className="text-white/70 font-medium text-center max-w-[250px] leading-tight">O mestre está escolhendo o próximo tema para jogarmos!</p>
+                    <div className="mt-8 flex gap-2">
+                      <div className="w-3 h-3 bg-[#FFCE00] rounded-full animate-bounce" style={{ animationDelay: '0s' }}></div>
+                      <div className="w-3 h-3 bg-[#FFCE00] rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                      <div className="w-3 h-3 bg-[#FFCE00] rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    {/* Room Info para Convidados */}
+                    <div className="bg-white/10 p-2 sm:p-3 rounded-[1.5rem] border border-white/20 backdrop-blur-sm">
+                      <p className="text-[9px] font-black uppercase tracking-widest mb-1.5 opacity-60 text-center">Capacidade da Sala</p>
+                      <div className="flex justify-center gap-2">
+                        {[2, 3, 4].map(num => (
+                          <div key={num} className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-black text-base sm:text-lg transition-all shadow-lg border-2 ${maxPlayers === num ? 'bg-[#FFCE00] text-[#009660] border-white scale-110 opacity-100' : 'bg-white/10 text-white/20 border-transparent opacity-30'}`}>{num}</div>
+                        ))}
                       </div>
                     </div>
-                  )}
 
+                    {/* Theme Badge para Participantes */}
+                    <div className="bg-white/10 backdrop-blur-md p-6 rounded-[2.5rem] border-2 border-white/20 flex flex-col items-center gap-3 shadow-[0_20px_50px_rgba(0,0,0,0.2)] w-full animate-in zoom-in duration-300">
+                      <div className="w-20 h-20 bg-white rounded-3xl flex items-center justify-center text-5xl shadow-2xl shrink-0">
+                        {currentLobbyTheme?.emoji || '🎨'}
+                      </div>
+                      <div className="text-center">
+                        <p className="text-[10px] font-black text-[#FFCE00] uppercase tracking-[0.4em] mb-1 leading-none opacity-80 text-center w-full">Tema da Partida</p>
+                        <h4 className="text-2xl font-black text-white uppercase italic tracking-tighter leading-none drop-shadow-md">
+                          {currentLobbyTheme?.name || 'Carregando...'}
+                        </h4>
+                        <p className="text-[10px] font-medium text-white/50 mt-2 italic px-4">
+                          "{currentLobbyTheme?.description || 'Aguardando sincronização de tema...'}"
+                        </p>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+
+            {!showThemeSelector && (
+              <>
+                <div className="w-full max-w-[550px] flex flex-col gap-3 mt-2">
                   {players.length < maxPlayers && (
                     <div className="bg-black/20 p-3 rounded-2xl border border-white/10 w-full text-center">
                       <p className="text-white font-black text-xs sm:text-sm uppercase tracking-widest animate-pulse italic">
@@ -314,15 +462,23 @@ export default function GameContainer({ user, isGuest, initialTheme, onBack }) {
                   </div>
 
                   <div className="flex flex-row gap-3 w-full">
-                    <button onClick={leaveRoom} className="flex-1 bg-white group hover:bg-[#FFCE00] px-4 py-2.5 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 border-b-4 border-gray-200 active:translate-y-0.5">
+                    <button onClick={leaveRoom} className={`${isRoomOwner ? 'flex-1' : 'w-full'} bg-white group hover:bg-[#FFCE00] px-4 py-2.5 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 border-b-4 border-gray-200 active:translate-y-0.5`}>
                       <span className="text-xl">🏠</span>
-                      <span className="text-[#009660] font-black text-[10px] uppercase tracking-tight">Sair</span>
+                      <span className="text-[#009660] font-black text-[10px] uppercase tracking-tight">Sair da Sala</span>
                     </button>
                     
-                    <button onClick={onBack} className="flex-1 bg-emerald-700/50 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl transition-all border-b-4 border-emerald-900/40 flex items-center justify-center gap-2 active:translate-y-0.5">
-                      <span className="text-lg">🔄</span>
-                      <span className="font-black text-[10px] uppercase tracking-widest leading-none">Trocar Tema</span>
-                    </button>
+                    {isRoomOwner && (
+                      <button 
+                        onClick={() => {
+                          setShowThemeSelector(true);
+                          setSelectingTheme(true);
+                        }} 
+                        className="flex-1 bg-emerald-700/50 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl transition-all border-b-4 border-emerald-900/40 flex items-center justify-center gap-2 active:translate-y-0.5"
+                      >
+                        <span className="text-lg">🔄</span>
+                        <span className="font-black text-[10px] uppercase tracking-widest leading-none">Trocar Tema</span>
+                      </button>
+                    )}
                   </div>
 
                   {players.length >= maxPlayers && isRoomOwner && (
@@ -334,17 +490,17 @@ export default function GameContainer({ user, isGuest, initialTheme, onBack }) {
           </div>
         </div>
 
-        {showCreator && (
-          <ThemeCreator
-            onThemeCreated={(newTheme) => {
-              setSelectedTheme(newTheme.id);
-              setShowCreator(false);
-              document.body.classList.remove('modal-open');
-              window.dispatchEvent(new CustomEvent('refreshThemes'));
-            }}
-            onClose={() => {
-              setShowCreator(false);
-              document.body.classList.remove('modal-open');
+        {showThemeSelector && isRoomOwner && (
+          <HomeScreen 
+            user={user} 
+            onSelectTheme={(theme) => {
+              handleThemeSelect(theme.id);
+              setShowThemeSelector(false);
+              setSelectingTheme(false);
+            }} 
+            onBack={() => {
+              setShowThemeSelector(false);
+              setSelectingTheme(false);
             }}
           />
         )}

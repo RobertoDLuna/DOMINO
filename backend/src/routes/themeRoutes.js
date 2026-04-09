@@ -69,6 +69,7 @@ router.post('/',
   upload.array('symbols', 6), 
   ThemeController.createTheme
 );
+router.get('/info/:id', ThemeController.getTheme);
 router.delete('/:id', 
   authMiddleware, 
   restrictRole(['PROFESSOR', 'ADMIN']), 

@@ -212,7 +212,7 @@ class RankingService {
           // O mais simples pra evitar join pesado: buscar Categorias e incluir Sub > Themes > GameMatches
           const categories = await prisma.category.findMany({
               include: {
-                  subcategories: {
+                  subs: {
                       include: {
                           themes: {
                               include: { gameMatches: true }
@@ -224,7 +224,7 @@ class RankingService {
 
           const mapped = categories.map(cat => {
               let matchCount = 0;
-              cat.subcategories.forEach(sub => {
+              cat.subs.forEach(sub => {
                   sub.themes.forEach(theme => {
                       matchCount += theme.gameMatches.length;
                   });

@@ -13,19 +13,24 @@ module.exports = (io) => {
     /**
      * Create Room Handler
      */
-    socket.on("createRoom", async ({ playerId, playerName }) => {
+    socket.on("createRoom", async ({ playerId, playerName, themeId }) => {
       try {
         const roomId = GameService.generateRoomId();
         socket.join(roomId);
         const nameToUse = playerName || 'JOGADOR';
-        await RedisService.setRoom(roomId, { 
+        const roomData = { 
           players: [{ id: socket.id, playerId, name: nameToUse }], 
           status: 'lobby',
-          maxPlayers: 2
-        });
+          maxPlayers: 2,
+          themeId: themeId || 'animais'
+        };
+        await RedisService.setRoom(roomId, roomData);
         socket.emit("roomCreated", { roomId });
         io.to(roomId).emit("playerJoined", [{ id: socket.id, playerId, name: nameToUse }]);
-        io.to(roomId).emit("roomUpdated", { maxPlayers: 2 });
+        io.to(roomId).emit("roomUpdated", { 
+          maxPlayers: 2,
+          themeId: roomData.themeId 
+        });
         console.log(`🏠 Sala criada: ${roomId} por ${playerId}`);
       } catch (error) {
         console.error("❌ Erro ao criar sala:", error);
@@ -71,8 +76,11 @@ module.exports = (io) => {
 
           await RedisService.setRoom(roomId, room);
           io.to(roomId).emit("playerJoined", room.players);
-          io.to(roomId).emit("roomUpdated", { maxPlayers: room.maxPlayers || 2 });
-          socket.emit("joinedSuccess", { roomId, status: room.status });
+          io.to(roomId).emit("roomUpdated", { 
+            maxPlayers: room.maxPlayers || 2,
+            themeId: room.themeId || 'animais'
+          });
+          socket.emit("joinedSuccess", { roomId, status: room.status, themeId: room.themeId || 'animais' });
 
           if (room.status === 'playing') {
             // Sincronizar turno com todos da sala (importante para atualizar IDs de socket)
@@ -95,6 +103,23 @@ module.exports = (io) => {
         }
       } catch (error) {
         console.error("❌ Erro ao entrar na sala:", error);
+      }
+    });
+
+    /**
+     * Select Theme Handler (Lobby)
+     */
+    socket.on("selectTheme", async ({ room: roomId, themeId }) => {
+      try {
+        const room = await RedisService.getRoom(roomId);
+        if (room && room.status === 'lobby') {
+          room.themeId = themeId;
+          await RedisService.setRoom(roomId, room);
+          // Notifica todos na sala sobre o novo tema selecionado
+          io.to(roomId).emit("roomUpdated", { themeId });
+        }
+      } catch (error) {
+        console.error("❌ Erro ao selecionar tema:", error);
       }
     });
 
@@ -218,6 +243,46 @@ module.exports = (io) => {
         await RedisService.setRoom(roomId, game);
       } catch (e) { console.error(e); }
     };
+
+    /**
+     * Theme and Max Players Selection Handler
+     */
+    socket.on("selectTheme", async ({ roomId, themeId }) => {
+      try {
+        const room = await RedisService.getRoom(roomId);
+        if (room) {
+          room.themeId = themeId;
+          await RedisService.setRoom(roomId, room);
+          io.to(roomId).emit("roomUpdated", { 
+            themeId: room.themeId,
+            maxPlayers: room.maxPlayers 
+          });
+        }
+      } catch (error) {
+        console.error("❌ Erro ao selecionar tema:", error);
+      }
+    });
+
+    socket.on("selectMaxPlayers", async ({ roomId, maxPlayers }) => {
+      try {
+        const room = await RedisService.getRoom(roomId);
+        if (room) {
+          room.maxPlayers = maxPlayers;
+          await RedisService.setRoom(roomId, room);
+          io.to(roomId).emit("roomUpdated", { 
+            themeId: room.themeId,
+            maxPlayers: room.maxPlayers
+          });
+        }
+      } catch (error) {
+        console.error("❌ Erro ao selecionar capacidade:", error);
+      }
+    });
+
+    socket.on("setSelectingTheme", ({ roomId, status }) => {
+      // Notifica todos na sala que o dono está escolhendo um tema
+      io.to(roomId).emit("selectingThemeStatus", { status });
+    });
 
     /**
      * Move Execution Handler

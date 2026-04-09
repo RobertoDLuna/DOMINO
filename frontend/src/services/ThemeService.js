@@ -26,6 +26,16 @@ class ThemeService {
     }
   }
 
+  async getThemeInfo(id) {
+    try {
+      const res = await fetch(`${API_URL}/themes/info/${id}`);
+      if (!res.ok) return null;
+      return await res.json();
+    } catch {
+      return null;
+    }
+  }
+
   async getCategories() {
     try {
       const res = await fetch(`${API_URL}/themes/categories`);

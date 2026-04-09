@@ -157,9 +157,11 @@ export const GameProvider = ({ children }) => {
     socket.on('error', ({ message }) => {
       console.error('❌ Erro do servidor:', message);
       
-      if (message === "Sala não encontrada.") {
+      const sessionBlockers = ["Sala não encontrada.", "Sala cheia.", "O jogo já começou."];
+      
+      if (sessionBlockers.includes(message)) {
         if (isManualJoinRef.current) alert(message);
-        console.warn('🧹 Limpando sala inválida do cache.');
+        console.warn(`🧹 Limpando sala após erro de sessão: ${message}`);
         resetRoomState();
       } else {
         alert(message);
@@ -206,10 +208,13 @@ export const GameProvider = ({ children }) => {
   };
 
   const leaveRoom = () => {
+    console.log("🚪 Saindo da sala e limpando cache...");
     if (room) {
       socket.emit('leaveRoom', { roomId: room });
-      resetRoomState();
     }
+    // Sempre reseta o estado local, independente se o room no contexto está preenchido,
+    // para garantir remoção de itens órfãos no localStorage.
+    resetRoomState();
   };
 
   const playAgain = () => {

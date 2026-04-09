@@ -38,14 +38,14 @@ export default function SnakeBoard({ board, isMyTurn, onDrop, draggingPiece }) {
     H_W: 180, // Larger for images
     H_H: 100,
     V_W: 88,
-    V_H: 192,
+    V_H: 184,
     GAP: 8,
     MARGIN: 20
   } : {
     H_W: 120,
     H_H: 68,
     V_W: 60,
-    V_H: 128, 
+    V_H: 122, 
     GAP: 4,   
     MARGIN: 20 
   };

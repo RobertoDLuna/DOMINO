@@ -7,6 +7,35 @@ const RankingService = require("../services/RankingService");
  * Socket.io Controller for Domino Game.
  */
 module.exports = (io) => {
+  // Job de limpeza a cada 60s para salas inativas (3 minutos)
+  setInterval(async () => {
+    try {
+      const allRooms = await RedisService.getAllRooms();
+      const now = Date.now();
+      const TIMEOUT = 180000; // 3 minutos de inatividade total
+
+      for (const roomId in allRooms) {
+        const room = allRooms[roomId];
+        
+        if (room && room.lastActivity) {
+          const inactiveTime = now - room.lastActivity;
+          if (inactiveTime > TIMEOUT) {
+            console.log(`[Timeout] Sala ${roomId} inativa por ${inactiveTime}ms. Encerrando.`);
+            
+            // Notifica todos na sala sobre o encerramento forçado por inatividade
+            io.to(roomId).emit("gameForcedEnd", { 
+              message: "A partida foi encerrada automaticamente por inatividade superior a 3 minutos." 
+            });
+            
+            await RedisService.deleteRoom(roomId);
+          }
+        }
+      }
+    } catch (error) {
+      console.error("[Cleanup Job Error]:", error);
+    }
+  }, 60000);
+
   io.on("connection", (socket) => {
     console.log(`🔌 Usuário conectado: ${socket.id}`);
 
@@ -22,7 +51,8 @@ module.exports = (io) => {
           players: [{ id: socket.id, playerId, name: nameToUse }], 
           status: 'lobby',
           maxPlayers: 2,
-          themeId: themeId || 'animais'
+          themeId: themeId || 'animais',
+          lastActivity: Date.now() // Inicializa atividade
         };
         await RedisService.setRoom(roomId, roomData);
         socket.emit("roomCreated", { roomId });
@@ -74,6 +104,7 @@ module.exports = (io) => {
              return socket.emit("error", { message: "Sala cheia." });
           }
 
+          room.lastActivity = Date.now(); // Atualiza atividade
           await RedisService.setRoom(roomId, room);
           io.to(roomId).emit("playerJoined", room.players);
           io.to(roomId).emit("roomUpdated", { 
@@ -83,7 +114,6 @@ module.exports = (io) => {
           socket.emit("joinedSuccess", { roomId, status: room.status, themeId: room.themeId || 'animais' });
 
           if (room.status === 'playing') {
-            // Sincronizar turno com todos da sala (importante para atualizar IDs de socket)
             io.to(roomId).emit("updateBoard", { 
               board: room.board, 
               currentTurn: room.currentTurn 
@@ -114,8 +144,8 @@ module.exports = (io) => {
         const room = await RedisService.getRoom(roomId);
         if (room && room.status === 'lobby') {
           room.themeId = themeId;
+          room.lastActivity = Date.now(); // Atualiza atividade
           await RedisService.setRoom(roomId, room);
-          // Notifica todos na sala sobre o novo tema selecionado
           io.to(roomId).emit("roomUpdated", { themeId });
         }
       } catch (error) {
@@ -131,26 +161,23 @@ module.exports = (io) => {
         let room = await RedisService.getRoom(roomId);
         if (!room) return;
 
-        // Se estiver reiniciando de um jogo finalizado, filtra apenas os que clicaram em "Jogar de Novo"
         if (room.status === 'finished') {
           const readyPlayers = room.players.filter(p => p.ready);
-          if (readyPlayers.length < 2) return; // Mínimo 2 para jogar domínó
+          if (readyPlayers.length < 2) return;
 
           room.players = readyPlayers;
           room.maxPlayers = readyPlayers.length;
-          // Limpa o estado pronto para o próximo jogo
           room.players.forEach(p => delete p.ready);
         }
 
         if (room.players.length >= 2) {
           const gameData = await GameService.createGame(room.players, themeId);
-          const updatedRoom = { ...room, ...gameData, status: 'playing' };
+          const updatedRoom = { ...room, ...gameData, status: 'playing', lastActivity: Date.now() };
           await RedisService.setRoom(roomId, updatedRoom);
 
-          const socketIds = room.players.map(p => p.id);
-          socketIds.forEach(pId => {
-            io.to(pId).emit("gameStarted", {
-              hand: updatedRoom.hands[pId],
+          room.players.forEach(p => {
+            io.to(p.id).emit("gameStarted", {
+              hand: updatedRoom.hands[p.id],
               currentTurn: updatedRoom.currentTurn,
               startingPieceId: updatedRoom.startingPieceId,
               board: updatedRoom.board,
@@ -158,9 +185,6 @@ module.exports = (io) => {
               theme: updatedRoom.theme
             });
           });
-
-          // Notifica os que ficaram de fora (se houver) que a sala foi reiniciada sem eles
-          socket.to(roomId).emit("roomUpdated", { maxPlayers: room.maxPlayers });
         }
       } catch (error) {
         console.error("❌ Erro ao iniciar jogo:", error);
@@ -177,9 +201,9 @@ module.exports = (io) => {
           const playerIdx = room.players.findIndex(p => p.id === socket.id);
           if (playerIdx !== -1) {
             room.players[playerIdx].ready = true;
+            room.lastActivity = Date.now(); // Atualiza atividade
             await RedisService.setRoom(roomId, room);
             io.to(roomId).emit("playerJoined", room.players);
-            console.log(`✅ Jogador ${socket.id} pronto para jogar de novo na sala ${roomId}`);
           }
         }
       } catch (e) { console.error(e); }
@@ -198,13 +222,9 @@ module.exports = (io) => {
           const result = ScoringService.getTrancamentoWinner(game);
           
           if (result.isTie) {
-            // Conta ponto para cada empatado
             result.tiedPlayers.forEach(pId => {
               if (game.scores[pId] !== undefined) game.scores[pId] += result.points;
             });
-            
-            // Informa Ranking (no caso, os empatados) - Para simplificar se o seu jogo for X1, pode ser 1 vitorioso
-            // Mas registramos para ambos na base de dados
             result.tiedPlayers.forEach(pId => {
               const playerObj = game.players.find(p => p.id === pId);
               if (playerObj && playerObj.playerId) {
@@ -213,7 +233,6 @@ module.exports = (io) => {
             });
           } else {
             if (game.scores[result.winnerId] !== undefined) game.scores[result.winnerId] += result.points;
-            
             const playerObj = game.players.find(p => p.id === result.winnerId);
             if (playerObj && playerObj.playerId) {
               RankingService.saveGameResult(playerObj.playerId, result.winType, result.points, roomId, game.theme?.id);
@@ -222,67 +241,18 @@ module.exports = (io) => {
           
           playerIds.forEach(pId => {
             const isWinner = result.winnerId === pId;
-            let message = "";
-            
-            if (isWinner) {
-              message = `Você trancou com menos pontos! (+${result.points})`;
-            } else if (result.isTie && result.tiedPlayers.includes(pId)) {
-              message = `O jogo trancou e vocês empataram nos pontos! (+${result.points})`;
-            } else if (result.isTie) {
-               message = `O jogo trancou em empate!`;
-            } else {
-              message = "O jogo trancou! Alguém tinha menos pontos.";
-            }
-
+            let message = isWinner ? `Você trancou com menos pontos! (+${result.points})` : "O jogo trancou! Alguém tinha menos pontos.";
+            if (result.isTie) message = result.tiedPlayers.includes(pId) ? `Empate no trancamento! (+${result.points})` : "O jogo trancou em empate!";
             io.to(pId).emit("gameOver", { iWon: isWinner, message });
           });
           game.status = 'finished';
         } else {
           io.to(roomId).emit("updateBoard", { board: game.board, currentTurn: game.currentTurn });
         }
+        game.lastActivity = Date.now(); // Atualiza atividade
         await RedisService.setRoom(roomId, game);
       } catch (e) { console.error(e); }
     };
-
-    /**
-     * Theme and Max Players Selection Handler
-     */
-    socket.on("selectTheme", async ({ roomId, themeId }) => {
-      try {
-        const room = await RedisService.getRoom(roomId);
-        if (room) {
-          room.themeId = themeId;
-          await RedisService.setRoom(roomId, room);
-          io.to(roomId).emit("roomUpdated", { 
-            themeId: room.themeId,
-            maxPlayers: room.maxPlayers 
-          });
-        }
-      } catch (error) {
-        console.error("❌ Erro ao selecionar tema:", error);
-      }
-    });
-
-    socket.on("selectMaxPlayers", async ({ roomId, maxPlayers }) => {
-      try {
-        const room = await RedisService.getRoom(roomId);
-        if (room) {
-          room.maxPlayers = maxPlayers;
-          await RedisService.setRoom(roomId, room);
-          io.to(roomId).emit("roomUpdated", { 
-            themeId: room.themeId,
-            maxPlayers: room.maxPlayers
-          });
-        }
-      } catch (error) {
-        console.error("❌ Erro ao selecionar capacidade:", error);
-      }
-    });
-
-    socket.on("setSelectingTheme", ({ roomId, status }) => {
-      // Notifica todos na sala que o dono está escolhendo um tema
-      io.to(roomId).emit("selectingThemeStatus", { status });
-    });
 
     /**
      * Move Execution Handler
@@ -294,17 +264,12 @@ module.exports = (io) => {
 
         const moveResult = GameService.processMove(game, socket.id, pieceId, side);
         
-        if (!moveResult.canPlay && moveResult.error) {
-          return socket.emit("error", { message: moveResult.error });
-        }
-
         if (moveResult.canPlay) {
           socket.emit("updateHand", game.hands[socket.id]);
           if (moveResult.isOver) {
              const pointsData = ScoringService.calculateWinScore(moveResult.finalPiece, moveResult.isLailoa);
              game.scores[socket.id] += pointsData.points;
              
-             // Salva o ranking no Postgres
              const playerObj = game.players.find(p => p.id === socket.id);
              if (playerObj && playerObj.playerId) {
                RankingService.saveGameResult(playerObj.playerId, pointsData.winType, pointsData.points, roomId, game.theme?.id);
@@ -321,6 +286,7 @@ module.exports = (io) => {
              socket.emit("gameOver", { iWon: true, message: msgText });
              
              game.status = 'finished';
+             game.lastActivity = Date.now(); // Atualiza atividade
              await RedisService.setRoom(roomId, game);
              return;
           }
@@ -342,7 +308,6 @@ module.exports = (io) => {
         const room = await RedisService.getRoom(roomId);
         if (room) {
           socket.leave(roomId);
-          // P1: Se o dono da sala sair (primeiro da lista), a sala deve ser encerrada para todos
           if (room.players.length > 0 && room.players[0].id === socket.id) {
              io.to(roomId).emit("gameForcedEnd", { message: "O dono da sala saiu e a sala foi encerrada." });
              await RedisService.deleteRoom(roomId);
@@ -352,6 +317,7 @@ module.exports = (io) => {
           room.players = room.players.filter(p => p.id !== socket.id);
           if (room.players.length === 0) await RedisService.deleteRoom(roomId);
           else {
+            room.lastActivity = Date.now(); // Atualiza atividade
             io.to(roomId).emit("playerJoined", room.players);
             await RedisService.setRoom(roomId, room);
           }
@@ -359,9 +325,6 @@ module.exports = (io) => {
       } catch (e) { console.error(e); }
     });
     
-    /**
-     * Terminate Game Handler (Force End)
-     */
     socket.on("forceEndGame", async ({ room: roomId }) => {
       try {
         const room = await RedisService.getRoom(roomId);
@@ -369,21 +332,6 @@ module.exports = (io) => {
           io.to(roomId).emit("gameForcedEnd", { message: "A partida foi encerrada por um dos jogadores." });
           await RedisService.deleteRoom(roomId);
           console.log(`💀 Partida ${roomId} encerrada forçadamente.`);
-        }
-      } catch (e) { console.error(e); }
-    });
-
-    /**
-     * Update Max Players Handler
-     */
-    socket.on("updateMaxPlayers", async ({ room: roomId, maxPlayers }) => {
-      try {
-        const room = await RedisService.getRoom(roomId);
-        if (room && room.players[0].id === socket.id && room.status === 'lobby') {
-          room.maxPlayers = maxPlayers;
-          await RedisService.setRoom(roomId, room);
-          io.to(roomId).emit("roomUpdated", { maxPlayers: room.maxPlayers });
-          console.log(`📏 Sala ${roomId} atualizada para ${maxPlayers} jogadores.`);
         }
       } catch (e) { console.error(e); }
     });
@@ -400,16 +348,13 @@ module.exports = (io) => {
             const player = room.players[playerIdx];
             console.log(`🔌 ${player.playerId} desconectado da sala ${roomId}. Aguardando 1 min para reconexão...`);
             
-            // Se o jogo não estiver rolando, não precisa encerrar forçadamente com timer
             if (room.status !== 'playing') continue;
 
-            // Inicia o timer de 1 minuto
             setTimeout(async () => {
               try {
                 const updatedRoom = await RedisService.getRoom(roomId);
                 if (!updatedRoom || updatedRoom.status !== 'playing') return;
 
-                // Verifica se o jogador ainda está com o socket antigo (não atualizou para um novo socket id via joinRoom)
                 const currentPlayer = updatedRoom.players.find(p => p.playerId === player.playerId);
                 
                 if (currentPlayer && currentPlayer.id === disconnectedSocketId) {

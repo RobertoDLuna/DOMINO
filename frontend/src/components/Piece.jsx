@@ -24,30 +24,30 @@ export default function Piece({
   const API_BASE = import.meta.env.VITE_API_URL?.replace('/api', '') || '';
 
   const renderSide = (symbol, value) => {
+    const isImage = typeof symbol === 'string' && (symbol.startsWith('/uploads') || symbol.startsWith('http'));
     const renderIndicator = () => (
       <div className="absolute bottom-0.5 right-0.5 bg-black/70 text-white text-[9px] font-black w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center rounded-full pointer-events-none shadow-md z-10 border border-white/10">
         {value}
       </div>
     );
 
-    if (typeof symbol === 'string' && (symbol.startsWith('/uploads') || symbol.startsWith('http'))) {
-      const src = symbol.startsWith('http') ? symbol : `${API_BASE}${symbol}`;
-      return (
-        <div className="relative w-full h-full p-1.5 sm:p-2.5 flex items-center justify-center">
-          <img
-            src={src}
-            alt="Symbol"
-            className="w-full h-full object-cover drop-shadow-sm transition-transform hover:scale-110"
-          />
-          {renderIndicator()}
-        </div>
-      );
-    }
-    
-    // Para temas não-imagem (padrões ou emojis)
     return (
-      <div className="relative w-full h-full flex items-center justify-center">
-        {symbol}
+      <div className="relative w-full h-full p-2 sm:p-3 flex items-center justify-center">
+        {isImage ? (
+          <div className="w-full h-full flex items-center justify-center">
+            <img 
+              src={symbol.startsWith('http') ? symbol : `${API_BASE}${symbol}`} 
+              alt={`Lado ${value}`}
+              className="max-w-[95%] max-h-[95%] object-contain drop-shadow-md"
+            />
+          </div>
+        ) : (
+          <div className={`grid grid-cols-2 gap-0.5 sm:gap-1 p-1 ${horizontal ? 'rotate-0' : 'rotate-90'}`}>
+            {[...Array(value)].map((_, i) => (
+              <div key={i} className="w-1.5 h-1.5 sm:w-2.5 sm:h-2.5 rounded-full bg-slate-700 shadow-sm" />
+            ))}
+          </div>
+        )}
         {renderIndicator()}
       </div>
     );

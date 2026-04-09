@@ -572,7 +572,7 @@ export default function GameContainer({ user, isGuest, initialTheme, onBack }) {
             {myHand.map((piece) => {
               const isFirstPlayLocked = board.length === 0 && startingPieceId && piece.id !== startingPieceId;
               return (
-                <Piece key={piece.id} piece={piece} draggable={isMyTurn && !isFirstPlayLocked} selected={selectedPiece?.id === piece.id} onDragStart={(e) => { if (!isFirstPlayLocked) handleDragStart(piece.id); }} onClick={() => handlePieceClick(piece)} className={`${(!isMyTurn || isFirstPlayLocked) ? 'opacity-30 grayscale scale-100 pointer-events-none' : 'scale-110 sm:scale-140'} ${board.length === 0 && piece.id === startingPieceId && isMyTurn ? 'ring-4 ring-yellow-400 animate-pulse' : ''}`} />
+                <Piece key={piece.id} piece={piece} horizontal={false} draggable={isMyTurn && !isFirstPlayLocked} selected={selectedPiece?.id === piece.id} onDragStart={(e) => { if (!isFirstPlayLocked) handleDragStart(piece.id); }} onClick={() => handlePieceClick(piece)} className={`${(!isMyTurn || isFirstPlayLocked) ? 'opacity-30 grayscale scale-100 pointer-events-none' : 'scale-110 sm:scale-120'} ${board.length === 0 && piece.id === startingPieceId && isMyTurn ? 'ring-4 ring-yellow-400 animate-pulse' : ''}`} />
               );
             })}
           </div>

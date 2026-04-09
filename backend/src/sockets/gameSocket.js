@@ -119,7 +119,12 @@ module.exports = (io) => {
             maxPlayers: room.maxPlayers || 2,
             themeId: room.themeId || 'animais'
           });
-          socket.emit("joinedSuccess", { roomId, status: room.status, themeId: room.themeId || 'animais' });
+          socket.emit("joinedSuccess", { 
+            roomId, 
+            status: room.status, 
+            themeId: room.themeId || 'animais',
+            maxPlayers: room.maxPlayers || 2
+          });
 
           if (room.status === 'playing') {
             io.to(roomId).emit("updateBoard", { 
@@ -147,14 +152,17 @@ module.exports = (io) => {
     /**
      * Select Theme Handler (Lobby)
      */
-    socket.on("selectTheme", async ({ room: roomId, themeId }) => {
+    socket.on("selectTheme", async ({ roomId, themeId }) => {
       try {
         const room = await RedisService.getRoom(roomId);
         if (room && room.status === 'lobby') {
           room.themeId = themeId;
-          room.lastActivity = Date.now(); // Atualiza atividade
+          room.lastActivity = Date.now();
           await RedisService.setRoom(roomId, room);
-          io.to(roomId).emit("roomUpdated", { themeId });
+          io.to(roomId).emit("roomUpdated", { 
+            themeId: room.themeId,
+            maxPlayers: room.maxPlayers 
+          });
         }
       } catch (error) {
         console.error("❌ Erro ao selecionar tema:", error);
@@ -162,9 +170,29 @@ module.exports = (io) => {
     });
 
     /**
+     * Select Max Players Handler (Lobby)
+     */
+    socket.on("selectMaxPlayers", async ({ roomId, maxPlayers }) => {
+      try {
+        const room = await RedisService.getRoom(roomId);
+        if (room && room.status === 'lobby') {
+          room.maxPlayers = maxPlayers;
+          room.lastActivity = Date.now();
+          await RedisService.setRoom(roomId, room);
+          io.to(roomId).emit("roomUpdated", { 
+            themeId: room.themeId,
+            maxPlayers: room.maxPlayers 
+          });
+        }
+      } catch (error) {
+        console.error("❌ Erro ao selecionar capacidade:", error);
+      }
+    });
+
+    /**
      * Start Game Handler
      */
-    socket.on("startGame", async ({ room: roomId, themeId }) => {
+    socket.on("startGame", async ({ roomId, themeId }) => {
       try {
         let room = await RedisService.getRoom(roomId);
         if (!room) return;
@@ -202,7 +230,7 @@ module.exports = (io) => {
     /**
      * Play Again Vote Handler
      */
-    socket.on("playAgain", async ({ room: roomId }) => {
+    socket.on("playAgain", async ({ roomId }) => {
       try {
         const room = await RedisService.getRoom(roomId);
         if (room && room.status === 'finished') {
@@ -265,7 +293,7 @@ module.exports = (io) => {
     /**
      * Move Execution Handler
      */
-    socket.on("makeMove", async ({ pieceId, side, room: roomId }) => {
+    socket.on("makeMove", async ({ pieceId, side, roomId }) => {
       try {
         const game = await RedisService.getRoom(roomId);
         if (!game || game.currentTurn !== socket.id) return;
@@ -303,7 +331,7 @@ module.exports = (io) => {
       } catch (error) { console.error(error); }
     });
 
-    socket.on("passTurn", async ({ room: roomId }) => {
+    socket.on("passTurn", async ({ roomId }) => {
       try {
         const game = await RedisService.getRoom(roomId);
         await touch(roomId);

@@ -204,7 +204,7 @@ export const GameProvider = ({ children }) => {
   };
 
   const startGame = (themeId) => {
-    socket.emit('startGame', { room, themeId });
+    socket.emit('startGame', { roomId: room, themeId });
   };
 
   const leaveRoom = () => {
@@ -219,21 +219,21 @@ export const GameProvider = ({ children }) => {
 
   const playAgain = () => {
     if (room) {
-      socket.emit('playAgain', { room });
+      socket.emit('playAgain', { roomId: room });
     }
   };
 
   const passTurn = () => {
-    socket.emit('passTurn', { room });
+    socket.emit('passTurn', { roomId: room });
   };
 
   const makeMove = (pieceId, side) => {
-    socket.emit('makeMove', { pieceId, side, room });
+    socket.emit('makeMove', { pieceId, side, roomId: room });
   };
 
   const forceEndGame = () => {
     if (room) {
-      socket.emit('forceEndGame', { room });
+      socket.emit('forceEndGame', { roomId: room });
       // Reset local state immediately for the initiator
       resetRoomState();
     }

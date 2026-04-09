@@ -3,7 +3,7 @@ import logoCampina from '../assets/logo-campina.png';
 import logoPrefeitura from '../assets/logo-prefeitura.png';
 import AuthService from "../services/AuthService";
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+import { API_URL } from '../config/api';
 
 const TrophySVG = ({ fill = '#FFE066', size = 36 }) => (
   <svg width={size} height={size} viewBox="0 0 48 54" fill="none" xmlns="http://www.w3.org/2000/svg">

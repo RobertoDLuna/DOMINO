@@ -2,7 +2,7 @@
 // Use relative URL so it works in both dev (via Vite proxy) and production (same origin)
 import AuthService from "./AuthService";
 
-const API_URL = import.meta.env.VITE_API_URL || '/api';
+import { API_URL } from '../config/api';
 
 class ThemeService {
   async getThemes(filters = {}) {

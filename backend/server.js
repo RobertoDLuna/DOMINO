@@ -7,6 +7,7 @@ const themeRoutes = require("./src/routes/themeRoutes");
 const authRoutes = require("./src/routes/authRoutes");
 const schoolRoutes = require("./src/routes/schoolRoutes");
 const adminRoutes = require("./src/routes/adminRoutes");
+const rankingRoutes = require("./src/routes/rankingRoutes");
 
 // Global error handlers for Docker troubleshooting
 process.on("uncaughtException", (err) => {
@@ -40,6 +41,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/schools", schoolRoutes);
 app.use("/api/themes", themeRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/ranking", rankingRoutes);
 
 // Serving Static Frontend Files (Production)
 const frontendPath = path.join(__dirname, "../frontend/dist");

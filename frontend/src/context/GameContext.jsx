@@ -13,6 +13,16 @@ export const GameProvider = ({ children }) => {
   const [startingPieceId, setStartingPieceId] = useState(null);
   const [myId, setMyId] = useState(null);
   const [playerId, setPlayerId] = useState(() => {
+    // 1. Tenta usar o ID Real do Jogador Logado
+    try {
+      const authUser = localStorage.getItem('domino_user');
+      if (authUser) {
+        const user = JSON.parse(authUser);
+        if (user && user.id) return user.id;
+      }
+    } catch (e) {}
+
+    // 2. Fallback para ID de Convidado Local
     const saved = localStorage.getItem('domino_player_id');
     const id = saved || Math.random().toString(36).substring(2, 15);
     if (!saved) localStorage.setItem('domino_player_id', id);

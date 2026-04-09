@@ -161,6 +161,7 @@ class GameService {
     const piece = playerHand[pieceIdx];
     let canPlay = false;
     let finalPiece = { ...piece };
+    let isLailoa = false;
 
     if (game.board.length === 0) {
       // Primeira jogada do jogo: DEVE ser obrigatoriamente a peça que definiu o início
@@ -171,6 +172,12 @@ class GameService {
     } else {
       const leftEnd = game.board[0].ladoA;
       const rightEnd = game.board[game.board.length - 1].ladoB;
+
+      // Verifica se é lailoa (se a peça tem o leftEnd de um lado e o rightEnd do outro)
+      // Nota: lailoa de verdade importa só se a pessoa bater, mas verificamos de antemão
+      if ((piece.ladoA === leftEnd && piece.ladoB === rightEnd) || (piece.ladoB === leftEnd && piece.ladoA === rightEnd)) {
+        isLailoa = true;
+      }
 
       if (side === 'left') {
         if (piece.ladoB === leftEnd) {
@@ -201,7 +208,10 @@ class GameService {
       }
 
       const isOver = playerHand.length === 0;
-      return { canPlay: true, finalPiece, isOver };
+      // Se não for a última peça (bater), não é Lailoa pontuável final
+      if (!isOver) isLailoa = false;
+
+      return { canPlay: true, finalPiece, isOver, isLailoa };
     }
 
     return { canPlay: false };

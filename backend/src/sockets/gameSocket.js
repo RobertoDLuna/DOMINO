@@ -1,6 +1,7 @@
 const RedisService = require("../services/RedisService");
 const ScoringService = require("../services/ScoringService");
 const GameService = require("../services/GameService");
+const RankingService = require("../services/RankingService");
 
 /**
  * Socket.io Controller for Domino Game.
@@ -169,18 +170,41 @@ module.exports = (io) => {
         game.currentTurn = playerIds[(currentIdx + 1) % playerIds.length];
 
         if (GameService.checkDeadlock(game)) {
-          const winnerId = GameService.getWinnerOnDeadlock(game);
-          const trancamentoWinnerId = ScoringService.getTrancamentoWinner(game);
-          if (trancamentoWinnerId) game.scores[trancamentoWinnerId] += 1;
+          const result = ScoringService.getTrancamentoWinner(game);
+          
+          if (result.isTie) {
+            // Conta ponto para cada empatado
+            result.tiedPlayers.forEach(pId => {
+              if (game.scores[pId] !== undefined) game.scores[pId] += result.points;
+            });
+            
+            // Informa Ranking (no caso, os empatados) - Para simplificar se o seu jogo for X1, pode ser 1 vitorioso
+            // Mas registramos para ambos na base de dados
+            result.tiedPlayers.forEach(pId => {
+              const playerObj = game.players.find(p => p.id === pId);
+              if (playerObj && playerObj.playerId) {
+                RankingService.saveGameResult(playerObj.playerId, result.winType, result.points, roomId);
+              }
+            });
+          } else {
+            if (game.scores[result.winnerId] !== undefined) game.scores[result.winnerId] += result.points;
+            
+            const playerObj = game.players.find(p => p.id === result.winnerId);
+            if (playerObj && playerObj.playerId) {
+              RankingService.saveGameResult(playerObj.playerId, result.winType, result.points, roomId);
+            }
+          }
           
           playerIds.forEach(pId => {
-            const isWinner = winnerId && pId === winnerId;
+            const isWinner = result.winnerId === pId;
             let message = "";
             
             if (isWinner) {
-              message = "Você venceu por menos pontos na mão!";
-            } else if (!winnerId) {
-              message = "O jogo trancou e houve um empate nos pontos!";
+              message = `Você trancou com menos pontos! (+${result.points})`;
+            } else if (result.isTie && result.tiedPlayers.includes(pId)) {
+              message = `O jogo trancou e vocês empataram nos pontos! (+${result.points})`;
+            } else if (result.isTie) {
+               message = `O jogo trancou em empate!`;
             } else {
               message = "O jogo trancou! Alguém tinha menos pontos.";
             }
@@ -212,11 +236,25 @@ module.exports = (io) => {
         if (moveResult.canPlay) {
           socket.emit("updateHand", game.hands[socket.id]);
           if (moveResult.isOver) {
-             game.scores[socket.id] += 3;
+             const pointsData = ScoringService.calculateWinScore(moveResult.finalPiece, moveResult.isLailoa);
+             game.scores[socket.id] += pointsData.points;
+             
+             // Salva o ranking no Postgres
+             const playerObj = game.players.find(p => p.id === socket.id);
+             if (playerObj && playerObj.playerId) {
+               RankingService.saveGameResult(playerObj.playerId, pointsData.winType, pointsData.points, roomId);
+             }
+
              io.to(roomId).emit("updateScores", game.scores);
              io.to(roomId).emit("updateBoard", { board: game.board, currentTurn: null });
+             
              socket.to(roomId).emit("gameOver", { iWon: false, message: "Alguém bateu o jogo!" });
-             socket.emit("gameOver", { iWon: true, message: "Parabéns! Você bateu e venceu!" });
+             
+             const msgText = moveResult.isLailoa 
+                 ? `Parabéns! LAILOA! (+${pointsData.points} pts)`
+                 : `Parabéns! Você bateu e venceu! (+${pointsData.points} pts)`;
+             socket.emit("gameOver", { iWon: true, message: msgText });
+             
              game.status = 'finished';
              await RedisService.setRoom(roomId, game);
              return;

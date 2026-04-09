@@ -28,11 +28,36 @@ model User {
   schoolId  Int?     @map("school_id")
   
   themes    Theme[]
+  rankingPoints Int  @default(0) @map("ranking_points")
+  gameMatches   GameMatch[]
   
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("users")
+}
+
+enum WinType {
+  NORMAL
+  CARROCA
+  LAILOA
+  LAILOA_CARROCA
+  TRANCOU_MENOS
+  TRANCOU_EMPATE
+}
+
+model GameMatch {
+  id        String   @id @default(uuid())
+  winnerId  String?  @map("winner_id") // Optional because guests won't tie to User
+  winType   WinType  @map("win_type")
+  points    Int
+  roomId    String?  @map("room_id")
+  
+  winner    User?    @relation(fields: [winnerId], references: [id])
+  
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("game_matches")
 }
 
 model School {

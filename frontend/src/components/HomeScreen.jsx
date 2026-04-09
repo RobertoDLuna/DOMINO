@@ -3,6 +3,7 @@ import ThemeService from '../services/ThemeService';
 import { themes as defaultThemes } from '../config/themes';
 import ThemeCreator from './ThemeCreator';
 import AuthService from '../services/AuthService';
+import RankingBoard from './RankingBoard';
 
 const GameCard = ({ theme, onClick }) => {
   const isDefault = theme.isDefault;
@@ -125,6 +126,7 @@ const HomeScreen = ({ user, onSelectTheme, onJoinRoom }) => {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [selectedSubCategory, setSelectedSubCategory] = useState(null);
   const [showCreator, setShowCreator] = useState(false);
+  const [showRanking, setShowRanking] = useState(false);
   const [detailsTheme, setDetailsTheme] = useState(null);
   const [activeTab, setActiveTab] = useState('ALL'); // ALL, DEFAULT, CUSTOM
 
@@ -301,7 +303,13 @@ const HomeScreen = ({ user, onSelectTheme, onJoinRoom }) => {
               onClick={onJoinRoom}
               className="bg-amber-400 text-amber-900 p-4 rounded-[1.5rem] font-black text-sm shadow-[0_6px_0_#d97706] hover:brightness-110 transition-all active:translate-y-1 active:shadow-none flex items-center gap-2 whitespace-nowrap"
             >
-              <span>🔑</span> <span className="hidden sm:inline">ENTRAR EM SALA</span>
+              <span>🔑</span> <span className="hidden sm:inline">SALA</span>
+            </button>
+            <button
+              onClick={() => setShowRanking(true)}
+              className="bg-indigo-500 text-white p-4 rounded-[1.5rem] font-black text-sm shadow-[0_6px_0_#3730a3] hover:brightness-110 transition-all active:translate-y-1 active:shadow-none flex items-center gap-2 whitespace-nowrap"
+            >
+              <span>🏆</span> <span className="hidden sm:inline">RANKING</span>
             </button>
             {(user?.role === 'ADMIN' || user?.role === 'PROFESSOR') && (
               <button
@@ -372,6 +380,10 @@ const HomeScreen = ({ user, onSelectTheme, onJoinRoom }) => {
           onThemeCreated={(newTheme) => { setShowCreator(false); fetchData(); }} 
           onClose={() => setShowCreator(false)} 
         />
+      )}
+      
+      {showRanking && (
+        <RankingBoard onClose={() => setShowRanking(false)} />
       )}
       
       {detailsTheme && (

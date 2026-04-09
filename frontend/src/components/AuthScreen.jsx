@@ -5,133 +5,7 @@ import AuthService from "../services/AuthService";
 
 import { API_URL } from '../config/api';
 
-const TrophySVG = ({ fill = '#FFE066', size = 36 }) => (
-  <svg width={size} height={size} viewBox="0 0 48 54" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M10 4h28v22c0 9-6.5 14-14 14S10 35 10 26V4z" fill={fill} opacity="0.95"/>
-    <path d="M10 8H5a5 5 0 0 0 5 5V8z" fill={fill} opacity="0.65"/>
-    <path d="M38 8h5a5 5 0 0 1-5 5V8z" fill={fill} opacity="0.65"/>
-    <rect x="20" y="40" width="8" height="6" rx="1" fill={fill} opacity="0.8"/>
-    <rect x="14" y="46" width="20" height="4" rx="2" fill={fill}/>
-    <path d="M24 13l2 5h5.5l-4.5 3.2 1.7 5.3L24 23l-4.7 3.5 1.7-5.3L16.5 18H22z" fill="white" opacity="0.85"/>
-    <path d="M15 9 Q17 15 15 22" stroke="white" strokeWidth="2" strokeLinecap="round" opacity="0.45"/>
-  </svg>
-);
-
-const SparkSVG = ({ fill = '#FFD700', size = 10 }) => (
-  <svg width={size} height={size} viewBox="0 0 20 20" fill={fill}><path d="M10 0L11.8 8.2L20 10L11.8 11.8L10 20L8.2 11.8L0 10L8.2 8.2Z"/></svg>
-);
-
-// BAR_W fixo para todas as 3 colunas — só barH varia.
-const BAR_W = 80;
-const PODIUM_CONFIG = {
-  1: { outerDiamond: '#8B6508', innerGrad: ['#FFD700','#FFC200'], cupFill: '#FFF8C0', spark: '#FFE566', barBg: '#FFCE00', barTop: '#9A6B00', barH: 110, tSize: 32, dSize: 68 },
-  2: { outerDiamond: '#4A4A4A', innerGrad: ['#D4D4D4','#A0A0A0'], cupFill: '#EFEFEF', spark: '#C8C8C8', barBg: '#BABABA', barTop: '#5A5A5A', barH: 84,  tSize: 24, dSize: 54 },
-  3: { outerDiamond: '#5C2D0E', innerGrad: ['#C87832','#9A5020'], cupFill: '#FFDAAA', spark: '#D08838', barBg: '#E07828', barTop: '#6A3010', barH: 62,  tSize: 20, dSize: 46 },
-};
-
-const MiniPodium = ({ top3, mode }) => {
-  if (!top3 || top3.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center p-6 bg-black/10 rounded-[2rem] border border-white/10 text-center mt-5 backdrop-blur-sm">
-         <TrophySVG fill="rgba(255,255,255,0.15)" size={32}/>
-         <p className="text-emerald-100/40 italic text-[9px] font-bold uppercase tracking-widest mt-2">Nenhuma liderança ainda.</p>
-      </div>
-    );
-  }
-  
-  const reordered = [];
-  if (top3.length > 1) reordered.push({ ...top3[1], pos: 2 });
-  if (top3.length > 0) reordered.push({ ...top3[0], pos: 1 });
-  if (top3.length > 2) reordered.push({ ...top3[2], pos: 3 });
-
-  const label = (mode === 'CREATOR' || mode === 'CATEGORIES') ? 'PARTIDAS' : 'PTS';
-
-  // Nome truncado de forma inteligente — nunca quebra no meio de palavra
-  const getDisplayName = (name) => {
-    if (mode === 'SCHOOLS') {
-       const cleaned = name.replace(/Escola|Municipal|Estadual|Col[eé]gio|EMEF|-/gi, '').trim();
-       const w = cleaned.split(' ').filter(Boolean);
-       return w.length >= 2 ? `${w[0]} ${w[1].charAt(0)}.` : (w[0] || name.split(' ')[0]);
-    }
-    if (mode === 'CATEGORIES') return name.substring(0, 12).trim();
-    const parts = name.trim().split(' ').filter(Boolean);
-    if (parts.length === 1) return parts[0];
-    // Ex: "Roberto Luna" → "Roberto L."  |  se 1 palavra apenas, mostra só ela
-    return `${parts[0]} ${parts[parts.length - 1].charAt(0)}.`;
-  };
-
-  return (
-    <div className="flex justify-center items-end gap-3 pb-2 relative mt-8 w-full">
-      {reordered.map((u) => {
-        const cfg = PODIUM_CONFIG[u.pos];
-        const isFirst = u.pos === 1;
-
-        return (
-          <div key={u.id ?? u.name} className="flex flex-col items-center" style={{ width: BAR_W }}>
-
-            {/* Losango + Troféu — flutua acima, pequeno overlap fixo de 18px */}
-            <div className="relative flex items-center justify-center z-20"
-              style={{ width: cfg.dSize, height: cfg.dSize, marginBottom: -18 }}>
-              {/* Losango externo */}
-              <div className="absolute inset-0 shadow-[0_6px_20px_rgba(0,0,0,0.28)]"
-                style={{ background: cfg.outerDiamond, transform: 'rotate(45deg)', borderRadius: 9 }}/>
-              {/* Losango interno metálico */}
-              <div className="absolute"
-                style={{
-                  inset: 6, borderRadius: 6, transform: 'rotate(45deg)',
-                  background: `linear-gradient(145deg, ${cfg.innerGrad[0]}, ${cfg.innerGrad[1]})`
-                }}/>
-              {/* Troféu */}
-              <div className="relative z-10 drop-shadow-md flex items-center justify-center">
-                <TrophySVG fill={cfg.cupFill} size={cfg.tSize}/>
-              </div>
-              {/* Sparkles */}
-              <div className="absolute -top-2 -right-1"><SparkSVG fill={cfg.spark} size={isFirst ? 10 : 8}/></div>
-              <div className="absolute top-1 left-0 opacity-55"><SparkSVG fill={cfg.spark} size={isFirst ? 7 : 6}/></div>
-              <div className="absolute -bottom-1 -right-3 opacity-40"><SparkSVG fill={cfg.spark} size={7}/></div>
-            </div>
-
-            {/* Barra do Pódio — conteúdo ancorado na base (justify-end) */}
-            <div className="flex flex-col items-center justify-end z-10 w-full overflow-hidden"
-              style={{
-                height: cfg.barH,
-                background: cfg.barBg,
-                borderTop: `5px solid ${cfg.barTop}`,
-                borderRadius: '10px 10px 0 0',
-                paddingBottom: 14,
-                paddingLeft: 10,
-                paddingRight: 10,
-                boxShadow: 'inset 0 -8px 18px rgba(0,0,0,0.10), 0 4px 14px rgba(0,0,0,0.15)',
-              }}>
-              {/* Nome */}
-              <span className="block text-center font-black uppercase w-full text-white overflow-hidden mb-0.5"
-                style={{
-                  fontSize: isFirst ? 11 : 9,
-                  letterSpacing: '0.05em',
-                  textShadow: '0 1px 3px rgba(0,0,0,0.3)',
-                  whiteSpace: 'nowrap',
-                  textOverflow: 'ellipsis',
-                }}>
-                {getDisplayName(u.name)}
-              </span>
-              {/* Pontuação */}
-              <span className="font-black leading-none text-white"
-                style={{ fontSize: isFirst ? 28 : 20, textShadow: '0 2px 8px rgba(0,0,0,0.22)' }}>
-                {u.points}
-              </span>
-              {/* Label */}
-              <span className="font-black uppercase text-white/70 tracking-widest mt-0.5"
-                style={{ fontSize: 7.5 }}>
-                {label}
-              </span>
-            </div>
-
-          </div>
-        );
-      })}
-    </div>
-  );
-};
+import { Podium } from './RankingBoard';
 
 const PreviewPanel = ({ previews }) => {
    const [tab, setTab] = useState('GERAL');
@@ -146,6 +20,10 @@ const PreviewPanel = ({ previews }) => {
       }
    }
 
+   const label = (tab === 'CREATOR' || tab === 'CATEGORIES') ? 'PARTIDAS' : 'PTS';
+   const listData = getPodiumData() || [];
+   const hasData = listData.length > 0;
+
    return (
      <div className="flex flex-col mt-4 w-full relative z-10">
          <div className="flex flex-wrap bg-black/15 p-2 rounded-2xl shadow-inner backdrop-blur-md self-start max-w-full border border-white/10 gap-1.5">
@@ -155,7 +33,40 @@ const PreviewPanel = ({ previews }) => {
             <button onClick={()=>setTab('CREATOR')} className={`px-4 py-2.5 text-[11px] font-black uppercase tracking-widest transition-all rounded-xl cursor-pointer ${tab==='CREATOR' ? 'bg-[#FFCE00] text-emerald-900 shadow-md' : 'text-emerald-50 hover:bg-white/10'}`}>AUTORES</button>
          </div>
 
-         <MiniPodium mode={tab} top3={getPodiumData()} />
+         {!hasData ? (
+            <div className="flex flex-col items-center justify-center p-6 bg-black/10 rounded-[2rem] border border-white/10 text-center mt-5 backdrop-blur-sm self-start min-w-[200px]">
+               <span className="text-4xl opacity-50 grayscale mb-2">🏆</span>
+               <p className="text-emerald-100/40 italic text-[9px] font-bold uppercase tracking-widest mt-2">Nenhuma liderança ainda.</p>
+            </div>
+         ) : (
+            <div className="w-full flex justify-center">
+               <Podium mode={tab} top3={listData.slice(0, 3)} align="center" className="mt-16 sm:mt-20 mb-1" isWidget={true} />
+            </div>
+         )}
+         
+         {/* Cartões do 4º e 5º Lado Esquerdo Verde */}
+         {listData.length > 3 && (
+            <div className="mt-2 flex flex-col gap-2.5 pl-2 max-w-[340px]">
+               {listData.slice(3, 5).map((user, idx) => {
+                  const realPos = idx + 4;
+                  return (
+                     <div key={user.id || user.name} className="flex items-center gap-3 p-3 rounded-2xl bg-black/20 border border-white/5 shadow-sm backdrop-blur-sm opacity-90 transition-all hover:opacity-100 hover:bg-black/30">
+                        <div className="w-8 h-8 rounded-full font-black text-xs text-white/50 bg-black/30 border border-white/10 shrink-0 flex items-center justify-center">
+                           {realPos}º
+                        </div>
+                        <div className="flex-1 overflow-hidden">
+                           <h3 className="font-black text-white/80 text-[11px] sm:text-xs truncate uppercase">{user.name}</h3>
+                           <p className="text-[8px] uppercase font-bold text-white/40 tracking-widest truncate">{user.school || 'Sem vínculo'}</p>
+                        </div>
+                        <div className="text-right">
+                           <div className="font-black text-lg text-[#FFCE00]/80 leading-none">{user.points}</div>
+                           <div className="text-[7px] font-black tracking-widest text-[#FFCE00]/50 uppercase mt-0.5">{label}</div>
+                        </div>
+                     </div>
+                  );
+               })}
+            </div>
+         )}
      </div>
    )
 }

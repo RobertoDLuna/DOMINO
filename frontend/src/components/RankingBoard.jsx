@@ -24,7 +24,7 @@ const PODIUM_CONFIG = {
   3: { outerDiamond: '#5C2D0E', innerGrad: ['#C87832','#9A5020'], cupFill: '#FFDAAA', spark: '#D08838', barBg: '#E07828', barTop: '#6A3010', barHMobile: 80, barHDesktop: 100, barWMobile: 70, barWDesktop: 90, tSize: 20, dSize: 40 },
 };
 
-const Podium = ({ top3, mode }) => {
+export const Podium = ({ top3, mode, align = 'center', className = 'mt-20 sm:mt-24 mb-4', isWidget = false }) => {
   if (!top3 || top3.length === 0) return null;
   const reordered = [];
   if (top3.length > 1) reordered.push({ ...top3[1], pos: 2 });
@@ -40,40 +40,48 @@ const Podium = ({ top3, mode }) => {
   };
 
   return (
-    <div className="flex justify-center items-end gap-2 sm:gap-4 mt-24 mb-4 pb-2 w-full">
+    <div className={`flex items-end gap-2 sm:gap-3 pb-2 w-full ${className} ${align === 'center' ? 'justify-center' : 'justify-start'}`}>
       {reordered.map((u) => {
         const cfg = PODIUM_CONFIG[u.pos];
         const isFirst = u.pos === 1;
+        const dSize = isWidget ? cfg.dSize * 0.85 : cfg.dSize;
+        const tSize = isWidget ? cfg.tSize * 0.85 : cfg.tSize;
 
         return (
-          <div key={u.id ?? u.name} className="flex flex-col items-center pt-12 sm:pt-16 relative podium-col-wrapper" style={{ zIndex: 30 - u.pos }}>
+          <div key={u.id ?? u.name} className={`flex flex-col items-center relative podium-col-wrapper ${isWidget ? 'pt-8' : 'pt-12 sm:pt-16'}`} style={{ zIndex: 30 - u.pos }}>
             <style dangerouslySetInnerHTML={{__html: `
-              .podium-bar-${u.pos} { width: ${cfg.barWMobile}px; height: ${cfg.barHMobile}px; } 
-              @media (min-width: 640px) { .podium-bar-${u.pos} { width: ${cfg.barWDesktop}px; height: ${cfg.barHDesktop}px; } }
+              .podium-bar-${u.pos} { width: ${isWidget ? cfg.barWMobile * 0.85 : cfg.barWMobile}px; height: ${isWidget ? cfg.barHMobile * 0.85 : cfg.barHMobile}px; } 
+              @media (min-width: 640px) { .podium-bar-${u.pos} { width: ${isWidget ? cfg.barWDesktop * 0.85 : cfg.barWDesktop}px; height: ${isWidget ? cfg.barHDesktop * 0.85 : cfg.barHDesktop}px; } }
             `}}></style>
 
-            {/* Coroas Pulando COM o design de losango abaixo */}
-            {u.pos === 1 && <span className="absolute -top-10 sm:-top-14 text-[50px] sm:text-[60px] z-40 animate-bounce" style={{filter: 'drop-shadow(0 10px 10px rgba(0,0,0,0.3))'}}>👑</span>}
-            {u.pos === 2 && <span className="absolute -top-4 sm:-top-6 text-[40px] sm:text-[50px] z-40 animate-bounce" style={{filter: 'grayscale(100%) brightness(1.3) drop-shadow(0 5px 8px rgba(0,0,0,0.2))'}}>👑</span>}
-            {u.pos === 3 && <span className="absolute -top-4 sm:-top-6 text-[35px] sm:text-[45px] z-40 animate-bounce" style={{filter: 'sepia(1) hue-rotate(-50deg) saturate(3) brightness(0.8) drop-shadow(0 5px 8px rgba(0,0,0,0.2))'}}>👑</span>}
-
             <div className="relative flex items-center justify-center z-20"
-              style={{ width: cfg.dSize, height: cfg.dSize, marginBottom: -15 }}>
+              style={{ width: dSize, height: dSize, marginBottom: isWidget ? -8 : -15 }}>
+              
+              <div className="absolute bottom-full mb-1 sm:mb-2 w-full flex justify-center z-40 pointer-events-none">
+                 {u.pos === 1 && <span className="animate-bounce inline-block" style={{fontSize: isWidget ? 45 : 55, filter: 'drop-shadow(0 10px 10px rgba(0,0,0,0.3))'}}>👑</span>}
+                 {u.pos === 2 && <span className="animate-bounce inline-block" style={{fontSize: isWidget ? 35 : 45, filter: 'grayscale(100%) brightness(1.3) drop-shadow(0 5px 8px rgba(0,0,0,0.2))'}}>👑</span>}
+                 {u.pos === 3 && <span className="animate-bounce inline-block" style={{fontSize: isWidget ? 32 : 40, filter: 'sepia(1) hue-rotate(-50deg) saturate(3) brightness(0.8) drop-shadow(0 5px 8px rgba(0,0,0,0.2))'}}>👑</span>}
+              </div>
               {/* Losango externo */ }
+              {/* Losango externo */}
               <div className="absolute inset-0 shadow-[0_6px_20px_rgba(0,0,0,0.28)]"
-                style={{ background: cfg.outerDiamond, transform: 'rotate(45deg)', borderRadius: 10 }}/>
+                style={{ background: cfg.outerDiamond, transform: 'rotate(45deg)', borderRadius: isWidget ? 6 : 10 }}/>
               <div className="absolute"
                 style={{
-                  inset: 6, borderRadius: 8, transform: 'rotate(45deg)',
+                  inset: isWidget ? 4 : 6, borderRadius: isWidget ? 5 : 8, transform: 'rotate(45deg)',
                   background: `linear-gradient(145deg, ${cfg.innerGrad[0]}, ${cfg.innerGrad[1]})`
                 }}/>
-              {/* Troféu */ }
+              {/* Troféu */}
               <div className="relative z-10 drop-shadow-md flex items-center justify-center">
-                <TrophySVG fill={cfg.cupFill} size={cfg.tSize}/>
+                <TrophySVG fill={cfg.cupFill} size={tSize}/>
               </div>
-              <div className="absolute -top-2 -right-1"><SparkSVG fill={cfg.spark} size={isFirst ? 12 : 9}/></div>
-              <div className="absolute top-1 left-0 opacity-55"><SparkSVG fill={cfg.spark} size={isFirst ? 8 : 6}/></div>
-              <div className="absolute -bottom-1 -right-3 opacity-40"><SparkSVG fill={cfg.spark} size={8}/></div>
+              {!isWidget && (
+                 <>
+                   <div className="absolute -top-2 -right-1"><SparkSVG fill={cfg.spark} size={isFirst ? 12 : 9}/></div>
+                   <div className="absolute top-1 left-0 opacity-55"><SparkSVG fill={cfg.spark} size={isFirst ? 8 : 6}/></div>
+                   <div className="absolute -bottom-1 -right-3 opacity-40"><SparkSVG fill={cfg.spark} size={8}/></div>
+                 </>
+              )}
             </div>
 
             {/* Barra do Pódio */ }
@@ -90,7 +98,7 @@ const Podium = ({ top3, mode }) => {
               }}>
               <span className="block text-center font-black uppercase w-full text-white overflow-hidden mb-1"
                 style={{
-                  fontSize: isFirst ? 14 : 11,
+                  fontSize: isWidget ? (isFirst ? 12 : 10) : (isFirst ? 14 : 11),
                   letterSpacing: '0px',
                   textShadow: '0 2px 4px rgba(0,0,0,0.4)',
                   whiteSpace: 'nowrap',
@@ -99,10 +107,10 @@ const Podium = ({ top3, mode }) => {
                 {getDisplayName(u.name)}
               </span>
               <span className="block text-center font-black leading-none text-white"
-                style={{ fontSize: isFirst ? 38 : 30, textShadow: '0 2px 8px rgba(0,0,0,0.3)', letterSpacing: '0px' }}>
+                style={{ fontSize: isWidget ? (isFirst ? 32 : 25) : (isFirst ? 38 : 30), textShadow: '0 2px 8px rgba(0,0,0,0.3)', letterSpacing: '0px' }}>
                 {u.points}
               </span>
-              <span className="block text-center font-black uppercase text-white/80 mt-1 text-[10px] sm:text-[11px]" style={{ letterSpacing: '0px' }}>
+              <span className="block text-center font-black uppercase text-white/80 mt-1" style={{ fontSize: isWidget ? 9 : 10, letterSpacing: '0px' }}>
                 {label}
               </span>
             </div>

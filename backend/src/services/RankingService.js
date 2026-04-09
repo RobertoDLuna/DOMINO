@@ -5,25 +5,26 @@ class RankingService {
    * Salva o resultado de um jogo finalizado no banco de dados
    * Adiciona o registro no histórico e atualiza os pontos totais do usuário.
    */
-  async saveGameResult(winnerId, winType, points, roomId) {
-    // Se não há winnerId válido ou a sala de jogo não enviou, não salva 
-    // (Pode ocorrer em jogos de testes ou visitantes sem auth id)
+  async saveGameResult(winnerId, winType, points, roomId, themeId) {
     if (!winnerId || winnerId.length < 10) {
-        console.log(`⚠️ Jogo salvo s/ ranking: Vencedor (${winnerId}) não tem ID de banco de dados válido.`);
+        console.log(`⚠️ Jogo s/ ranking: Vencedor (${winnerId}) não tem ID de banco de dados.`);
         return;
     }
 
     try {
       const prisma = getPrisma();
       
-      // Valida se o User existe
-      const user = await prisma.user.findUnique({
-          where: { id: winnerId }
-      });
+      const user = await prisma.user.findUnique({ where: { id: winnerId } });
+      if (!user) return;
 
-      if (!user) {
-          console.log(`⚠️ Usuário ${winnerId} não encontrado no banco. Ranking ignorado.`);
-          return;
+      // Validação de Tema
+      // Muitas vezes o nome interno ou string dos defaults passará (ex: 'animais'), ignoramos e fica NULL (Tema Geral/Global).
+      let validThemeId = null;
+      if (themeId && themeId.length > 20) {
+        try {
+          const theme = await prisma.theme.findUnique({ where: { id: themeId } });
+          if (theme) validThemeId = theme.id;
+        } catch(e) {}
       }
 
       // 1. Cria o registro de partida (Histórico)
@@ -32,59 +33,91 @@ class RankingService {
           winnerId,
           winType,
           points,
-          roomId
+          roomId,
+          themeId: validThemeId
         }
       });
 
-      // 2. Atualiza o cache de ranking do usuário
+      // 2. Atualiza o cache de ranking global do usuário
       await prisma.user.update({
         where: { id: winnerId },
-        data: {
-          rankingPoints: {
-            increment: points
-          }
-        }
+        data: { rankingPoints: { increment: points } }
       });
 
-      console.log(`🏆 [Ranking] Salvo: Usuário ${user.fullName} ganhou ${points} pts por ${winType}!`);
+      console.log(`🏆 [Ranking] Salvo: ${user.fullName} ganhou ${points} pts (${winType}) [Tema: ${validThemeId || 'Padrão'}]`);
     } catch (error) {
       console.error('❌ [RankingService] Erro ao salvar resultado do ranking:', error);
     }
   }
 
   /**
-   * Busca o top 100 usuários com base nos pontos
+   * Busca os líderes. Se filters for vazio, usa o Cache rápido.
+   * Se houver categories, usa agregados instantâneos de cada GameMatch.
    */
-  async getLeaderboard() {
+  async getLeaderboard(filters = {}) {
       try {
           const prisma = getPrisma();
-          const leaders = await prisma.user.findMany({
-              where: {
-                  rankingPoints: {
-                      gt: 0 // Apenas quem pontuou
-                  }
-              },
-              orderBy: {
-                  rankingPoints: 'desc'
-              },
-              take: 100,
-              select: {
-                  id: true,
-                  fullName: true,
-                  rankingPoints: true,
-                  school: {
-                      select: { name: true }
-                  }
-              }
+          const { themeId, categoryId, subcategoryId } = filters;
+
+          // Ranking Geral / Universal
+          if (!themeId && !categoryId && !subcategoryId) {
+              const leaders = await prisma.user.findMany({
+                  where: { rankingPoints: { gt: 0 } },
+                  orderBy: { rankingPoints: 'desc' },
+                  take: 100,
+                  select: { id: true, fullName: true, rankingPoints: true, school: { select: { name: true } } }
+              });
+
+              return leaders.map((u, index) => ({
+                  rank: index + 1,
+                  id: u.id,
+                  name: u.fullName,
+                  points: u.rankingPoints,
+                  school: u.school?.name || 'Sem Escola'
+              }));
+          }
+
+          // ---------- RANKING CUSTOMIZADO POR CATEGORIA/TEMA (Aggregations) -------------
+          const whereClause = {};
+          if (themeId) whereClause.themeId = themeId;
+          else if (subcategoryId) whereClause.theme = { subcategoryId: parseInt(subcategoryId) };
+          else if (categoryId) whereClause.theme = { categoryId: parseInt(categoryId) };
+
+          // Previne agrupar itens sem winner
+          whereClause.winnerId = { not: null };
+
+          const aggregations = await prisma.gameMatch.groupBy({
+             by: ['winnerId'],
+             where: whereClause,
+             _sum: { points: true },
+             orderBy: { _sum: { points: 'desc' } },
+             take: 100
           });
 
-          return leaders.map((u, index) => ({
-              rank: index + 1,
-              id: u.id,
-              name: u.fullName,
-              points: u.rankingPoints,
-              school: u.school?.name || 'Sem Escola'
-          }));
+          // Filtra quem zerou
+          const validAggregations = aggregations.filter(a => a._sum.points > 0);
+          
+          if (validAggregations.length === 0) return [];
+
+          const userIds = validAggregations.map(a => a.winnerId);
+          const users = await prisma.user.findMany({
+              where: { id: { in: userIds } },
+              include: { school: true }
+          });
+
+          const leaderMapping = validAggregations.map(agg => {
+              const user = users.find(u => u.id === agg.winnerId);
+              if (!user) return null;
+              return {
+                  id: user.id,
+                  name: user.fullName,
+                  points: agg._sum.points,
+                  school: user.school?.name || 'Sem Escola'
+              };
+          }).filter(Boolean);
+
+          return leaderMapping.map((l, index) => ({ ...l, rank: index + 1 }));
+
       } catch (error) {
           console.error('❌ [RankingService] Erro ao buscar leaderboard:', error);
           return [];

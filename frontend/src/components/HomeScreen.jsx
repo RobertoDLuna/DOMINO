@@ -163,7 +163,12 @@ const HomeScreen = ({ user, onSelectTheme, onJoinRoom }) => {
         return true;
       });
 
-      setThemes([...filteredDefaults, ...dbThemes]);
+      // Se o Backend retornou temas padrões que a gente inseriu lá pro Ranking, exclua-os pra não duplicar o card na Home
+      const filteredDbThemes = dbThemes.filter(dbTheme => 
+         !allDefaultThemes.some(defaultTheme => defaultTheme.id === dbTheme.id)
+      );
+
+      setThemes([...filteredDefaults, ...filteredDbThemes]);
     } catch (err) {
       console.error("Erro ao carregar dados da Home:", err);
     } finally {

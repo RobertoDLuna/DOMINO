@@ -5,7 +5,8 @@ const router = express.Router();
 // GET /api/ranking
 router.get('/', async (req, res) => {
     try {
-        const leaderboard = await RankingService.getLeaderboard();
+        const { themeId, categoryId, subcategoryId } = req.query;
+        const leaderboard = await RankingService.getLeaderboard({ themeId, categoryId, subcategoryId });
         res.json(leaderboard);
     } catch (error) {
         console.error('Erro na rota de ranking:', error);

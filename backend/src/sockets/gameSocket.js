@@ -183,7 +183,7 @@ module.exports = (io) => {
             result.tiedPlayers.forEach(pId => {
               const playerObj = game.players.find(p => p.id === pId);
               if (playerObj && playerObj.playerId) {
-                RankingService.saveGameResult(playerObj.playerId, result.winType, result.points, roomId);
+                RankingService.saveGameResult(playerObj.playerId, result.winType, result.points, roomId, game.theme?.id);
               }
             });
           } else {
@@ -191,7 +191,7 @@ module.exports = (io) => {
             
             const playerObj = game.players.find(p => p.id === result.winnerId);
             if (playerObj && playerObj.playerId) {
-              RankingService.saveGameResult(playerObj.playerId, result.winType, result.points, roomId);
+              RankingService.saveGameResult(playerObj.playerId, result.winType, result.points, roomId, game.theme?.id);
             }
           }
           
@@ -242,7 +242,7 @@ module.exports = (io) => {
              // Salva o ranking no Postgres
              const playerObj = game.players.find(p => p.id === socket.id);
              if (playerObj && playerObj.playerId) {
-               RankingService.saveGameResult(playerObj.playerId, pointsData.winType, pointsData.points, roomId);
+               RankingService.saveGameResult(playerObj.playerId, pointsData.winType, pointsData.points, roomId, game.theme?.id);
              }
 
              io.to(roomId).emit("updateScores", game.scores);

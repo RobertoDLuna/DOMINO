@@ -53,6 +53,9 @@ model GameMatch {
   points    Int
   roomId    String?  @map("room_id")
   
+  themeId   String?  @map("theme_id")
+  theme     Theme?   @relation(fields: [themeId], references: [id])
+  
   winner    User?    @relation(fields: [winnerId], references: [id])
   
   createdAt DateTime @default(now()) @map("created_at")
@@ -122,6 +125,8 @@ model Theme {
   
   subcategory   SubCategory?  @relation(fields: [subcategoryId], references: [id])
   subcategoryId Int?         @map("subcategory_id")
+  
+  gameMatches   GameMatch[]
   
   createdAt     DateTime     @default(now()) @map("created_at")
   updatedAt     DateTime     @updatedAt @map("updated_at")

@@ -5,8 +5,14 @@ const router = express.Router();
 // GET /api/ranking
 router.get('/', async (req, res) => {
     try {
-        const { themeId, categoryId, subcategoryId } = req.query;
-        const leaderboard = await RankingService.getLeaderboard({ themeId, categoryId, subcategoryId });
+        const { themeId, categoryId, subcategoryId, type } = req.query;
+        let leaderboard = [];
+
+        if (type === 'CREATORS') {
+            leaderboard = await RankingService.getCreatorsLeaderboard();
+        } else {
+            leaderboard = await RankingService.getLeaderboard({ themeId, categoryId, subcategoryId });
+        }
         res.json(leaderboard);
     } catch (error) {
         console.error('Erro na rota de ranking:', error);

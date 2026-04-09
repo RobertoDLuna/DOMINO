@@ -6,7 +6,7 @@ const RankingBoard = ({ onClose }) => {
   const [leaderboard, setLeaderboard] = useState([]);
   const [loading, setLoading] = useState(true);
   
-  const [filterMode, setFilterMode] = useState('GERAL'); // GERAL, CATEGORY, THEME
+  const [filterMode, setFilterMode] = useState('GERAL'); // GERAL, CATEGORIA, TEMA, CREATOR
   const [filterId, setFilterId] = useState(null);
   
   const [categories, setCategories] = useState([]);
@@ -38,7 +38,8 @@ const RankingBoard = ({ onClose }) => {
         
         let query = '';
         if (filterMode === 'CATEGORY' && filterId) query = `?categoryId=${filterId}`;
-        if (filterMode === 'THEME' && filterId) query = `?themeId=${filterId}`;
+        else if (filterMode === 'THEME' && filterId) query = `?themeId=${filterId}`;
+        else if (filterMode === 'CREATOR') query = `?type=CREATORS`;
 
         const response = await fetch(`${API_URL}/ranking${query}`, {
           headers: { 'Authorization': `Bearer ${token}` }
@@ -84,10 +85,11 @@ const RankingBoard = ({ onClose }) => {
 
         {/* Tabs de Filtro */}
         <div className="bg-white shadow-[0_5px_15px_rgba(0,0,0,0.05)] z-10 px-4 pt-4 border-b-2 border-slate-100 flex flex-col gap-3">
-          <div className="flex bg-slate-100 p-1.5 rounded-2xl">
-            <button onClick={() => handleModeChange('GERAL')} className={`flex-1 py-2 sm:py-3 text-xs sm:text-sm font-black uppercase tracking-wider rounded-xl transition-all ${filterMode === 'GERAL' ? 'bg-white text-emerald-600 shadow-md scale-100' : 'text-slate-400 hover:text-slate-600'}`}>🌍 GERAL</button>
-            <button onClick={() => handleModeChange('CATEGORY')} className={`flex-1 py-2 sm:py-3 text-xs sm:text-sm font-black uppercase tracking-wider rounded-xl transition-all ${filterMode === 'CATEGORY' ? 'bg-white text-emerald-600 shadow-md scale-100' : 'text-slate-400 hover:text-slate-600'}`}>📚 NÍVEIS</button>
-            <button onClick={() => handleModeChange('THEME')} className={`flex-1 py-2 sm:py-3 text-xs sm:text-sm font-black uppercase tracking-wider rounded-xl transition-all ${filterMode === 'THEME' ? 'bg-white text-emerald-600 shadow-md scale-100' : 'text-slate-400 hover:text-slate-600'}`}>🎯 POR TEMA</button>
+          <div className="flex bg-slate-100 p-1.5 rounded-2xl gap-1">
+            <button onClick={() => handleModeChange('GERAL')} className={`flex-1 truncate py-2 sm:py-3 text-[9px] sm:text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${filterMode === 'GERAL' ? 'bg-white text-emerald-600 shadow-md scale-100' : 'text-slate-400 hover:text-slate-600'}`}>🌍 GERAL</button>
+            <button onClick={() => handleModeChange('CATEGORY')} className={`flex-1 truncate py-2 sm:py-3 text-[9px] sm:text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${filterMode === 'CATEGORY' ? 'bg-white text-emerald-600 shadow-md scale-100' : 'text-slate-400 hover:text-slate-600'}`}>📚 NÍVEIS</button>
+            <button onClick={() => handleModeChange('THEME')} className={`flex-1 truncate py-2 sm:py-3 text-[9px] sm:text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${filterMode === 'THEME' ? 'bg-white text-emerald-600 shadow-md scale-100' : 'text-slate-400 hover:text-slate-600'}`}>🎯 JOGOS</button>
+            <button onClick={() => handleModeChange('CREATOR')} className={`flex-1 title="Autores com mais partidas concluídas" truncate py-2 sm:py-3 text-[9px] sm:text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${filterMode === 'CREATOR' ? 'bg-white text-emerald-600 shadow-md scale-100' : 'text-slate-400 hover:text-slate-600'}`}>🛠️ AUTORES</button>
           </div>
           
           {filterMode === 'CATEGORY' && (
@@ -107,7 +109,7 @@ const RankingBoard = ({ onClose }) => {
 
         {/* Content ListView */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-slate-50 relative">
-          {(filterMode !== 'GERAL' && !filterId) ? (
+          {(filterMode === 'CATEGORY' || filterMode === 'THEME') && !filterId ? (
              <div className="text-center py-16 opacity-50">
                 <span className="text-5xl block mb-4">🔽</span>
                 <p className="font-black text-slate-500 uppercase tracking-widest text-sm">Selecione o filtro acima para ver os líderes.</p>
@@ -143,7 +145,9 @@ const RankingBoard = ({ onClose }) => {
                    {/* Pontuação Final */}
                    <div className="text-right shrink-0 bg-slate-50 px-3 py-1.5 rounded-xl">
                       <span className="block text-xl sm:text-2xl font-black text-emerald-600 leading-none">{user.points}</span>
-                      <span className="block text-[8px] sm:text-[9px] font-black text-emerald-900/40 uppercase tracking-widest leading-none mt-1">PTS</span>
+                      <span className="block text-[8px] sm:text-[9px] font-black text-emerald-900/40 uppercase tracking-widest leading-none mt-1">
+                        {filterMode === 'CREATOR' ? 'PARTIDAS' : 'PTS'}
+                      </span>
                    </div>
                  </div>
                ))}

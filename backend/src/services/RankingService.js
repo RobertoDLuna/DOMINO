@@ -123,6 +123,61 @@ class RankingService {
           return [];
       }
   }
+
+  /**
+   * Busca os líderes em criação: quem teve mais partidas concluídas usando seus temas
+   */
+  async getCreatorsLeaderboard() {
+      try {
+          const prisma = getPrisma();
+          
+          // Busco todos os temas que têm dono, somando o count de partidas em cada t
+          const themeStats = await prisma.theme.findMany({
+              where: { ownerId: { not: null } },
+              select: {
+                  ownerId: true,
+                  _count: { select: { gameMatches: true } }
+              }
+          });
+
+          // Agrupando in-memory
+          const creatorCounts = {};
+          themeStats.forEach(t => {
+              if (t._count.gameMatches > 0) {
+                  if (!creatorCounts[t.ownerId]) creatorCounts[t.ownerId] = 0;
+                  creatorCounts[t.ownerId] += t._count.gameMatches;
+              }
+          });
+
+          const validCreators = Object.entries(creatorCounts)
+              .sort((a, b) => b[1] - a[1]);
+
+          if (validCreators.length === 0) return [];
+
+          const userIds = validCreators.map(arr => arr[0]).slice(0, 50); // limit 50
+          const users = await prisma.user.findMany({
+              where: { id: { in: userIds } },
+              include: { school: true }
+          });
+
+          const leaderMapping = validCreators.slice(0, 50).map(([id, count]) => {
+              const user = users.find(u => u.id === id);
+              if (!user) return null;
+              return {
+                  id: user.id,
+                  name: user.fullName,
+                  points: count,
+                  school: user.school?.name || 'Sem Escola'
+              };
+          }).filter(Boolean);
+
+          return leaderMapping.map((l, index) => ({ ...l, rank: index + 1 }));
+
+      } catch (e) {
+          console.error("❌ Erro em getCreatorsLeaderboard:", e);
+          return [];
+      }
+  }
 }
 
 module.exports = new RankingService();

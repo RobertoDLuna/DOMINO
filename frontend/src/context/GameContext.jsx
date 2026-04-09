@@ -151,7 +151,7 @@ export const GameProvider = ({ children }) => {
       resetRoomState();
       if (message) alert(message);
     };
-
+ 
     socket.on('gameForcedEnd', handleForcedEnd);
 
     socket.on('error', ({ message }) => {

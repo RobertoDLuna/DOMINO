@@ -7,26 +7,34 @@ const RankingService = require("../services/RankingService");
  * Socket.io Controller for Domino Game.
  */
 module.exports = (io) => {
+  const touch = async (roomId) => {
+    try {
+      const room = await RedisService.getRoom(roomId);
+      if (room) {
+        room.lastActivity = Date.now();
+        await RedisService.setRoom(roomId, room);
+      }
+    } catch (e) {
+      console.warn(`[Redis Touch Error] Sala ${roomId}:`, e.message);
+    }
+  };
+
   // Job de limpeza a cada 60s para salas inativas (3 minutos)
   setInterval(async () => {
     try {
       const allRooms = await RedisService.getAllRooms();
       const now = Date.now();
-      const TIMEOUT = 180000; // 3 minutos de inatividade total
+      const TIMEOUT = 180000; // 3 minutos
 
       for (const roomId in allRooms) {
         const room = allRooms[roomId];
-        
         if (room && room.lastActivity) {
           const inactiveTime = now - room.lastActivity;
           if (inactiveTime > TIMEOUT) {
-            console.log(`[Timeout] Sala ${roomId} inativa por ${inactiveTime}ms. Encerrando.`);
-            
-            // Notifica todos na sala sobre o encerramento forçado por inatividade
+            console.log(`[Inatividade] Sala ${roomId} encerrada após ${Math.round(inactiveTime/1000)}s.`);
             io.to(roomId).emit("gameForcedEnd", { 
-              message: "A partida foi encerrada automaticamente por inatividade superior a 3 minutos." 
+              message: "A sala foi encerrada por inatividade. Interaja com o jogo para mantê-la ativa." 
             });
-            
             await RedisService.deleteRoom(roomId);
           }
         }
@@ -298,7 +306,7 @@ module.exports = (io) => {
     socket.on("passTurn", async ({ room: roomId }) => {
       try {
         const game = await RedisService.getRoom(roomId);
-        if (!game || game.currentTurn !== socket.id) return;
+        await touch(roomId);
         await finalizeTurn(game, roomId);
       } catch (e) { console.error(e); }
     });

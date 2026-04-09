@@ -20,4 +20,15 @@ router.get('/', async (req, res) => {
     }
 });
 
+// GET /api/ranking/preview (Destaques públicos ofuscados)
+router.get('/preview', async (req, res) => {
+    try {
+        const previewData = await RankingService.getPreviewLeaderboards();
+        res.json(previewData);
+    } catch (error) {
+        console.error('Erro na rota de ranking/preview:', error);
+        res.status(500).json({ error: "Erro interno ao buscar Destaques." });
+    }
+});
+
 module.exports = router;

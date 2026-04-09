@@ -178,6 +178,105 @@ class RankingService {
           return [];
       }
   }
+
+  /**
+   * Avalia quais escolas acumulam mais pontos com seus alunos
+   */
+  async getSchoolsLeaderboard() {
+      try {
+          const prisma = getPrisma();
+          const schools = await prisma.school.findMany({
+              select: { id: true, name: true, users: { select: { rankingPoints: true } } }
+          });
+          
+          const mapped = schools.map(s => {
+              const totalPts = s.users.reduce((acc, user) => acc + (user.rankingPoints || 0), 0);
+              return { id: s.id, name: s.name, points: totalPts };
+          }).filter(s => s.points > 0).sort((a, b) => b.points - a.points);
+          
+          return mapped.map((s, index) => ({ ...s, rank: index + 1 }));
+      } catch (e) {
+          console.error("❌ Erro em getSchoolsLeaderboard:", e);
+          return [];
+      }
+  }
+
+  /**
+   * Avalia quais níveis letivos tem mais engajamento (Mais partidas vencidas/pontos)
+   */
+  async getCategoriesLeaderboard() {
+      try {
+          const prisma = getPrisma();
+          
+          // Agrega partidas que tem vencedores, agrupando por Tema -> para achar Categoria.
+          // O mais simples pra evitar join pesado: buscar Categorias e incluir Sub > Themes > GameMatches
+          const categories = await prisma.category.findMany({
+              include: {
+                  subcategories: {
+                      include: {
+                          themes: {
+                              include: { gameMatches: true }
+                          }
+                      }
+                  }
+              }
+          });
+
+          const mapped = categories.map(cat => {
+              let matchCount = 0;
+              cat.subcategories.forEach(sub => {
+                  sub.themes.forEach(theme => {
+                      matchCount += theme.gameMatches.length;
+                  });
+              });
+              return { id: cat.id, name: cat.name, points: matchCount }; // points aqui atuará como "PARTIDAS"
+          }).filter(c => c.points > 0).sort((a, b) => b.points - a.points);
+          
+          return mapped.map((c, index) => ({ ...c, rank: index + 1 }));
+      } catch (e) {
+          console.error("❌ Erro em getCategoriesLeaderboard:", e);
+          return [];
+      }
+  }
+
+  /**
+   * Helper para Ofuscar nomes e proteger a identidade ao listar logs públicos (LGPD)
+   * Exemplo: Roberto D. Luna -> Roberto L.
+   */
+  obfuscateName(fullName) {
+      if (!fullName) return 'Anônimo';
+      const parts = fullName.trim().split(' ');
+      if (parts.length === 1) return parts[0];
+      const lastName = parts[parts.length - 1];
+      return `${parts[0]} ${lastName.charAt(0)}.`;
+  }
+
+  /**
+   * Puxa compactamente a nata dos rankings para a vitrine deslogada (Tela de Login)
+   */
+  async getPreviewLeaderboards() {
+      try {
+          const rawGeneral = await this.getLeaderboard();
+          const topPlayers = rawGeneral.slice(0, 3).map(p => ({
+             ...p,
+             name: this.obfuscateName(p.name)
+          }));
+
+          const rawCreators = await this.getCreatorsLeaderboard();
+          const topCreators = rawCreators.slice(0, 3).map(c => ({
+             ...c,
+             name: this.obfuscateName(c.name)
+          }));
+
+          const topSchools = (await this.getSchoolsLeaderboard()).slice(0,3);
+          const topCategories = (await this.getCategoriesLeaderboard()).slice(0,3);
+
+          return { topPlayers, topCreators, topSchools, topCategories };
+      } catch (e) {
+          console.error("❌ Erro no preview de Leaderboards:", e);
+          return { topPlayers: [], topCreators: [], topSchools: [], topCategories: [] };
+      }
+  }
 }
 
 module.exports = new RankingService();

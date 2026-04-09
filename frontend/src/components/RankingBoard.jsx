@@ -2,6 +2,28 @@ import React, { useState, useEffect } from 'react';
 
 import { API_URL } from '../config/api';
 
+const TrophySVG = ({ fill = '#FFE066', size = 36 }) => (
+  <svg width={size} height={size} viewBox="0 0 48 54" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M10 4h28v22c0 9-6.5 14-14 14S10 35 10 26V4z" fill={fill} opacity="0.95"/>
+    <path d="M10 8H5a5 5 0 0 0 5 5V8z" fill={fill} opacity="0.65"/>
+    <path d="M38 8h5a5 5 0 0 1-5 5V8z" fill={fill} opacity="0.65"/>
+    <rect x="20" y="40" width="8" height="6" rx="1" fill={fill} opacity="0.8"/>
+    <rect x="14" y="46" width="20" height="4" rx="2" fill={fill}/>
+    <path d="M24 13l2 5h5.5l-4.5 3.2 1.7 5.3L24 23l-4.7 3.5 1.7-5.3L16.5 18H22z" fill="white" opacity="0.85"/>
+    <path d="M15 9 Q17 15 15 22" stroke="white" strokeWidth="2" strokeLinecap="round" opacity="0.45"/>
+  </svg>
+);
+
+const SparkSVG = ({ fill = '#FFD700', size = 10 }) => (
+  <svg width={size} height={size} viewBox="0 0 20 20" fill={fill}><path d="M10 0L11.8 8.2L20 10L11.8 11.8L10 20L8.2 11.8L0 10L8.2 8.2Z"/></svg>
+);
+
+const PODIUM_CONFIG = {
+  1: { outerDiamond: '#8B6508', innerGrad: ['#FFD700','#FFC200'], cupFill: '#FFF8C0', spark: '#FFE566', barBg: '#FFCE00', barTop: '#9A6B00', barHMobile: 140, barHDesktop: 160, barWMobile: 90, barWDesktop: 120, tSize: 32, dSize: 64 },
+  2: { outerDiamond: '#4A4A4A', innerGrad: ['#D4D4D4','#A0A0A0'], cupFill: '#EFEFEF', spark: '#C8C8C8', barBg: '#BABABA', barTop: '#5A5A5A', barHMobile: 110, barHDesktop: 130, barWMobile: 80, barWDesktop: 100, tSize: 26, dSize: 50 },
+  3: { outerDiamond: '#5C2D0E', innerGrad: ['#C87832','#9A5020'], cupFill: '#FFDAAA', spark: '#D08838', barBg: '#E07828', barTop: '#6A3010', barHMobile: 80, barHDesktop: 100, barWMobile: 70, barWDesktop: 90, tSize: 20, dSize: 40 },
+};
+
 const Podium = ({ top3, mode }) => {
   if (!top3 || top3.length === 0) return null;
   const reordered = [];
@@ -11,37 +33,82 @@ const Podium = ({ top3, mode }) => {
 
   const label = mode === 'CREATOR' ? 'PARTIDAS' : 'PTS';
 
+  const getDisplayName = (name) => {
+    const parts = name.trim().split(' ').filter(Boolean);
+    if (parts.length === 1) return parts[0];
+    return `${parts[0]} ${parts[parts.length - 1].charAt(0)}.`;
+  };
+
   return (
-    <div className="flex justify-center items-end gap-3 sm:gap-6 mt-12 mb-6 pb-4 border-b-2 border-emerald-900/5 relative overflow-visible px-2">
-      {reordered.map((u) => (
-        <div key={u.id} className="flex flex-col items-center animate-in slide-in-from-bottom duration-500 hover:-translate-y-2 transition-transform">
-          {u.pos === 1 && <span className="text-[40px] sm:text-[50px] -mb-3 z-20 drop-shadow-xl relative animate-bounce">👑</span>}
-          {u.pos === 2 && <span className="text-[30px] sm:text-[40px] -mb-2 z-20 drop-shadow-md">🥈</span>}
-          {u.pos === 3 && <span className="text-[30px] sm:text-[40px] -mb-2 z-20 drop-shadow-md">🥉</span>}
-          
-          {/* Avatar Círculo */}
-          <div className={`relative z-10 rounded-full flex flex-col items-center justify-center font-black text-white shadow-xl border-4 ${
-            u.pos === 1 ? 'w-24 h-24 sm:w-32 sm:h-32 bg-gradient-to-br from-[#FFCE00] to-yellow-400 border-white text-emerald-900' :
-            u.pos === 2 ? 'w-20 h-20 sm:w-28 sm:h-28 bg-gradient-to-br from-zinc-300 to-slate-400 border-white text-white' :
-            'w-20 h-20 sm:w-28 sm:h-28 bg-gradient-to-br from-orange-300 to-amber-600 border-white text-white'
-          }`}>
-             <div className="text-center truncate px-2 w-full">
-                 <span className={`block text-[10px] sm:text-xs uppercase tracking-widest truncate mix-blend-color-burn`}>{u.name.split(' ')[0]}</span>
-                 <span className={`${u.pos === 1 ? 'text-2xl sm:text-4xl' : 'text-xl sm:text-3xl'} drop-shadow-md leading-none mt-1 block`}>{u.points}</span>
-             </div>
+    <div className="flex justify-center items-end gap-2 sm:gap-4 mt-24 mb-4 pb-2 w-full">
+      {reordered.map((u) => {
+        const cfg = PODIUM_CONFIG[u.pos];
+        const isFirst = u.pos === 1;
+
+        return (
+          <div key={u.id ?? u.name} className="flex flex-col items-center pt-12 sm:pt-16 relative podium-col-wrapper" style={{ zIndex: 30 - u.pos }}>
+            <style dangerouslySetInnerHTML={{__html: `
+              .podium-bar-${u.pos} { width: ${cfg.barWMobile}px; height: ${cfg.barHMobile}px; } 
+              @media (min-width: 640px) { .podium-bar-${u.pos} { width: ${cfg.barWDesktop}px; height: ${cfg.barHDesktop}px; } }
+            `}}></style>
+
+            {/* Coroas Pulando COM o design de losango abaixo */}
+            {u.pos === 1 && <span className="absolute -top-10 sm:-top-14 text-[50px] sm:text-[60px] z-40 animate-bounce" style={{filter: 'drop-shadow(0 10px 10px rgba(0,0,0,0.3))'}}>👑</span>}
+            {u.pos === 2 && <span className="absolute -top-4 sm:-top-6 text-[40px] sm:text-[50px] z-40 animate-bounce" style={{filter: 'grayscale(100%) brightness(1.3) drop-shadow(0 5px 8px rgba(0,0,0,0.2))'}}>👑</span>}
+            {u.pos === 3 && <span className="absolute -top-4 sm:-top-6 text-[35px] sm:text-[45px] z-40 animate-bounce" style={{filter: 'sepia(1) hue-rotate(-50deg) saturate(3) brightness(0.8) drop-shadow(0 5px 8px rgba(0,0,0,0.2))'}}>👑</span>}
+
+            <div className="relative flex items-center justify-center z-20"
+              style={{ width: cfg.dSize, height: cfg.dSize, marginBottom: -15 }}>
+              {/* Losango externo */ }
+              <div className="absolute inset-0 shadow-[0_6px_20px_rgba(0,0,0,0.28)]"
+                style={{ background: cfg.outerDiamond, transform: 'rotate(45deg)', borderRadius: 10 }}/>
+              <div className="absolute"
+                style={{
+                  inset: 6, borderRadius: 8, transform: 'rotate(45deg)',
+                  background: `linear-gradient(145deg, ${cfg.innerGrad[0]}, ${cfg.innerGrad[1]})`
+                }}/>
+              {/* Troféu */ }
+              <div className="relative z-10 drop-shadow-md flex items-center justify-center">
+                <TrophySVG fill={cfg.cupFill} size={cfg.tSize}/>
+              </div>
+              <div className="absolute -top-2 -right-1"><SparkSVG fill={cfg.spark} size={isFirst ? 12 : 9}/></div>
+              <div className="absolute top-1 left-0 opacity-55"><SparkSVG fill={cfg.spark} size={isFirst ? 8 : 6}/></div>
+              <div className="absolute -bottom-1 -right-3 opacity-40"><SparkSVG fill={cfg.spark} size={8}/></div>
+            </div>
+
+            {/* Barra do Pódio */ }
+            <div className={`flex flex-col items-center justify-center z-10 overflow-hidden podium-bar-${u.pos}`}
+              style={{
+                background: cfg.barBg,
+                borderTop: `6px solid ${cfg.barTop}`,
+                borderRadius: '12px 12px 0 0',
+                paddingTop: 10,
+                paddingBottom: 4,
+                paddingLeft: 4,
+                paddingRight: 4,
+                boxShadow: 'inset 0 -8px 18px rgba(0,0,0,0.15), 0 8px 20px rgba(0,0,0,0.15)',
+              }}>
+              <span className="block text-center font-black uppercase w-full text-white overflow-hidden mb-1"
+                style={{
+                  fontSize: isFirst ? 14 : 11,
+                  letterSpacing: '0px',
+                  textShadow: '0 2px 4px rgba(0,0,0,0.4)',
+                  whiteSpace: 'nowrap',
+                  textOverflow: 'ellipsis',
+                }}>
+                {getDisplayName(u.name)}
+              </span>
+              <span className="block text-center font-black leading-none text-white"
+                style={{ fontSize: isFirst ? 38 : 30, textShadow: '0 2px 8px rgba(0,0,0,0.3)', letterSpacing: '0px' }}>
+                {u.points}
+              </span>
+              <span className="block text-center font-black uppercase text-white/80 mt-1 text-[10px] sm:text-[11px]" style={{ letterSpacing: '0px' }}>
+                {label}
+              </span>
+            </div>
           </div>
-          
-          {/* Base do Pódio 3D Styled */}
-          <div className={`w-[85px] sm:w-[110px] flex flex-col items-center pt-3 rounded-t-2xl shadow-[inset_0_-10px_20px_rgba(0,0,0,0.2)] mt-[-15px] relative overflow-hidden ${
-            u.pos === 1 ? 'h-[140px] sm:h-[180px] bg-gradient-to-b from-[#009660] to-[#007b4f] border-t-[10px] border-[#FFCE00]' :
-            u.pos === 2 ? 'h-[110px] sm:h-[140px] bg-gradient-to-b from-[#008253] to-[#00603d] border-t-[10px] border-zinc-300 opacity-95' :
-            'h-[80px] sm:h-[100px] bg-gradient-to-b from-[#007047] to-[#005030] border-t-[10px] border-orange-300 opacity-90'
-          }`}>
-            <span className="text-4xl sm:text-6xl font-black text-black/10 drop-shadow-sm mix-blend-overlay">{u.pos}</span>
-            <span className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest text-emerald-100/50 mt-1">{label}</span>
-          </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 };
@@ -108,8 +175,8 @@ const RankingBoard = ({ onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-[400] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-300">
-      <div className="bg-slate-50 w-full max-w-3xl rounded-[3rem] shadow-[0_40px_100px_rgba(0,0,0,0.5)] overflow-hidden flex flex-col max-h-[85vh] sm:max-h-[90vh] animate-in zoom-in-95 duration-300 border border-emerald-900/10">
+    <div className="fixed inset-0 z-[400] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 sm:p-6 animate-in fade-in duration-300">
+      <div className="bg-slate-50 w-full lg:max-w-5xl xl:max-w-6xl shadow-[0_40px_100px_rgba(0,0,0,0.5)] overflow-hidden flex flex-col h-full sm:h-auto max-h-[100vh] sm:max-h-[90vh] rounded-2xl sm:rounded-[3rem] animate-in zoom-in-95 duration-300 border border-emerald-900/10">
         
         {/* Header Elegante */}
         <div className="relative bg-gradient-to-r from-[#009660] to-[#007b4f] p-6 flex flex-col sm:flex-row sm:items-center justify-between shrink-0 shadow-md z-20">
@@ -174,25 +241,47 @@ const RankingBoard = ({ onClose }) => {
                
                {/* Listagem 4 em diante */}
                {leaderboard.length > 3 && (
-                 <div className="space-y-3 pt-6 px-1 lg:px-10">
-                   {leaderboard.slice(3).map((user, idx) => {
+                 <div className="pt-6 px-2 lg:px-8 flex flex-col gap-3">
+                   {/* 4 e 5: Cartões em cinza "medalha honrosa" */}
+                   {leaderboard.slice(3, 5).map((user, idx) => {
                      const realPos = idx + 4;
                      return (
-                        <div key={user.id} className="group flex items-center gap-4 sm:gap-6 p-4 sm:p-5 rounded-[2rem] bg-white shadow-sm border border-slate-100 hover:border-[#009660]/30 hover:shadow-md transition-all">
-                           <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full font-black text-sm sm:text-base bg-slate-100 text-slate-500 flex items-center justify-center border-2 border-slate-200 group-hover:bg-[#009660] group-hover:text-white transition-colors shrink-0">
-                             {realPos}
+                        <div key={user.id} className="flex items-center gap-4 p-4 rounded-[1.5rem] bg-slate-100/80 border-2 border-slate-200 shadow-sm opacity-90 transition-all hover:opacity-100">
+                           <div className="w-10 h-10 rounded-full font-black text-sm text-slate-500 bg-white shadow-inner flex items-center justify-center border border-slate-300 shrink-0">
+                             {realPos}º
                            </div>
                            <div className="flex-1 overflow-hidden">
-                               <h3 className="font-black text-slate-800 text-sm sm:text-base truncate uppercase">{user.name}</h3>
+                               <h3 className="font-black text-slate-600 text-sm sm:text-base truncate uppercase">{user.name}</h3>
                                <p className="text-[9px] sm:text-[10px] uppercase font-bold text-slate-400 tracking-widest truncate mt-0.5">{user.school || 'Sem vínculo'}</p>
                            </div>
                            <div className="text-right shrink-0">
-                               <span className="block text-xl sm:text-2xl font-black text-[#009660] leading-none">{user.points}</span>
+                               <span className="block text-xl sm:text-2xl font-black text-slate-500 leading-none">{user.points}</span>
                                <span className="block text-[8px] uppercase font-black tracking-widest text-slate-400 mt-1">{filterMode === 'CREATOR' ? 'PARTIDAS' : 'PTS'}</span>
                            </div>
                         </div>
                      )
                    })}
+
+                   {/* Posição 6 em diante - Lista Simples Textual */}
+                   {leaderboard.length > 5 && (
+                     <div className="mt-4 pt-4 border-t border-slate-200 px-2 flex flex-col gap-2">
+                       {leaderboard.slice(5).map((user, idx) => {
+                         const realPos = idx + 6;
+                         return (
+                           <div key={user.id} className="flex items-center justify-between py-2 border-b border-slate-100 last:border-0 hover:bg-slate-50 transition-colors px-2 rounded-lg">
+                             <div className="flex items-center gap-3 overflow-hidden">
+                               <span className="font-bold text-slate-400 text-sm w-6 text-right shrink-0">{realPos}º</span>
+                               <span className="font-bold text-slate-700 text-xs sm:text-sm truncate uppercase">{user.name}</span>
+                             </div>
+                             <div className="flex items-baseline gap-1 shrink-0">
+                               <span className="font-black text-slate-600 text-sm sm:text-base">{user.points}</span>
+                               <span className="text-[9px] font-bold text-slate-400 uppercase">{filterMode === 'CREATOR' ? 'partidas' : 'pts'}</span>
+                             </div>
+                           </div>
+                         );
+                       })}
+                     </div>
+                   )}
                  </div>
                )}
              </div>

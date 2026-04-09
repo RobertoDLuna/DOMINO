@@ -127,6 +127,7 @@ const HomeScreen = ({ user, onSelectTheme, onJoinRoom }) => {
   const [selectedSubCategory, setSelectedSubCategory] = useState(null);
   const [showCreator, setShowCreator] = useState(false);
   const [showRanking, setShowRanking] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [detailsTheme, setDetailsTheme] = useState(null);
   const [activeTab, setActiveTab] = useState('ALL'); // ALL, DEFAULT, CUSTOM
 
@@ -191,12 +192,28 @@ const HomeScreen = ({ user, onSelectTheme, onJoinRoom }) => {
   });
 
   return (
-    <div className="flex min-h-screen bg-[#F0FDF4] w-full">
+    <div className="flex min-h-screen bg-[#F0FDF4] w-full relative">
+      {/* Mobile Overlay */}
+      {showMobileMenu && (
+        <div 
+          className="fixed inset-0 bg-emerald-900/40 z-40 lg:hidden backdrop-blur-sm"
+          onClick={() => setShowMobileMenu(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <aside className="w-72 bg-white/80 backdrop-blur-xl border-r-2 border-emerald-100 p-8 hidden lg:flex flex-col sticky top-0 h-screen z-40">
-        <div className="mb-10">
-          <h1 className="text-3xl font-black text-[#009660] italic tracking-tighter leading-none mb-1">DOMINÓ</h1>
-          <p className="text-[10px] font-black uppercase text-emerald-900/40 tracking-[0.2em]">Educação & Diversão</p>
+      <aside className={`fixed inset-y-0 left-0 w-72 bg-white/95 backdrop-blur-xl border-r-2 border-emerald-100 p-6 sm:p-8 flex flex-col z-50 transform transition-transform duration-300 lg:static lg:translate-x-0 ${showMobileMenu ? 'translate-x-0 shadow-2xl' : '-translate-x-full'}`}>
+        <div className="flex items-center justify-between mb-10">
+          <div>
+            <h1 className="text-3xl font-black text-[#009660] italic tracking-tighter leading-none mb-1">DOMINÓ</h1>
+            <p className="text-[10px] font-black uppercase text-emerald-900/40 tracking-[0.2em]">Educação & Diversão</p>
+          </div>
+          <button 
+            onClick={() => setShowMobileMenu(false)}
+            className="lg:hidden text-emerald-900 bg-emerald-50 w-8 h-8 rounded-full flex items-center justify-center hover:bg-emerald-100 transition-colors"
+          >
+            ✕
+          </button>
         </div>
 
         <nav className="flex-1 space-y-8 overflow-y-auto pr-2 scrollbar-hide">
@@ -288,9 +305,21 @@ const HomeScreen = ({ user, onSelectTheme, onJoinRoom }) => {
       {/* Main Content */}
       <main className="flex-1 p-6 sm:p-10 lg:p-12 overflow-y-auto h-screen">
         <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
-          <div>
-            <h2 className="text-4xl font-black text-emerald-900 uppercase italic tracking-tighter">Explorar Jogos</h2>
-            <p className="text-sm font-medium text-emerald-900/40">Escolha um tema e comece o desafio!</p>
+          <div className="flex items-center gap-4">
+             <button 
+               onClick={() => setShowMobileMenu(true)}
+               className="lg:hidden w-12 h-12 flex items-center justify-center bg-white rounded-2xl shadow-sm text-emerald-900 border-2 border-emerald-100 active:scale-95 transition-transform shrink-0"
+             >
+               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                 <line x1="3" y1="12" x2="21" y2="12"></line>
+                 <line x1="3" y1="6" x2="21" y2="6"></line>
+                 <line x1="3" y1="18" x2="21" y2="18"></line>
+               </svg>
+             </button>
+             <div>
+               <h2 className="text-3xl sm:text-4xl font-black text-emerald-900 uppercase italic tracking-tighter">Explorar Jogos</h2>
+               <p className="text-xs sm:text-sm font-medium text-emerald-900/40">Escolha um tema e comece o desafio!</p>
+             </div>
           </div>
           
           <div className="flex items-center gap-4 w-full md:w-auto">

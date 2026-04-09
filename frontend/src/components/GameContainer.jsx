@@ -363,15 +363,15 @@ export default function GameContainer({ user, isGuest, initialTheme, onBack }) {
                 {(initialTheme || selectedTheme) && !showCreator && (
                   <div className="bg-white/10 backdrop-blur-md p-6 rounded-[2.5rem] border-2 border-white/20 flex flex-col items-center gap-3 shadow-[0_20px_50px_rgba(0,0,0,0.2)] w-full animate-in zoom-in duration-300">
                     <div className="w-20 h-20 bg-white rounded-3xl flex items-center justify-center text-5xl shadow-2xl shrink-0">
-                      {(initialTheme || currentLobbyTheme)?.emoji || '🎨'}
+                      {(currentLobbyTheme || initialTheme)?.emoji || '🎨'}
                     </div>
                     <div className="text-center">
                       <p className="text-[10px] font-black text-[#FFCE00] uppercase tracking-[0.4em] mb-1 leading-none opacity-80 text-center w-full">Configuração Ativa</p>
                       <h4 className="text-2xl font-black text-white uppercase italic tracking-tighter leading-none drop-shadow-md">
-                        {(initialTheme || currentLobbyTheme)?.name || 'Carregando...'}
+                        {(currentLobbyTheme || initialTheme)?.name || 'Carregando...'}
                       </h4>
                       <p className="text-[10px] font-medium text-white/50 mt-2 italic px-4">
-                        "{(initialTheme || currentLobbyTheme)?.description || 'Carregando detalhes...'}"
+                        "{(currentLobbyTheme || initialTheme)?.description || 'Carregando detalhes...'}"
                       </p>
                     </div>
                   </div>

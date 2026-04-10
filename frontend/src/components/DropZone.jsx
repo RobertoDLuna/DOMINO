@@ -18,8 +18,10 @@ export default function DropZone({
   const actualW = w || (horizontal ? 120 : 68);
   const actualH = h || (horizontal ? 68 : 120);
 
-  // Consistency with Piece.jsx
-  const API_BASE = import.meta.env.VITE_API_URL?.replace('/api', '') || '';
+  // Consistency with Piece.jsx e suporte dinâmico para produção
+  const API_BASE = import.meta.env.VITE_API_URL 
+    ? import.meta.env.VITE_API_URL.replace('/api', '') 
+    : (typeof window !== 'undefined' ? window.location.origin : '');
 
   const renderMatchIcon = (symbol) => {
     if (!symbol) return null;

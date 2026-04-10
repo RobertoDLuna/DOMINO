@@ -21,7 +21,9 @@ export default function Piece({
   const actualH = height || (horizontal ? 66 : 140);
 
   // Empty string = same origin (works in dev via Vite proxy AND in production)
-  const API_BASE = import.meta.env.VITE_API_URL?.replace('/api', '') || '';
+  const API_BASE = import.meta.env.VITE_API_URL 
+    ? import.meta.env.VITE_API_URL.replace('/api', '') 
+    : (typeof window !== 'undefined' ? window.location.origin : '');
 
   const renderSide = (symbol, value) => {
     const isImage = typeof symbol === 'string' && (symbol.startsWith('/uploads') || symbol.startsWith('http'));
@@ -41,7 +43,8 @@ export default function Piece({
             <img 
               src={symbol.startsWith('http') ? symbol : `${API_BASE}${symbol}`} 
               alt={`Lado ${value}`}
-              className="max-w-[98%] max-h-[98%] object-contain drop-shadow-md"
+              draggable={false}
+              className="max-w-[98%] max-h-[98%] object-contain drop-shadow-md pointer-events-none"
               onError={(e) => {
                 console.warn("Failed to load image for piece, falling back to dots", symbol);
                 e.target.style.display = 'none';

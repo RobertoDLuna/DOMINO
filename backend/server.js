@@ -24,6 +24,15 @@ process.on("unhandledRejection", (reason, promise) => {
 console.log("🚀 Iniciando servidor de Dominó...");
 console.log(`📂 Diretorio atual (__dirname): ${__dirname}`);
 
+// Garantir diretórios de upload para persistência (Docker Volumes)
+const fs = require('fs');
+const uploadsDir = path.join(__dirname, 'uploads');
+const themesDir = path.join(uploadsDir, 'themes');
+if (!fs.existsSync(themesDir)) {
+  console.log("📁 Criando diretórios de upload...");
+  fs.mkdirSync(themesDir, { recursive: true });
+}
+
 const setupSocket = require("./src/config/socketConfig");
 const errorMiddleware = require("./src/middleware/errorMiddleware");
 

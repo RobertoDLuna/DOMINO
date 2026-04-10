@@ -31,25 +31,16 @@ export default function SnakeBoard({ board, isMyTurn, onDrop, draggingPiece }) {
   const containerRef = React.useRef(null);
   const [containerSize, setContainerSize] = useState({ width: 800, height: 600 });
 
-  // Detect if current theme uses images
-  const isImageTheme = board.length > 0 && typeof board[0].ladoA === 'string' && (board[0].ladoA.startsWith('/') || board[0].ladoA.startsWith('http'));
-
-  const metrics = isImageTheme ? {
-    H_W: 180, // Larger for images
-    H_H: 100,
-    V_W: 88,
-    V_H: 184,
-    GAP: 8,
-    MARGIN: 20
-  } : {
-    H_W: 120,
-    H_H: 68,
-    V_W: 60,
-    V_H: 122, 
-    GAP: 4,   
-    MARGIN: 20 
+  // Métrica padronizada para todas as peças para garantir consistência visual no board vs a mão
+  const metrics = {
+    H_W: 140,
+    H_H: 66,
+    V_W: 66,
+    V_H: 140, 
+    GAP: 6,   
+    MARGIN: 32 
   };
-
+  
   const { H_W, H_H, V_W, V_H, GAP, MARGIN } = metrics;
 
   useEffect(() => {
@@ -228,13 +219,13 @@ export default function SnakeBoard({ board, isMyTurn, onDrop, draggingPiece }) {
     pos.posY += offsetY;
   });
 
-  // Smart-fit scale: fit the content inside the visible viewport with padding
-  const scaleX = (containerSize.width - 16) / logicalWidth;
-  const scaleY = (containerSize.height - 16) / logicalHeight;
+  // "Smart-fit scale": ajusta o conteúdo dentro do viewport visível com um respiro generoso de 64px
+  const scaleX = (containerSize.width - 64) / logicalWidth;
+  const scaleY = (containerSize.height - 64) / logicalHeight;
   const boardScale = Math.min(scaleX, scaleY, 1.0); 
 
   return (
-    <div ref={containerRef} className="w-full h-full relative overflow-hidden flex justify-center items-center">
+    <div ref={containerRef} className="w-full h-full relative flex justify-center items-center">
       <div 
         className="relative transition-all duration-700 ease-in-out" 
         style={{ 

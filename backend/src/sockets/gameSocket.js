@@ -361,7 +361,7 @@ module.exports = (io) => {
       } catch (e) { console.error(e); }
     });
     
-    socket.on("forceEndGame", async ({ room: roomId }) => {
+    socket.on("forceEndGame", async ({ roomId }) => {
       try {
         const room = await RedisService.getRoom(roomId);
         if (room) {

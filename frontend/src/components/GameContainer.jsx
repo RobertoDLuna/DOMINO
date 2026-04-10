@@ -40,7 +40,7 @@ export default function GameContainer({ user, isGuest, initialTheme, onBack }) {
   useEffect(() => {
     const fetchThemes = async () => {
       try {
-        const themes = await ThemeService.getThemes(localStorage.getItem('dominoPlayerId'));
+        const themes = await ThemeService.getThemes(localStorage.getItem('domino_player_id'));
         setDbThemes(prev => {
           // Mescla temas mantendo os que já foram buscados manualmente (como o tema da sala)
           const merged = [...prev];
@@ -128,9 +128,9 @@ export default function GameContainer({ user, isGuest, initialTheme, onBack }) {
   };
 
   const [playerInfo, setPlayerInfo] = useState({
-    name: user?.fullName || localStorage.getItem("dominoPlayerName") || "",
-    avatar: localStorage.getItem("dominoPlayerAvatar") || "0",
-    id: user?.id || localStorage.getItem("dominoPlayerId") || `guest-${Date.now()}`
+    name: user?.fullName || localStorage.getItem("domino_player_name") || "",
+    avatar: localStorage.getItem("domino_player_avatar") || "0",
+    id: user?.id || localStorage.getItem("domino_player_id") || `guest-${Date.now()}`
   });
 
   const canCreateThemes = user && (user.role === 'PROFESSOR' || user.role === 'ADMIN');
@@ -149,13 +149,13 @@ export default function GameContainer({ user, isGuest, initialTheme, onBack }) {
   const winnerName = players.find(p => p.id === winnerId)?.name || 'Vencedor';
 
   const [roomIdInput, setRoomIdInput] = useState("");
-  const [playerNameInput, setPlayerNameInput] = useState(() => localStorage.getItem('dominoPlayerName') || "");
+  const [playerNameInput, setPlayerNameInput] = useState(() => localStorage.getItem('domino_player_name') || "");
   const [draggingPiece, setDraggingPiece] = useState(null);
 
   const handleNameChange = (e) => {
     const val = e.target.value.substring(0, 20);
     setPlayerNameInput(val.toUpperCase());
-    localStorage.setItem('dominoPlayerName', val.toUpperCase());
+    localStorage.setItem('domino_player_name', val.toUpperCase());
   };
 
   const getFinalName = () => {
@@ -163,7 +163,7 @@ export default function GameContainer({ user, isGuest, initialTheme, onBack }) {
     const names = ["MESTRE", "LENDA", "NINJA", "HERÓI", "FOCA", "LEÃO"];
     const rnd = names[Math.floor(Math.random() * names.length)];
     setPlayerNameInput(rnd);
-    localStorage.setItem('dominoPlayerName', rnd);
+    localStorage.setItem('domino_player_name', rnd);
     return rnd;
   };
 
@@ -309,19 +309,43 @@ export default function GameContainer({ user, isGuest, initialTheme, onBack }) {
         </header>
         <div className="flex-1 flex flex-col items-center justify-start z-10 w-full overflow-y-auto scrollbar-hide py-2 sm:pt-8">
           <div className="w-full max-w-sm lg:max-w-[480px] flex flex-col items-center gap-3 sm:gap-4">
-            <div className="w-full bg-white/0 sm:bg-white sm:p-8 rounded-[3.5rem] sm:shadow-[0_25px_80px_rgba(0,0,0,0.3)] text-center sm:border-b-[10px] sm:border-emerald-900/10 overflow-hidden">
+            <div className="w-full bg-white/0 sm:bg-white sm:p-8 rounded-[3.5rem] sm:shadow-[0_25px_80px_rgba(0,0,0,0.3)] text-center sm:border-b-[10px] sm:border-emerald-900/10 sm:overflow-hidden">
               <div className="mb-3 sm:mb-4 flex flex-col gap-2">
-                <div className="flex items-center gap-2 w-full">
-                  <input type="text" placeholder="SEU NOME" value={playerInfo.name} disabled={!!user} onChange={(e) => setPlayerInfo({...playerInfo, name: e.target.value.toUpperCase()})} className="flex-1 bg-emerald-50 border-[3px] border-emerald-100 p-3 sm:p-4 rounded-[1.5rem] focus:outline-none focus:border-[#009660] placeholder-emerald-900/30 text-center text-lg sm:text-xl font-black uppercase text-[#009660] transition-all min-w-0" />
+                <div className="flex items-center gap-2 w-full p-0.5">
+                  <input 
+                    type="text" 
+                    placeholder="SEU NOME" 
+                    value={playerInfo.name} 
+                    disabled={!!user} 
+                    onChange={(e) => setPlayerInfo({...playerInfo, name: e.target.value.toUpperCase()})} 
+                    className="flex-1 bg-white sm:bg-emerald-50 border-2 sm:border-[3px] border-emerald-200/50 sm:border-emerald-100 p-4 sm:p-4 rounded-[2.5rem] sm:rounded-[1.5rem] focus:outline-none focus:border-[#FFCE00] sm:focus:border-[#009660] focus:ring-4 sm:focus:ring-0 focus:ring-[#FFCE00]/20 placeholder-emerald-900/20 sm:placeholder-emerald-900/30 text-center text-xl sm:text-xl font-black uppercase text-[#009660] transition-all shadow-xl sm:shadow-none min-w-0" 
+                  />
                 </div>
 
-                {isGuest && <p className="text-[9px] font-black uppercase text-emerald-900/40 tracking-widest">Modo Convidado</p>}
-                {user && <p className="text-[9px] font-black uppercase text-emerald-900/40 tracking-widest">{user.role} | {user.school || 'Externo'}</p>}
+                {isGuest && <p className="text-[10px] font-black uppercase text-white/40 sm:text-emerald-900/40 tracking-[0.3em] mt-1 sm:mt-0 italic sm:not-italic">Modo Convidado</p>}
+                {user && <p className="text-[10px] font-black uppercase text-white/40 sm:text-emerald-900/40 tracking-[0.3em] mt-1 sm:mt-0 italic sm:not-italic">{user.role} | {user.school || 'Externo'}</p>}
               </div>
-              <button onClick={handleCreateRoom} className="w-full bg-[#FFCE00] hover:bg-[#ffe050] text-[#009660] font-black py-4 sm:py-5 rounded-3xl shadow-[0_6px_0_#d1a900] transition-all transform hover:scale-105 active:translate-y-1 active:shadow-[0_3px_0_#d1a900] mb-3 sm:mb-4 text-lg sm:text-xl uppercase tracking-tight">Criar Sala 🏫</button>
-              <div className="flex flex-col gap-3 pt-3 border-t-2 border-dashed border-gray-100">
-                <input type="text" placeholder="CÓDIGO DA SALA" value={roomIdInput} onChange={(e) => setRoomIdInput(e.target.value.toUpperCase())} className="w-full bg-emerald-50 border-[3px] border-emerald-100 p-3 sm:p-4 rounded-[1.5rem] focus:outline-none focus:border-[#009660] placeholder-emerald-900/30 text-center text-lg sm:text-xl font-black uppercase text-[#009660] transition-all" />
-                <button onClick={handleJoinRoom} className="w-full bg-[#009660] hover:bg-[#00a86b] text-white font-black py-4 sm:py-5 rounded-3xl shadow-[0_6px_0_#006d46] transition-all transform hover:scale-105 active:translate-y-1 active:shadow-[0_3px_0_#006d46] text-lg sm:text-xl uppercase tracking-tight border-b-2 border-emerald-400/20">Entrar no Jogo 🧩</button>
+              <button 
+                onClick={handleCreateRoom} 
+                className="w-full bg-[#FFCE00] hover:bg-[#ffe050] text-[#009660] font-black py-5 sm:py-4 rounded-[2.5rem] sm:rounded-3xl shadow-[0_8px_0_#d1a900] sm:shadow-[0_6px_0_#d1a900] transition-all transform hover:scale-[1.02] sm:hover:scale-105 active:translate-y-1 active:shadow-[0_4px_0_#d1a900] mb-6 sm:mb-4 text-xl sm:text-lg uppercase tracking-tighter"
+              >
+                Criar Sala 🏫
+              </button>
+              
+              <div className="flex flex-col gap-4 pt-6 sm:pt-3 border-t-2 sm:border-t-2 border-white/10 sm:border-dashed sm:border-gray-100">
+                <input 
+                  type="text" 
+                  placeholder="CÓDIGO DA SALA" 
+                  value={roomIdInput} 
+                  onChange={(e) => setRoomIdInput(e.target.value.toUpperCase())} 
+                  className="w-full bg-emerald-900/20 sm:bg-emerald-50 border-2 sm:border-[3px] border-white/20 sm:border-emerald-100 p-4 sm:p-4 rounded-[2.5rem] sm:rounded-[1.5rem] focus:outline-none focus:border-[#FFCE00] sm:focus:border-[#009660] focus:ring-4 sm:focus:ring-0 focus:ring-[#FFCE00]/20 placeholder-white/20 sm:placeholder-emerald-900/30 text-center text-xl sm:text-lg font-black uppercase text-white sm:text-[#009660] transition-all shadow-inner sm:shadow-none" 
+                />
+                <button 
+                  onClick={handleJoinRoom} 
+                  className="w-full bg-white sm:bg-[#009660] hover:bg-white/90 sm:hover:bg-[#00a86b] text-[#009660] sm:text-white font-black py-5 sm:py-4 rounded-[2.5rem] sm:rounded-3xl shadow-[0_8px_0_#e5e7eb] sm:shadow-[0_6px_0_#006d46] transition-all transform hover:scale-[1.02] sm:hover:scale-105 active:translate-y-1 active:shadow-[0_4px_0_#e5e7eb] text-xl sm:text-lg uppercase tracking-tighter border-2 sm:border-b-2 border-transparent sm:border-emerald-400/20"
+                >
+                  Entrar no Jogo 🧩
+                </button>
                 <button 
                   onClick={onBack} 
                   className="mt-4 text-emerald-900/40 hover:text-emerald-900 font-black text-sm uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 hover:translate-y-[-2px] active:translate-y-0"
@@ -543,7 +567,7 @@ export default function GameContainer({ user, isGuest, initialTheme, onBack }) {
               <AvatarGuide gameState={gameState} myTurn={isMyTurn} isWinner={iWon} className="!items-start !max-w-[140px]" />
             </div>
           </div>
-          <div className="z-10 w-full flex-1 overflow-hidden relative">
+          <div className="z-10 w-full flex-1 overflow-visible relative">
             <SnakeBoard board={board} isMyTurn={isMyTurn} draggingPiece={draggingPiece} onDrop={handleDrop} />
           </div>
         </main>
@@ -568,8 +592,8 @@ export default function GameContainer({ user, isGuest, initialTheme, onBack }) {
           </div>
           {/* Status central */}
           <div className="flex flex-col items-center flex-1 mx-1 sm:mx-2 min-w-0">
-            <div className="text-base sm:text-3xl font-black uppercase tracking-tighter italic leading-none mb-0.5 truncate">{isMyTurn ? "SUA VEZ!" : "ESPERANDO..."}</div>
-            {currentTheme && <div className="text-[9px] sm:text-xs font-black uppercase tracking-widest opacity-40 leading-none truncate max-w-[90px] sm:max-w-none">{currentTheme?.name || 'Dominó'}</div>}
+            <div className="text-sm sm:text-3xl font-black uppercase tracking-tighter italic leading-none mb-0.5 mt-0.5 truncate">{isMyTurn ? "SUA VEZ!" : "ESPERANDO..."}</div>
+            {currentTheme && <div className="hidden xs:block text-[9px] sm:text-xs font-black uppercase tracking-widest opacity-50 leading-none truncate max-w-[90px] sm:max-w-none">{currentTheme?.name || 'Dominó'}</div>}
           </div>
           {/* Timer + Passar: sempre visível */}
           <div className={isMyTurn ? 'opacity-100 flex items-center gap-2 sm:gap-6 flex-shrink-0' : 'invisible pointer-events-none flex items-center gap-2 sm:gap-6'}>
@@ -594,8 +618,19 @@ export default function GameContainer({ user, isGuest, initialTheme, onBack }) {
               <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
             </span>
           </div>
-          {/* Container de peças: py maior em mobile para o scale não cortar */}
-          <div className="flex-1 flex justify-start sm:justify-center gap-12 sm:gap-16 overflow-x-auto py-10 sm:py-12 scrollbar-hide w-full max-w-[100vw] sm:max-w-none mx-auto min-h-[180px] sm:min-h-[220px] items-center px-10">
+          {/* Injeção local de Scrollbar moderno para dar affordance aos usuários mobile */}
+          <style>{`
+            .hand-scrollbar::-webkit-scrollbar { height: 10px; }
+            .hand-scrollbar::-webkit-scrollbar-track { background: rgba(0, 150, 96, 0.1); border-radius: 8px; margin: 0 40px;}
+            .hand-scrollbar::-webkit-scrollbar-thumb { background: rgba(0, 150, 96, 0.4); border-radius: 8px; }
+            .hand-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(0, 150, 96, 0.6); }
+          `}</style>
+          
+          {/* Container de peças: Adicionado touch-pan-x para forçar rolagem nativa, removido scrollbar-hide para dar affordance e pb-6 para n sobrepor */}
+          <div 
+            style={{ WebkitOverflowScrolling: 'touch' }}
+            className="hand-scrollbar flex-1 flex justify-start sm:justify-center gap-3 sm:gap-8 overflow-x-auto overflow-y-hidden py-6 sm:py-12 w-full max-w-full mx-auto min-h-[200px] sm:min-h-[240px] items-center px-4 sm:px-10 pb-6 touch-pan-x"
+          >
             {myHand.map((piece) => {
               const isFirstPlayLocked = board.length === 0 && startingPieceId && piece.id !== startingPieceId;
               return (
@@ -611,7 +646,9 @@ export default function GameContainer({ user, isGuest, initialTheme, onBack }) {
               <h2 className="text-2xl font-black uppercase text-[#009660] text-center p-6">Onde colocar?</h2>
               
               {(() => {
-                const API_BASE = import.meta.env.VITE_API_URL?.replace('/api', '') || '';
+                const API_BASE = import.meta.env.VITE_API_URL 
+                  ? import.meta.env.VITE_API_URL.replace('/api', '') 
+                  : (typeof window !== 'undefined' ? window.location.origin : '');
                 const renderSideLabel = (symbol) => {
                   if (!symbol) return null;
                   

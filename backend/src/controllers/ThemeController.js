@@ -30,11 +30,10 @@ class ThemeController {
       
       const where = {
         AND: [
-          { isApproved: true },
           {
             OR: [
-              { isPublic: true },
-              { ownerId: ownerId || 'guest' }
+              { AND: [{ isApproved: true }, { isPublic: true }] },
+              { ownerId: ownerId || 'unknown' }
             ]
           }
         ]

@@ -63,7 +63,15 @@ export default function GameContainer({ user, isGuest, initialTheme, onBack }) {
     }
   }, [lobbyTheme]);
 
-  // Se o tema inicial veio da Home e ainda não temos nada no lobby
+  // Se o tema inicial veio da Home e ainda não temos uma sala, cria uma automaticamente
+  useEffect(() => {
+    const hasRoomSession = !!room || !!localStorage.getItem('domino_current_room');
+    if (initialTheme?.id && !hasRoomSession && gameState === 'lobby') {
+      console.log('🚀 Criando sala automática para o tema:', initialTheme.id);
+      createRoom(playerInfo.name || "JOGADOR", initialTheme.id);
+    }
+  }, [initialTheme, room, gameState]);
+
   useEffect(() => {
     if (initialTheme?.id && !lobbyTheme && !selectedTheme) {
       setSelectedTheme(initialTheme.id);

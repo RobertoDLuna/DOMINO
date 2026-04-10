@@ -31,6 +31,10 @@ const themesDir = path.join(uploadsDir, 'themes');
 if (!fs.existsSync(themesDir)) {
   console.log("📁 Criando diretórios de upload...");
   fs.mkdirSync(themesDir, { recursive: true });
+} else {
+  const files = fs.readdirSync(themesDir);
+  console.log(`✅ Volume de Temas detectado: ${files.length} arquivos no armazenamento persistente.`);
+  console.log(`🔍 Auditoria de Uploads: ${JSON.stringify(files)}`);
 }
 
 const setupSocket = require("./src/config/socketConfig");

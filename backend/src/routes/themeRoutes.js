@@ -6,8 +6,8 @@ const fs = require('fs');
 const ThemeController = require('../controllers/ThemeController');
 const { authMiddleware, restrictRole } = require('../middleware/authMiddleware');
 
-// Ensure upload directories exist
-const uploadDir = 'uploads/themes';
+// Ensure upload directories exist (Using Absolute Paths for Docker persistence)
+const uploadDir = path.resolve(__dirname, '../../uploads/themes');
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }

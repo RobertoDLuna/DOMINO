@@ -166,9 +166,10 @@ class ThemeController {
       const theme = await prisma.theme.findUnique({ where: { id } });
       if (!theme) return res.status(404).json({ error: "Tema não encontrado." });
 
-      // Remove uploaded image files from disk
+      // Remove uploaded image files from disk (Using absolute normalized paths)
       theme.symbols.forEach(url => {
-        const filePath = path.join(__dirname, '../../', url);
+        const relativePath = url.startsWith('/') ? url.slice(1) : url;
+        const filePath = path.resolve(__dirname, '../../', relativePath);
         if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
       });
 

@@ -556,34 +556,46 @@ export default function GameContainer({ user, isGuest, initialTheme, onBack }) {
           )}
         </div>
 
-        <footer className={`${isMyTurn ? 'bg-[#FFCE00] text-[#009660]' : 'bg-white text-emerald-900 opacity-90'} py-3 px-6 sm:px-12 flex justify-between items-center shadow-[0_-10px_50px_rgba(0,0,0,0.1)] z-40 relative border-t-2 sm:border-t-4 border-black/10 ${gameState === 'finished' ? 'blur-md pointer-events-none' : ''} transition-all duration-1000`}>
-          <div className="flex items-center gap-3 sm:gap-6">
-            <div className="flex items-center gap-3 sm:gap-5 bg-white px-4 py-2 sm:py-2.5 rounded-2xl shadow-sm border-2 border-emerald-900/5">
-              <img src={logoCampina} alt="Seduc" className="h-5 sm:h-7 object-contain pointer-events-none" />
-              <div className="w-px h-5 sm:h-6 bg-gray-200 self-center"></div>
-              <img src={logoPrefeitura} alt="Prefeitura" className="h-5 sm:h-7 object-contain pointer-events-none" />
+        <footer className={`${isMyTurn ? 'bg-[#FFCE00] text-[#009660]' : 'bg-white text-emerald-900 opacity-90'} py-2 sm:py-3 px-3 sm:px-12 flex justify-between items-center shadow-[0_-10px_50px_rgba(0,0,0,0.1)] z-40 relative border-t-2 sm:border-t-4 border-black/10 ${gameState === 'finished' ? 'blur-md pointer-events-none' : ''} transition-all duration-1000`}>
+          {/* Logo + Som: compacto em mobile */}
+          <div className="flex items-center gap-2 sm:gap-6">
+            <div className="flex items-center gap-2 sm:gap-5 bg-white px-3 py-1.5 sm:py-2.5 rounded-2xl shadow-sm border-2 border-emerald-900/5">
+              <img src={logoCampina} alt="Seduc" className="h-5 sm:h-7 w-auto object-contain pointer-events-none" style={{minWidth: '28px'}} />
+              <div className="w-px h-4 sm:h-6 bg-gray-200 self-center"></div>
+              <img src={logoPrefeitura} alt="Prefeitura" className="h-5 sm:h-7 w-auto object-contain pointer-events-none" style={{minWidth: '28px'}} />
             </div>
-            <button onClick={() => setIsMuted(SoundService.toggleMute())} className="bg-white hover:bg-emerald-50 text-emerald-900 px-4 py-2 sm:py-2.5 rounded-2xl shadow-sm border-2 border-emerald-900/5 text-xl sm:text-2xl transition-all active:scale-90 flex items-center justify-center">{isMuted ? '🔇' : '🔊'}</button>
+            <button onClick={() => setIsMuted(SoundService.toggleMute())} className="bg-white hover:bg-emerald-50 text-emerald-900 px-3 py-2 sm:py-2.5 rounded-2xl shadow-sm border-2 border-emerald-900/5 text-lg sm:text-2xl transition-all active:scale-90 flex items-center justify-center">{isMuted ? '🔇' : '🔊'}</button>
           </div>
-          <div className="flex flex-col items-center flex-1 mx-2">
-            <div className="text-xl sm:text-3xl font-black uppercase tracking-tighter italic leading-none mb-1">{isMyTurn ? "SUA VEZ!" : "ESPERANDO..."}</div>
-            {currentTheme && <div className="text-[10px] sm:text-xs font-black uppercase tracking-widest opacity-40 leading-none">{currentTheme?.name || 'Dominó'}</div>}
+          {/* Status central */}
+          <div className="flex flex-col items-center flex-1 mx-1 sm:mx-2 min-w-0">
+            <div className="text-base sm:text-3xl font-black uppercase tracking-tighter italic leading-none mb-0.5 truncate">{isMyTurn ? "SUA VEZ!" : "ESPERANDO..."}</div>
+            {currentTheme && <div className="text-[9px] sm:text-xs font-black uppercase tracking-widest opacity-40 leading-none truncate max-w-[90px] sm:max-w-none">{currentTheme?.name || 'Dominó'}</div>}
           </div>
-          <div className={isMyTurn ? 'opacity-100 flex items-center gap-4 sm:gap-6' : 'invisible pointer-events-none'}>
+          {/* Timer + Passar: sempre visível */}
+          <div className={isMyTurn ? 'opacity-100 flex items-center gap-2 sm:gap-6 flex-shrink-0' : 'invisible pointer-events-none flex items-center gap-2 sm:gap-6'}>
             {isMyTurn && (
-              <div className="flex items-baseline gap-1.5 sm:gap-2 mr-1 sm:mr-2 leading-none">
-                <span className="text-[10px] sm:text-xs font-black uppercase italic opacity-40">TEMPO</span>
-                <span className={`text-xl sm:text-4xl font-black ${timer <= 10 ? 'text-red-600 animate-pulse' : 'text-[#009660]'}`}>{timer}s</span>
+              <div className="flex items-baseline gap-1 sm:gap-2 leading-none">
+                <span className="hidden sm:inline text-[10px] sm:text-xs font-black uppercase italic opacity-40">TEMPO</span>
+                <span className={`text-lg sm:text-4xl font-black ${timer <= 10 ? 'text-red-600 animate-pulse' : 'text-[#009660]'}`}>{timer}s</span>
               </div>
             )}
-            <button onClick={() => { SoundService.playPass(); passTurn(); }} className={`${timer <= 10 ? 'animate-blink-hard' : 'bg-red-500 shadow-[0_6px_0_#991b1b]'} hover:bg-red-600 text-white font-black px-6 sm:px-10 py-3 sm:py-4 rounded-2xl sm:rounded-3xl transition-all active:translate-y-[4px] active:shadow-none flex items-center gap-2 h-fit transform -translate-y-[3px]`}>
-              <span className="text-base sm:text-2xl uppercase tracking-tighter">PASSAR</span><span className="text-xl sm:text-3xl">⏭️</span>
+            <button onClick={() => { SoundService.playPass(); passTurn(); }} className={`${timer <= 10 ? 'animate-blink-hard' : 'bg-red-500 shadow-[0_4px_0_#991b1b]'} hover:bg-red-600 text-white font-black px-4 sm:px-10 py-2.5 sm:py-4 rounded-2xl sm:rounded-3xl transition-all active:translate-y-[4px] active:shadow-none flex items-center gap-1 sm:gap-2 h-fit transform -translate-y-[2px] flex-shrink-0`}>
+              <span className="text-sm sm:text-2xl uppercase tracking-tighter">PASSAR</span><span className="text-base sm:text-3xl">⏭️</span>
             </button>
           </div>
         </footer>
 
         <div className={`bg-white/95 p-1.5 sm:p-3 shadow-[0_-10px_60px_rgba(0,0,0,0.05)] relative z-30 border-t border-emerald-100 flex flex-col sm:flex-row items-center justify-between gap-2 overflow-visible ${gameState === 'finished' ? 'blur-md translate-y-full' : ''} transition-all duration-1000`}>
-          <div className="flex-1 flex justify-start sm:justify-center gap-12 sm:gap-16 overflow-x-auto py-8 sm:py-12 scrollbar-hide w-full max-w-[100vw] sm:max-w-none mx-auto min-h-[160px] sm:min-h-[220px] items-center px-10">
+          {/* Hint de scroll: visível apenas em mobile */}
+          <div className="flex sm:hidden items-center justify-center gap-1.5 pt-1 pb-0 w-full">
+            <span className="text-[9px] font-black uppercase tracking-widest text-emerald-900/30 flex items-center gap-1">
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16l-4-4m0 0l4-4m-4 4h18" /></svg>
+              Role para ver todas as peças da sua mão
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+            </span>
+          </div>
+          {/* Container de peças: py maior em mobile para o scale não cortar */}
+          <div className="flex-1 flex justify-start sm:justify-center gap-12 sm:gap-16 overflow-x-auto py-10 sm:py-12 scrollbar-hide w-full max-w-[100vw] sm:max-w-none mx-auto min-h-[180px] sm:min-h-[220px] items-center px-10">
             {myHand.map((piece) => {
               const isFirstPlayLocked = board.length === 0 && startingPieceId && piece.id !== startingPieceId;
               return (

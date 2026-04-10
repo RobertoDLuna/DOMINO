@@ -20,7 +20,7 @@ export default function GameContainer({ user, isGuest, initialTheme, onBack }) {
   const {
     room, players, gameState, myHand, board, currentTurn, startingPieceId,
     createRoom, joinRoom, leaveRoom, startGame, makeMove, passTurn, forceEndGame, updateMaxPlayers, playAgain,
-    iWon, gameOverMsg, scores, currentTheme, lobbyTheme, maxPlayers, myId, playerId, isConnected, selectTheme, isSelectingTheme, setSelectingTheme: setGlobalSelectingTheme
+    iWon, gameOverMsg, winner, scores, currentTheme, lobbyTheme, maxPlayers, myId, playerId, isConnected, selectTheme, isSelectingTheme, setSelectingTheme: setGlobalSelectingTheme
   } = useGame();
 
   const [selectedTheme, setSelectedTheme] = useState(initialTheme?.id || lobbyTheme || 'animais');
@@ -143,10 +143,7 @@ export default function GameContainer({ user, isGuest, initialTheme, onBack }) {
   const [showEndConfirm, setShowEndConfirm] = useState(false);
   const [showThemeSelector, setShowThemeSelector] = useState(false);
 
-  const winnerId = scores && Object.keys(scores).length > 0
-    ? Object.keys(scores).reduce((a, b) => (scores[a] || 0) >= (scores[b] || 0) ? a : b)
-    : null;
-  const winnerName = players.find(p => p.id === winnerId)?.name || 'Vencedor';
+
 
   const [roomIdInput, setRoomIdInput] = useState("");
   const [playerNameInput, setPlayerNameInput] = useState(() => localStorage.getItem('domino_player_name') || "");
@@ -580,23 +577,23 @@ export default function GameContainer({ user, isGuest, initialTheme, onBack }) {
           )}
         </div>
 
-        <footer className={`${isMyTurn ? 'bg-[#FFCE00] text-[#009660]' : 'bg-white text-emerald-900 opacity-90'} py-2 sm:py-3 px-3 sm:px-12 flex justify-between items-center shadow-[0_-10px_50px_rgba(0,0,0,0.1)] z-40 relative border-t-2 sm:border-t-4 border-black/10 ${gameState === 'finished' ? 'blur-md pointer-events-none' : ''} transition-all duration-1000`}>
+        <footer className={`${isMyTurn ? 'bg-[#FFCE00] text-[#009660]' : 'bg-white text-emerald-900 opacity-90'} py-2 sm:py-3 px-2 sm:px-12 flex justify-between items-center shadow-[0_-10px_50px_rgba(0,0,0,0.1)] z-40 relative border-t-2 sm:border-t-4 border-black/10 ${gameState === 'finished' ? 'blur-md pointer-events-none' : ''} transition-all duration-1000`}>
           {/* Logo + Som: compacto em mobile */}
-          <div className="flex items-center gap-2 sm:gap-6">
-            <div className="flex items-center gap-2 sm:gap-5 bg-white px-3 py-1.5 sm:py-2.5 rounded-2xl shadow-sm border-2 border-emerald-900/5">
-              <img src={logoCampina} alt="Seduc" className="h-5 sm:h-7 w-auto object-contain pointer-events-none" style={{minWidth: '28px'}} />
-              <div className="w-px h-4 sm:h-6 bg-gray-200 self-center"></div>
-              <img src={logoPrefeitura} alt="Prefeitura" className="h-5 sm:h-7 w-auto object-contain pointer-events-none" style={{minWidth: '28px'}} />
+          <div className="flex items-center gap-1.5 sm:gap-6 flex-shrink-0">
+            <div className="flex items-center gap-1.5 sm:gap-5 bg-white px-2 py-1.5 sm:py-2.5 rounded-2xl shadow-sm border-2 border-emerald-900/5">
+              <img src={logoCampina} alt="Seduc" className="h-4 sm:h-7 w-auto object-contain pointer-events-none" style={{minWidth: '22px'}} />
+              <div className="w-px h-3 sm:h-6 bg-gray-200 self-center"></div>
+              <img src={logoPrefeitura} alt="Prefeitura" className="h-4 sm:h-7 w-auto object-contain pointer-events-none" style={{minWidth: '22px'}} />
             </div>
-            <button onClick={() => setIsMuted(SoundService.toggleMute())} className="bg-white hover:bg-emerald-50 text-emerald-900 px-3 py-2 sm:py-2.5 rounded-2xl shadow-sm border-2 border-emerald-900/5 text-lg sm:text-2xl transition-all active:scale-90 flex items-center justify-center">{isMuted ? '🔇' : '🔊'}</button>
+            <button onClick={() => setIsMuted(SoundService.toggleMute())} className="bg-white hover:bg-emerald-50 text-emerald-900 px-2 py-2 sm:py-2.5 rounded-2xl shadow-sm border-2 border-emerald-900/5 text-base sm:text-2xl transition-all active:scale-90 flex items-center justify-center">{isMuted ? '🔇' : '🔊'}</button>
           </div>
           {/* Status central */}
-          <div className="flex flex-col items-center flex-1 mx-1 sm:mx-2 min-w-0">
-            <div className="text-sm sm:text-3xl font-black uppercase tracking-tighter italic leading-none mb-0.5 mt-0.5 truncate">{isMyTurn ? "SUA VEZ!" : "ESPERANDO..."}</div>
-            {currentTheme && <div className="hidden xs:block text-[9px] sm:text-xs font-black uppercase tracking-widest opacity-50 leading-none truncate max-w-[90px] sm:max-w-none">{currentTheme?.name || 'Dominó'}</div>}
+          <div className="flex flex-col items-center flex-1 mx-1 sm:mx-4 min-w-0">
+            <div className="text-[10px] xs:text-xs sm:text-3xl font-black uppercase tracking-tighter italic leading-none mb-0.5 mt-0.5 truncate px-1">{isMyTurn ? "SUA VEZ!" : "ESPERANDO..."}</div>
+            {currentTheme && <div className="hidden sm:block text-[9px] sm:text-xs font-black uppercase tracking-widest opacity-50 leading-none truncate max-w-[90px] sm:max-w-none">{currentTheme?.name || 'Dominó'}</div>}
           </div>
           {/* Timer + Passar: sempre visível */}
-          <div className={isMyTurn ? 'opacity-100 flex items-center gap-2 sm:gap-6 flex-shrink-0' : 'invisible pointer-events-none flex items-center gap-2 sm:gap-6'}>
+          <div className={isMyTurn ? 'opacity-100 flex items-center gap-1.5 sm:gap-6 flex-shrink-0' : 'invisible pointer-events-none flex items-center gap-1.5 sm:gap-6 flex-shrink-0'}>
             {isMyTurn && (
               <div className="flex items-baseline gap-1 sm:gap-2 leading-none">
                 <span className="hidden sm:inline text-[10px] sm:text-xs font-black uppercase italic opacity-40">TEMPO</span>
@@ -730,7 +727,7 @@ export default function GameContainer({ user, isGuest, initialTheme, onBack }) {
               <h2 className={`font-black mb-2 sm:mb-3 uppercase italic tracking-tighter leading-none ${iWon ? 'text-5xl sm:text-7xl text-[#009660]' : 'text-4xl sm:text-6xl text-red-500'}`}>{iWon ? 'VITÓRIA!' : 'FOI QUASE!'}</h2>
               <div className="flex flex-col gap-1 mb-6 sm:mb-8">
                 <p className="text-xs sm:text-sm font-black text-gray-400 uppercase tracking-widest leading-none">Vencedor:</p>
-                <p className={`text-2xl sm:text-4xl font-black uppercase italic ${iWon ? 'text-orange-500' : 'text-emerald-700'}`}>🏆 {winnerName}</p>
+                <p className={`text-2xl sm:text-4xl font-black uppercase italic ${iWon ? 'text-orange-500' : 'text-emerald-700'}`}>🏆 {winner?.name || 'VENCEDOR'}</p>
               </div>
               <div className={`text-base sm:text-lg font-black mb-6 sm:mb-8 p-4 rounded-[1.5rem] shadow-inner ${iWon ? 'bg-emerald-50 text-[#009660]' : 'bg-red-50 text-red-900'}`}>{gameOverMsg}</div>
               <div className="flex flex-col gap-4 w-full">

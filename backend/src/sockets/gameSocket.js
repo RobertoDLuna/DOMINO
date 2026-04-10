@@ -24,7 +24,7 @@ module.exports = (io) => {
     try {
       const allRooms = await RedisService.getAllRooms();
       const now = Date.now();
-      const TIMEOUT = 180000; // 3 minutos
+      const TIMEOUT = 600000; // 10 minutos
 
       for (const roomId in allRooms) {
         const room = allRooms[roomId];
@@ -279,7 +279,14 @@ module.exports = (io) => {
             const isWinner = result.winnerId === pId;
             let message = isWinner ? `Você trancou com menos pontos! (+${result.points})` : "O jogo trancou! Alguém tinha menos pontos.";
             if (result.isTie) message = result.tiedPlayers.includes(pId) ? `Empate no trancamento! (+${result.points})` : "O jogo trancou em empate!";
-            io.to(pId).emit("gameOver", { iWon: isWinner, message });
+            
+            const winnerInfo = game.players.find(p => p.id === result.winnerId);
+            io.to(pId).emit("gameOver", { 
+              iWon: isWinner, 
+              message,
+              winnerId: result.winnerId,
+              winnerName: winnerInfo ? winnerInfo.name : 'Vencedor'
+            });
           });
           game.status = 'finished';
         } else {
@@ -314,12 +321,22 @@ module.exports = (io) => {
              io.to(roomId).emit("updateScores", game.scores);
              io.to(roomId).emit("updateBoard", { board: game.board, currentTurn: null });
              
-             socket.to(roomId).emit("gameOver", { iWon: false, message: "Alguém bateu o jogo!" });
+             socket.to(roomId).emit("gameOver", { 
+               iWon: false, 
+               message: "Alguém bateu o jogo!",
+               winnerId: socket.id,
+               winnerName: playerObj ? playerObj.name : 'Vencedor'
+             });
              
              const msgText = moveResult.isLailoa 
                  ? `Parabéns! LAILOA! (+${pointsData.points} pts)`
                  : `Parabéns! Você bateu e venceu! (+${pointsData.points} pts)`;
-             socket.emit("gameOver", { iWon: true, message: msgText });
+             socket.emit("gameOver", { 
+               iWon: true, 
+               message: msgText,
+               winnerId: socket.id,
+               winnerName: playerObj ? playerObj.name : 'Vencedor'
+             });
              
              game.status = 'finished';
              game.lastActivity = Date.now(); // Atualiza atividade

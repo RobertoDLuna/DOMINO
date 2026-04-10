@@ -126,9 +126,12 @@ export const GameProvider = ({ children }) => {
       setScores(newScores);
     });
 
-    socket.on('gameOver', ({ iWon, message }) => {
+    socket.on('gameOver', ({ iWon, message, winnerId, winnerName }) => {
       setIWon(iWon);
       setGameOverMsg(message);
+      if (winnerId || winnerName) {
+        setWinner({ id: winnerId, name: winnerName });
+      }
       setGameState('finished');
     });
 

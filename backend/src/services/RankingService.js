@@ -18,13 +18,15 @@ class RankingService {
       if (!user) return;
 
       // Validação de Tema
-      // Muitas vezes o nome interno ou string dos defaults passará (ex: 'animais'), ignoramos e fica NULL (Tema Geral/Global).
       let validThemeId = null;
-      if (themeId && themeId.length > 20) {
+      if (themeId) {
         try {
+          // Verifica se o tema existe no banco (Customizado ou Padrão Sincronizado)
           const theme = await prisma.theme.findUnique({ where: { id: themeId } });
           if (theme) validThemeId = theme.id;
-        } catch(e) {}
+        } catch(e) {
+          console.warn(`[RankingService] Tema ${themeId} não encontrado no banco. Salvando apenas ranking global.`);
+        }
       }
 
       // 1. Cria o registro de partida (Histórico)

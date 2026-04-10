@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 
 import { API_URL } from '../config/api';
+import { themes as defaultThemes } from '../config/themes';
 
 const TrophySVG = ({ fill = '#FFE066', size = 36 }) => (
   <svg width={size} height={size} viewBox="0 0 48 54" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -139,7 +140,24 @@ const RankingBoard = ({ onClose }) => {
         
         const token = localStorage.getItem('domino_token') || localStorage.getItem('token');
         const themeRes = await fetch(`${API_URL}/themes`, { headers: { 'Authorization': `Bearer ${token}` } });
-        if (themeRes.ok) setThemes(await themeRes.json());
+        
+        if (themeRes.ok) {
+          const dbThemes = await themeRes.json();
+          // Mescla temas padrões com os do banco e remove duplicatas por ID
+          const merged = [
+            ...defaultThemes.map(t => ({ 
+              id: t.id, 
+              name: t.name, 
+              isSystem: true,
+              category: { name: 'Padrão' } 
+            })),
+            ...dbThemes
+          ];
+          
+          // Deduplica pelo ID (o Map mantém a última ocorrência, então o DB sobrescreve o Mock)
+          const uniqueThemes = Array.from(new Map(merged.map(t => [t.id, t])).values());
+          setThemes(uniqueThemes);
+        }
       } catch (e) {
         console.error(e);
       }

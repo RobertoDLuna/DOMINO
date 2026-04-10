@@ -33,7 +33,7 @@ if (!fs.existsSync(themesDir)) {
   fs.mkdirSync(themesDir, { recursive: true });
 } else {
   const files = fs.readdirSync(themesDir);
-  console.log(`✅ Volume de Temas detectado: ${files.length} arquivos no armazenamento persistente.`);
+  console.log(`✅ Volume de Temas detectado em [${themesDir}]: ${files.length} arquivos.`);
   console.log(`🔍 Auditoria de Uploads: ${JSON.stringify(files)}`);
 }
 
@@ -93,6 +93,8 @@ app.use((req, res) => {
     return res.status(404).json({ error: "Endpoint de API não encontrado. Verifique se o servidor foi reiniciado." });
   }
 
+  console.log(`🔍 SPA Fallback: Servindo index.html para ${req.url}. Caminho: ${path.join(frontendPath, "index.html")}`);
+
   const indexPath = path.join(frontendPath, "index.html");
   if (require('fs').existsSync(indexPath)) {
     return res.sendFile(indexPath);
@@ -113,6 +115,48 @@ app.use((req, res) => {
 // Middleware de Erros Global
 app.use(errorMiddleware);
 
-server.listen(PORT, () => {
+const syncDefaultThemes = async () => {
+  const { getPrisma } = require('./src/config/prismaClient');
+  const prisma = getPrisma();
+  
+  const defaultThemes = [
+    { id: 'animais', name: 'Animais Selvagens' },
+    { id: 'matematica', name: 'Matemática Divertida' },
+    { id: 'frutas', name: 'Frutas Tropicais' },
+    { id: 'espaco', name: 'Espaço Sideral' },
+    { id: 'objetos', name: 'Objetos Escolares' },
+    { id: 'classico', name: 'Dominó Clássico' }
+  ];
+
+  try {
+    // Garante que existe uma categoria "Padrão"
+    const cat = await prisma.category.upsert({
+      where: { name: 'Padrão' },
+      update: {},
+      create: { name: 'Padrão', isDefault: true }
+    });
+
+    for (const theme of defaultThemes) {
+      await prisma.theme.upsert({
+        where: { id: theme.id },
+        update: { name: theme.name, categoryId: cat.id, isApproved: true, isPublic: true },
+        create: { 
+          id: theme.id, 
+          name: theme.name, 
+          categoryId: cat.id, 
+          isApproved: true, 
+          isPublic: true,
+          color: '#009660'
+        }
+      });
+    }
+    console.log("✅ Temas Padrão sincronizados no banco de dados.");
+  } catch (err) {
+    console.error("❌ Erro ao sincronizar temas padrão:", err);
+  }
+};
+
+server.listen(PORT, async () => {
   console.log(`🚀 Servidor rodando na porta ${PORT}`);
+  await syncDefaultThemes();
 });

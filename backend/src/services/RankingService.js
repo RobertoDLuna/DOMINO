@@ -6,8 +6,8 @@ class RankingService {
    * Adiciona o registro no histórico e atualiza os pontos totais do usuário.
    */
   async saveGameResult(winnerId, winType, points, roomId, themeId) {
-    if (!winnerId || winnerId.length < 10) {
-        console.log(`⚠️ Jogo s/ ranking: Vencedor (${winnerId}) não tem ID de banco de dados.`);
+    if (!winnerId || winnerId.length < 10 || winnerId.startsWith('guest-')) {
+        console.log(`⚠️ Jogo s/ ranking: Vencedor (${winnerId}) é um convidado ou tem ID inválido.`);
         return;
     }
 

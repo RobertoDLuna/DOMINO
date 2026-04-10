@@ -23,8 +23,13 @@ export const GameProvider = ({ children }) => {
     } catch (e) {}
 
     // 2. Fallback para ID de Convidado Local
-    const saved = localStorage.getItem('domino_player_id');
-    const id = saved || Math.random().toString(36).substring(2, 15);
+    let saved = localStorage.getItem('domino_player_id');
+    if (saved && !saved.startsWith('guest-')) {
+      // Força a inclusão do prefixo guest em IDs antigos/locais
+      saved = `guest-${saved}`;
+      localStorage.setItem('domino_player_id', saved);
+    }
+    const id = saved || `guest-${Math.random().toString(36).substring(2, 15)}`;
     if (!saved) localStorage.setItem('domino_player_id', id);
     return id;
   });

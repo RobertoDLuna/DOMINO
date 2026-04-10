@@ -365,7 +365,7 @@ const HomeScreen = ({
                 onClick={() => setShowCreator(true)}
                 className="bg-[#009660] text-white p-4 rounded-[1.5rem] font-black text-sm shadow-[0_6px_0_#00764D] hover:brightness-110 transition-all active:translate-y-1 active:shadow-none flex items-center gap-2 whitespace-nowrap"
               >
-                <span>➕</span> <span className="hidden sm:inline">CRIAR NOVO</span>
+                <span>➕</span> <span className="hidden sm:inline">CRIAR NOVO TEMA</span>
               </button>
             )}
           </div>

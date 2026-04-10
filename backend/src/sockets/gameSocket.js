@@ -276,15 +276,23 @@ module.exports = (io) => {
           }
           
           playerIds.forEach(pId => {
-            const isWinner = result.winnerId === pId;
-            let message = isWinner ? `Você trancou com menos pontos! (+${result.points})` : "O jogo trancou! Alguém tinha menos pontos.";
-            if (result.isTie) message = result.tiedPlayers.includes(pId) ? `Empate no trancamento! (+${result.points})` : "O jogo trancou em empate!";
+            const winnerId = result.winnerId;
+            const winnerInfo = game.players.find(p => p.id === winnerId);
+            const isWinner = winnerId === pId;
+            const winnerIsGuest = winnerInfo && winnerInfo.playerId && winnerInfo.playerId.startsWith('guest-');
             
-            const winnerInfo = game.players.find(p => p.id === result.winnerId);
+            let message = "";
+            if (isWinner) {
+              const baseMsg = result.isTie ? "Empate no trancamento!" : "Você trancou com menos pontos!";
+              message = winnerIsGuest ? baseMsg : `${baseMsg} (+${result.points} pts)`;
+            } else {
+              message = result.isTie ? "O jogo trancou em empate!" : "O jogo trancou! Alguém tinha menos pontos.";
+            }
+
             io.to(pId).emit("gameOver", { 
               iWon: isWinner, 
               message,
-              winnerId: result.winnerId,
+              winnerId: winnerId,
               winnerName: winnerInfo ? winnerInfo.name : 'Vencedor'
             });
           });
@@ -328,9 +336,11 @@ module.exports = (io) => {
                winnerName: playerObj ? playerObj.name : 'Vencedor'
              });
              
+             const winnerIsGuest = playerObj && playerObj.playerId && playerObj.playerId.startsWith('guest-');
              const msgText = moveResult.isLailoa 
-                 ? `Parabéns! LAILOA! (+${pointsData.points} pts)`
-                 : `Parabéns! Você bateu e venceu! (+${pointsData.points} pts)`;
+                 ? `Parabéns! LAILOA!${winnerIsGuest ? '' : ` (+${pointsData.points} pts)`}`
+                 : `Parabéns! Você bateu e venceu!${winnerIsGuest ? '' : ` (+${pointsData.points} pts)`}`;
+             
              socket.emit("gameOver", { 
                iWon: true, 
                message: msgText,

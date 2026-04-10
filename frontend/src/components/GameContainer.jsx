@@ -501,7 +501,7 @@ export default function GameContainer({ user, isGuest, initialTheme, onBack }) {
                   </div>
 
                   <div className="flex flex-row gap-3 w-full">
-                    <button onClick={leaveRoom} className={`${isRoomOwner ? 'flex-1' : 'w-full'} bg-white group hover:bg-[#FFCE00] px-4 py-2.5 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 border-b-4 border-gray-200 active:translate-y-0.5`}>
+                    <button onClick={onBack} className={`${isRoomOwner ? 'flex-1' : 'w-full'} bg-white group hover:bg-[#FFCE00] px-4 py-2.5 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 border-b-4 border-gray-200 active:translate-y-0.5`}>
                       <span className="text-xl">🏠</span>
                       <span className="text-[#009660] font-black text-[10px] uppercase tracking-tight">Sair da Sala</span>
                     </button>

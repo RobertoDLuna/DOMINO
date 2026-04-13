@@ -211,8 +211,8 @@ const HomeScreen = ({
             <div className="flex items-center gap-3 mb-6 animate-in fade-in slide-in-from-top-4">
               <div className="w-12 h-12 flex items-center justify-center bg-white rounded-2xl shadow-sm border-2 border-emerald-100 p-2">
                 <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-sm">
-                  <path d="M50 15 L90 85 H10 Z" fill="#009660" />
-                  <path d="M50 45 L75 85 H25 Z" fill="#FFCE00" />
+                  <path d="M50 5 L100 95 L80 95 L50 40 L20 95 L0 95 Z" fill="#009660" />
+                  <path d="M50 45 L75 95 L58 95 L50 80 L42 95 L25 95 Z" fill="#FFCE00" />
                 </svg>
               </div>
               <div className="flex flex-col">

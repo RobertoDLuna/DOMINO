@@ -139,8 +139,8 @@ const AuthScreen = ({ onAuthSuccess, onGuestStart, onJoinRoom }) => {
               <div className="hidden max-[480px]:flex items-center gap-2 mb-4">
                 <div className="w-10 h-10 flex items-center justify-center bg-white/10 rounded-xl backdrop-blur-md border border-white/20 p-2">
                   <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-sm">
-                    <path d="M50 15 L90 85 H10 Z" fill="#FFCE00" />
-                    <path d="M50 45 L75 85 H25 Z" fill="#FFFFFF" />
+                    <path d="M50 5 L100 95 L80 95 L50 40 L20 95 L0 95 Z" fill="#FFCE00" />
+                    <path d="M50 45 L75 95 L58 95 L50 80 L42 95 L25 95 Z" fill="#FFFFFF" />
                   </svg>
                 </div>
                 <span className="text-xl font-black text-white italic tracking-tighter uppercase">EduGames</span>
@@ -196,8 +196,8 @@ const AuthScreen = ({ onAuthSuccess, onGuestStart, onJoinRoom }) => {
             <div className="w-16 h-16 flex items-center justify-center bg-white rounded-[2rem] shadow-xl shadow-emerald-900/5 border border-emerald-100 p-3 mb-3 relative">
                <div className="absolute inset-0 bg-emerald-500/5 rounded-full blur-xl scale-75 animate-pulse"></div>
                <svg viewBox="0 0 100 100" className="w-full h-full relative z-10">
-                <path d="M50 15 L90 85 H10 Z" fill="#009660" />
-                <path d="M50 45 L75 85 H25 Z" fill="#FFCE00" />
+                <path d="M50 5 L100 95 L80 95 L50 40 L20 95 L0 95 Z" fill="#009660" />
+                <path d="M50 45 L75 95 L58 95 L50 80 L42 95 L25 95 Z" fill="#FFCE00" />
               </svg>
             </div>
             <h1 className="text-3xl font-black text-slate-800 italic tracking-tighter leading-none mb-1">

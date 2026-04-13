@@ -133,8 +133,24 @@ const AuthScreen = ({ onAuthSuccess, onGuestStart, onJoinRoom }) => {
       
       {/* Mobile Drawer (Sobrepõe o lado direito no celular) */}
       <div className={`fixed inset-y-0 left-0 w-[85%] max-w-sm bg-[#009660] z-50 transform transition-transform duration-300 flex flex-col p-8 overflow-y-auto ${showDrawer ? 'translate-x-0 shadow-2xl' : '-translate-x-full'} lg:hidden`}>
-         <div className="flex justify-between items-center mb-8 relative z-10">
-           <h2 className="text-3xl font-black italic uppercase text-[#FFCE00]">DOMINÓ</h2>
+         <div className="flex justify-between items-start mb-8 relative z-10">
+           <div className="flex flex-col">
+              {/* Logo EduGames Mobile Drawer - Exclusivo para < 480px */}
+              <div className="hidden max-[480px]:flex items-center gap-2 mb-4">
+                <div className="w-10 h-10 flex items-center justify-center bg-white/10 rounded-xl backdrop-blur-md border border-white/20 p-2">
+                  <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-sm">
+                    <path d="M50 15 L90 85 H10 Z" fill="#FFCE00" />
+                    <path d="M50 45 L75 85 H25 Z" fill="#FFFFFF" />
+                  </svg>
+                </div>
+                <span className="text-xl font-black text-white italic tracking-tighter uppercase">EduGames</span>
+              </div>
+              
+              <div>
+                <h2 className="text-3xl font-black italic uppercase text-[#FFCE00] leading-none mb-1">DOMINÓ</h2>
+                <p className="text-[10px] font-black uppercase text-emerald-100/30 tracking-[0.2em]">Educação & Diversão</p>
+              </div>
+           </div>
            <button onClick={() => setShowDrawer(false)} className="text-white bg-black/20 w-8 h-8 rounded-full flex items-center justify-center">✕</button>
          </div>
          <p className="text-emerald-100/80 text-sm font-medium mb-6 relative z-10">Plataforma educacional para aprendizado lúdico através do dominó.</p>
@@ -175,15 +191,30 @@ const AuthScreen = ({ onAuthSuccess, onGuestStart, onJoinRoom }) => {
 
         {/* Logos Responsivos no Formulário (Lobby) */}
         <header className="flex flex-col items-center mb-5 mt-8 lg:mt-0 lg:mb-6 shrink-0 z-10">
+          {/* Mobile Only: Branding Superior Animado - Exclusivo para < 480px */}
+          <div className="hidden max-[480px]:flex flex-col items-center mb-8 animate-in fade-in slide-in-from-top-4 duration-700">
+            <div className="w-16 h-16 flex items-center justify-center bg-white rounded-[2rem] shadow-xl shadow-emerald-900/5 border border-emerald-100 p-3 mb-3 relative">
+               <div className="absolute inset-0 bg-emerald-500/5 rounded-full blur-xl scale-75 animate-pulse"></div>
+               <svg viewBox="0 0 100 100" className="w-full h-full relative z-10">
+                <path d="M50 15 L90 85 H10 Z" fill="#009660" />
+                <path d="M50 45 L75 85 H25 Z" fill="#FFCE00" />
+              </svg>
+            </div>
+            <h1 className="text-3xl font-black text-slate-800 italic tracking-tighter leading-none mb-1">
+              EDU <span className="text-[#009660]">GAMES</span>
+            </h1>
+            <div className="flex flex-col items-center">
+               <span className="text-xl font-black text-[#009660] italic tracking-tighter leading-none mb-0.5">DOMINÓ</span>
+               <span className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em]">Educação & Diversão</span>
+            </div>
+          </div>
+
           <div className="flex items-center gap-6 bg-white px-8 py-4 rounded-[2rem] shadow-[0_4px_24px_rgba(0,0,0,0.07)] border border-slate-100 mb-5">
-            <img src={logoCampina} alt="Seduc Campina Grande" className="h-12 sm:h-14 w-auto object-contain pointer-events-none" />
-            <div className="w-px h-10 bg-slate-200"></div>
-            <img src={logoPrefeitura} alt="Prefeitura" className="h-12 sm:h-14 w-auto object-contain pointer-events-none" />
+            <img src={logoCampina} alt="Seduc Campina Grande" className="h-8 sm:h-14 w-auto object-contain pointer-events-none px-1" />
+            <div className="w-px h-8 sm:h-10 bg-slate-200"></div>
+            <img src={logoPrefeitura} alt="Prefeitura" className="h-8 sm:h-14 w-auto object-contain pointer-events-none px-1" />
           </div>
           
-          <h2 className="text-3xl font-black text-slate-800 uppercase italic mb-1 tracking-tight text-center lg:hidden">
-            EDU <span className="text-[#009660]">GAMES</span>
-          </h2>
           <p className="text-slate-500 font-medium text-xs text-center max-w-xs leading-relaxed">
             {view === "register" ? "Crie sua conta para começar a jogar" : "Bem-vindo de volta! Entre na sua conta para continuar"}
           </p>

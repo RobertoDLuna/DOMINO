@@ -10,18 +10,18 @@ const GameCard = ({ theme, onClick }) => {
   const author = theme.owner?.fullName || (isDefault ? 'SISTEMA' : 'DESCONHECIDO');
   const date = theme.createdAt ? new Date(theme.createdAt).toLocaleDateString('pt-BR') : '--/--/----';
   const categoryName = theme.category?.name || 'GERAL';
-  
+
   return (
     <button
       onClick={() => onClick(theme)}
       className="group relative flex flex-col bg-white rounded-[2rem] border-2 border-emerald-100 p-5 text-left transition-all hover:scale-[1.03] hover:shadow-[0_20px_50px_rgba(0,150,96,0.15)] hover:border-emerald-300 active:scale-95 animate-in fade-in zoom-in duration-500 overflow-hidden"
     >
       {/* Background Accent */}
-      <div 
+      <div
         className="absolute top-0 right-0 w-32 h-32 -mr-16 -mt-16 rounded-full opacity-10 group-hover:opacity-20 transition-opacity"
         style={{ backgroundColor: theme.color || '#009660' }}
       />
-      
+
       <div className="flex justify-between items-start mb-4 relative z-10">
         <div className="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center text-3xl group-hover:scale-110 transition-transform">
           {theme.emoji || '🎨'}
@@ -36,7 +36,7 @@ const GameCard = ({ theme, onClick }) => {
       <h3 className="text-emerald-900 font-black text-lg leading-tight uppercase mb-1 truncate">
         {theme.name}
       </h3>
-      
+
       <p className="text-emerald-900/60 text-xs font-medium mb-4 line-clamp-2 h-8">
         {theme.description || 'Nenhuma descrição disponível.'}
       </p>
@@ -46,7 +46,7 @@ const GameCard = ({ theme, onClick }) => {
           <span className="text-[10px] font-black text-emerald-900/40 uppercase tracking-widest">Nível:</span>
           <span className="text-[10px] font-black text-emerald-600 uppercase">{categoryName}</span>
         </div>
-        
+
         <div className="flex justify-between items-center pt-3 border-t border-emerald-50">
           <div className="flex flex-col">
             <span className="text-[8px] font-black text-emerald-900/30 uppercase tracking-tighter">Autor</span>
@@ -64,19 +64,19 @@ const GameCard = ({ theme, onClick }) => {
 
 const GameDetailsModal = ({ theme, onPlay, onClose }) => {
   if (!theme) return null;
-  
+
   return (
     <div className="fixed inset-0 z-[300] flex items-center justify-center bg-emerald-900/40 backdrop-blur-md p-4 animate-in fade-in duration-300">
       <div className="bg-white w-full max-w-lg rounded-[3rem] shadow-[0_40px_100px_rgba(0,0,0,0.4)] overflow-hidden animate-in zoom-in-95 duration-300">
         <header className="relative h-48 flex items-center justify-center overflow-hidden">
-          <div 
-            className="absolute inset-0 opacity-20" 
+          <div
+            className="absolute inset-0 opacity-20"
             style={{ backgroundColor: theme.color || '#009660' }}
           />
           <div className="text-7xl relative z-10 animate-bounce-slow">
             {theme.emoji || '🎨'}
           </div>
-          <button 
+          <button
             onClick={onClose}
             className="absolute top-6 right-6 w-10 h-10 rounded-full bg-white/80 hover:bg-white text-emerald-900 flex items-center justify-center font-black transition-colors z-20"
           >
@@ -91,7 +91,7 @@ const GameDetailsModal = ({ theme, onPlay, onClose }) => {
           <h2 className="text-3xl font-black text-emerald-900 uppercase italic tracking-tighter mb-4">
             {theme.name}
           </h2>
-          
+
           <div className="bg-emerald-50/50 rounded-3xl p-6 mb-8 text-emerald-900/80 font-medium leading-relaxed">
             <p className="text-sm italic">
               {theme.summary || theme.description || 'Este jogo não possui um resumo detalhado.'}
@@ -118,11 +118,11 @@ const GameDetailsModal = ({ theme, onPlay, onClose }) => {
   );
 };
 
-const HomeScreen = ({ 
-  user, 
-  onSelectTheme = () => console.warn("onSelectTheme not provided"), 
+const HomeScreen = ({
+  user,
+  onSelectTheme = () => console.warn("onSelectTheme not provided"),
   onJoinRoom = () => console.warn("onJoinRoom not provided"),
-  onBack 
+  onBack
 }) => {
   const [themes, setThemes] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -150,25 +150,25 @@ const HomeScreen = ({
       if (selectedCategory) filters.categoryId = selectedCategory;
       if (selectedSubCategory) filters.subcategoryId = selectedSubCategory;
       if (search) filters.search = search;
-      
+
       const dbThemes = await ThemeService.getThemes(filters);
-      
+
       // Merge with hardcoded themes
-      const allDefaultThemes = defaultThemes.map(t => ({ 
-        ...t, 
+      const allDefaultThemes = defaultThemes.map(t => ({
+        ...t,
         isDefault: true,
         category: { name: 'GERAL' },
         createdAt: new Date().toISOString()
       }));
-      
+
       const filteredDefaults = allDefaultThemes.filter(t => {
         if (search && !t.name.toLowerCase().includes(search.toLowerCase())) return false;
-        if (selectedCategory && selectedCategory !== 'default') return false; 
+        if (selectedCategory && selectedCategory !== 'default') return false;
         return true;
       });
 
-      const filteredDbThemes = dbThemes.filter(dbTheme => 
-         !allDefaultThemes.some(defaultTheme => defaultTheme.id === dbTheme.id)
+      const filteredDbThemes = dbThemes.filter(dbTheme =>
+        !allDefaultThemes.some(defaultTheme => defaultTheme.id === dbTheme.id)
       );
 
       setThemes([...filteredDefaults, ...filteredDbThemes]);
@@ -197,7 +197,7 @@ const HomeScreen = ({
     <div className="flex min-h-screen bg-[#F0FDF4] w-full relative">
       {/* Mobile Overlay */}
       {showMobileMenu && (
-        <div 
+        <div
           className="fixed inset-0 bg-emerald-900/40 z-40 lg:hidden backdrop-blur-sm"
           onClick={() => setShowMobileMenu(false)}
         />
@@ -205,12 +205,27 @@ const HomeScreen = ({
 
       {/* Sidebar */}
       <aside className={`fixed inset-y-0 left-0 w-72 bg-white/95 backdrop-blur-xl border-r-2 border-emerald-100 p-6 sm:p-8 flex flex-col z-50 transform transition-transform duration-300 lg:static lg:translate-x-0 ${showMobileMenu ? 'translate-x-0 shadow-2xl' : '-translate-x-full'}`}>
-        <div className="flex items-center justify-between mb-10">
-          <div>
-            <h1 className="text-3xl font-black text-[#009660] italic tracking-tighter leading-none mb-1">DOMINÓ</h1>
-            <p className="text-[10px] font-black uppercase text-emerald-900/40 tracking-[0.2em]">Educação & Diversão</p>
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex flex-col">
+            {/* Branding EduGames - Sempre visível */}
+            <div className="flex items-center gap-3 mb-6 animate-in fade-in slide-in-from-top-4">
+              <div className="w-12 h-12 flex items-center justify-center bg-white rounded-2xl shadow-sm border-2 border-emerald-100 p-2">
+                <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-sm">
+                  <path d="M50 15 L90 85 H10 Z" fill="#009660" />
+                  <path d="M50 45 L75 85 H25 Z" fill="#FFCE00" />
+                </svg>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-2xl font-black text-emerald-900 italic tracking-tighter leading-none uppercase">EduGames</span>
+              </div>
+            </div>
+
+            <div className="pl-1">
+              <h1 className="text-3xl font-black text-[#009660] italic tracking-tighter leading-none mb-1">DOMINÓ</h1>
+              <p className="text-[10px] font-black uppercase text-emerald-900/40 tracking-[0.2em]">Educação & Diversão</p>
+            </div>
           </div>
-          <button 
+          <button
             onClick={() => setShowMobileMenu(false)}
             className="lg:hidden text-emerald-900 bg-emerald-50 w-8 h-8 rounded-full flex items-center justify-center hover:bg-emerald-100 transition-colors"
           >
@@ -272,7 +287,7 @@ const HomeScreen = ({
 
         <div className="mt-auto pt-8 border-t-2 border-emerald-50 space-y-4">
           {user?.role === 'ADMIN' && (
-            <button 
+            <button
               onClick={() => window.dispatchEvent(new CustomEvent('openAdminPanel'))}
               className="w-full bg-slate-800 hover:bg-slate-900 text-white p-4 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2 border-b-4 border-slate-950"
             >
@@ -288,7 +303,7 @@ const HomeScreen = ({
               <p className="text-[10px] font-black text-emerald-900/40 uppercase leading-none mb-1">Logado como</p>
               <p className="text-xs font-black text-emerald-900 truncate">{user?.fullName || 'Usuário'}</p>
             </div>
-            <button 
+            <button
               onClick={handleLogout}
               className="w-10 h-10 rounded-xl bg-red-50 text-red-500 flex items-center justify-center border-2 border-red-100 transition-all hover:bg-red-500 hover:text-white shrink-0"
               title="Sair"
@@ -306,68 +321,72 @@ const HomeScreen = ({
       {/* Main Content */}
       <main className="flex-1 p-6 sm:p-10 lg:p-12 overflow-y-auto h-screen">
         <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
+          {/* 1. Título e Navegação */}
           <div className="flex items-center gap-4">
-             {onBack && (
-               <button 
-                 onClick={onBack}
-                 className="w-12 h-12 flex items-center justify-center bg-white rounded-2xl shadow-sm text-emerald-900 border-2 border-emerald-100 active:scale-95 transition-transform shrink-0 font-black text-xl"
-                 title="Voltar"
-               >
-                 ←
-               </button>
-             )}
-             <button 
-               onClick={() => setShowMobileMenu(true)}
-               className="lg:hidden w-12 h-12 flex items-center justify-center bg-white rounded-2xl shadow-sm text-emerald-900 border-2 border-emerald-100 active:scale-95 transition-transform shrink-0"
-             >
-               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                 <line x1="3" y1="12" x2="21" y2="12"></line>
-                 <line x1="3" y1="6" x2="21" y2="6"></line>
-                 <line x1="3" y1="18" x2="21" y2="18"></line>
-               </svg>
-             </button>
-             <div>
-               <h2 className="text-3xl sm:text-4xl font-black text-emerald-900 uppercase italic tracking-tighter">Explorar Jogos</h2>
-               <p className="text-xs sm:text-sm font-medium text-emerald-900/40">Escolha um tema e comece o desafio!</p>
-             </div>
-          </div>
-          
-          <div className="flex items-center gap-4 w-full md:w-auto">
-            <div className="relative flex-1 md:w-80">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-lg">🔍</span>
-              <input
-                type="text"
-                placeholder="BUSCAR JOGO..."
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                className="w-full bg-white border-2 border-emerald-100 p-4 pl-12 rounded-[2rem] focus:border-emerald-300 transition-all outline-none font-black text-sm text-emerald-900 uppercase placeholder:text-emerald-200"
-              />
+            {onBack && (
+              <button
+                onClick={onBack}
+                className="w-12 h-12 flex items-center justify-center bg-white rounded-2xl shadow-sm text-emerald-900 border-2 border-emerald-100 active:scale-95 transition-transform shrink-0 font-black text-xl"
+                title="Voltar"
+              >
+                ←
+              </button>
+            )}
+            <button
+              onClick={() => setShowMobileMenu(true)}
+              className="lg:hidden w-12 h-12 flex items-center justify-center bg-white rounded-2xl shadow-sm text-emerald-900 border-2 border-emerald-100 active:scale-95 transition-transform shrink-0"
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="3" y1="12" x2="21" y2="12"></line>
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+              </svg>
+            </button>
+            <div>
+              <h2 className="text-3xl sm:text-4xl font-black text-emerald-900 uppercase italic tracking-tighter">Explorar Jogos</h2>
+              <p className="text-xs sm:text-sm font-medium text-emerald-900/40">Escolha um tema e comece o desafio!</p>
             </div>
-            {/* Ranking */}
-            <button
-              onClick={() => setShowRanking(true)}
-              className="bg-indigo-500 text-white p-4 rounded-[1.5rem] font-black text-sm shadow-[0_6px_0_#3730a3] hover:brightness-110 transition-all active:translate-y-1 active:shadow-none flex items-center gap-2 whitespace-nowrap"
-            >
-              <span>🏆</span> <span className="hidden sm:inline">RANKING</span>
-            </button>
+          </div>
 
-            {/* Entrar em Sala */}
-            <button
-              onClick={onJoinRoom}
-              className="bg-amber-400 text-amber-900 p-4 rounded-[1.5rem] font-black text-sm shadow-[0_6px_0_#d97706] hover:brightness-110 transition-all active:translate-y-1 active:shadow-none flex items-center gap-2 whitespace-nowrap"
-            >
-              <span>🔑</span> <span className="hidden sm:inline">ENTRAR EM SALA</span>
-            </button>
+          {/* 2. Barra de Busca */}
+          <div className="relative w-full md:w-80">
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-lg">🔍</span>
+            <input
+              type="text"
+              placeholder="BUSCAR JOGO..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              className="w-full bg-white border-2 border-emerald-100 p-4 pl-12 rounded-[2rem] focus:border-emerald-300 transition-all outline-none font-black text-sm text-emerald-900 uppercase placeholder:text-emerald-200 shadow-sm"
+            />
+          </div>
 
+          {/* 3. Botões de Ação - Empilhados abaixo da busca no mobile */}
+          <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto">
             {/* Criar Novo Tema */}
             {(user?.role === 'ADMIN' || user?.role === 'PROFESSOR') && (
               <button
                 onClick={() => setShowCreator(true)}
-                className="bg-[#009660] text-white p-4 rounded-[1.5rem] font-black text-sm shadow-[0_6px_0_#00764D] hover:brightness-110 transition-all active:translate-y-1 active:shadow-none flex items-center gap-2 whitespace-nowrap"
+                className="w-full md:w-auto bg-[#009660] text-white px-5 py-4 rounded-[1.5rem] font-black text-[11px] shadow-[0_6px_0_#00764D] hover:brightness-110 transition-all active:translate-y-1 active:shadow-none flex items-center justify-center gap-2 whitespace-nowrap"
               >
-                <span>➕</span> <span className="hidden sm:inline">CRIAR NOVO TEMA</span>
+                <span>➕</span> <span className="inline">CRIAR NOVO TEMA</span>
               </button>
             )}
+
+            {/* Entrar em Sala */}
+            <button
+              onClick={onJoinRoom}
+              className="w-full md:w-auto bg-amber-400 text-amber-900 px-5 py-4 rounded-[1.5rem] font-black text-[11px] shadow-[0_6px_0_#d97706] hover:brightness-110 transition-all active:translate-y-1 active:shadow-none flex items-center justify-center gap-2 whitespace-nowrap"
+            >
+              <span>🔑</span> <span className="inline">ENTRAR EM SALA</span>
+            </button>
+
+            {/* Ranking */}
+            <button
+              onClick={() => setShowRanking(true)}
+              className="w-full md:w-auto bg-indigo-500 text-white px-5 py-4 rounded-[1.5rem] font-black text-[11px] shadow-[0_6px_0_#3730a3] hover:brightness-110 transition-all active:translate-y-1 active:shadow-none flex items-center justify-center gap-2 whitespace-nowrap"
+            >
+              <span>🏆</span> <span className="inline">RANKING</span>
+            </button>
           </div>
         </header>
 
@@ -380,9 +399,9 @@ const HomeScreen = ({
 
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
           {loading ? (
-             [...Array(6)].map((_, i) => (
-                <div key={i} className="bg-emerald-50 h-64 rounded-[2rem] animate-pulse" />
-             ))
+            [...Array(6)].map((_, i) => (
+              <div key={i} className="bg-emerald-50 h-64 rounded-[2rem] animate-pulse" />
+            ))
           ) : filteredThemes.length > 0 ? (
             filteredThemes.map(theme => (
               <GameCard key={theme.id} theme={theme} onClick={setDetailsTheme} />
@@ -400,9 +419,9 @@ const HomeScreen = ({
       {showCreator && <ThemeCreator onThemeCreated={() => { setShowCreator(false); fetchData(); }} onClose={() => setShowCreator(false)} />}
       {showRanking && <RankingBoard onClose={() => setShowRanking(false)} />}
       {detailsTheme && (
-        <GameDetailsModal 
-          theme={detailsTheme} 
-          onClose={() => setDetailsTheme(null)} 
+        <GameDetailsModal
+          theme={detailsTheme}
+          onClose={() => setDetailsTheme(null)}
           onPlay={(theme) => onSelectTheme(theme)}
         />
       )}

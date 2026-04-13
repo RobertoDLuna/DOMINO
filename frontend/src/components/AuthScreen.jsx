@@ -8,67 +8,67 @@ import { API_URL } from '../config/api';
 import { Podium } from './RankingBoard';
 
 const PreviewPanel = ({ previews }) => {
-   const [tab, setTab] = useState('GERAL');
-   
-   const getPodiumData = () => {
-      switch(tab) {
-         case 'GERAL': return previews?.topPlayers;
-         case 'SCHOOLS': return previews?.topSchools;
-         case 'CATEGORIES': return previews?.topCategories;
-         case 'CREATOR': return previews?.topCreators;
-         default: return [];
-      }
-   }
+  const [tab, setTab] = useState('GERAL');
 
-   const label = (tab === 'CREATOR' || tab === 'CATEGORIES') ? 'PARTIDAS' : 'PTS';
-   const listData = getPodiumData() || [];
-   const hasData = listData.length > 0;
+  const getPodiumData = () => {
+    switch (tab) {
+      case 'GERAL': return previews?.topPlayers;
+      case 'SCHOOLS': return previews?.topSchools;
+      case 'CATEGORIES': return previews?.topCategories;
+      case 'CREATOR': return previews?.topCreators;
+      default: return [];
+    }
+  }
 
-   return (
-     <div className="flex flex-col mt-4 w-full relative z-10">
-         <div className="flex flex-wrap bg-black/15 p-2 rounded-2xl shadow-inner backdrop-blur-md self-start max-w-full border border-white/10 gap-1.5">
-            <button onClick={()=>setTab('GERAL')} className={`px-4 py-2.5 text-[11px] font-black uppercase tracking-widest transition-all rounded-xl cursor-pointer ${tab==='GERAL' ? 'bg-[#FFCE00] text-emerald-900 shadow-md' : 'text-emerald-50 hover:bg-white/10'}`}>GERAL</button>
-            <button onClick={()=>setTab('SCHOOLS')} className={`px-4 py-2.5 text-[11px] font-black uppercase tracking-widest transition-all rounded-xl cursor-pointer ${tab==='SCHOOLS' ? 'bg-[#FFCE00] text-emerald-900 shadow-md' : 'text-emerald-50 hover:bg-white/10'}`}>ESCOLAS</button>
-            <button onClick={()=>setTab('CATEGORIES')} className={`px-4 py-2.5 text-[11px] font-black uppercase tracking-widest transition-all rounded-xl cursor-pointer ${tab==='CATEGORIES' ? 'bg-[#FFCE00] text-emerald-900 shadow-md' : 'text-emerald-50 hover:bg-white/10'}`}>NÍVEIS</button>
-            <button onClick={()=>setTab('CREATOR')} className={`px-4 py-2.5 text-[11px] font-black uppercase tracking-widest transition-all rounded-xl cursor-pointer ${tab==='CREATOR' ? 'bg-[#FFCE00] text-emerald-900 shadow-md' : 'text-emerald-50 hover:bg-white/10'}`}>AUTORES</button>
-         </div>
+  const label = (tab === 'CREATOR' || tab === 'CATEGORIES') ? 'PARTIDAS' : 'PTS';
+  const listData = getPodiumData() || [];
+  const hasData = listData.length > 0;
 
-         {!hasData ? (
-            <div className="flex flex-col items-center justify-center p-6 bg-black/10 rounded-[2rem] border border-white/10 text-center mt-5 backdrop-blur-sm self-start min-w-[200px]">
-               <span className="text-4xl opacity-50 grayscale mb-2">🏆</span>
-               <p className="text-emerald-100/40 italic text-[9px] font-bold uppercase tracking-widest mt-2">Nenhuma liderança ainda.</p>
-            </div>
-         ) : (
-            <div className="w-full flex justify-center">
-               <Podium mode={tab} top3={listData.slice(0, 3)} align="center" className="mt-16 sm:mt-20 mb-1" isWidget={true} />
-            </div>
-         )}
-         
-         {/* Cartões do 4º e 5º Lado Esquerdo Verde */}
-         {listData.length > 3 && (
-            <div className="mt-2 flex flex-col gap-2.5 pl-2 max-w-[340px]">
-               {listData.slice(3, 5).map((user, idx) => {
-                  const realPos = idx + 4;
-                  return (
-                     <div key={user.id || user.name} className="flex items-center gap-3 p-3 rounded-2xl bg-black/20 border border-white/5 shadow-sm backdrop-blur-sm opacity-90 transition-all hover:opacity-100 hover:bg-black/30">
-                        <div className="w-8 h-8 rounded-full font-black text-xs text-white/50 bg-black/30 border border-white/10 shrink-0 flex items-center justify-center">
-                           {realPos}º
-                        </div>
-                        <div className="flex-1 overflow-hidden">
-                           <h3 className="font-black text-white/80 text-[11px] sm:text-xs truncate uppercase">{user.name}</h3>
-                           <p className="text-[8px] uppercase font-bold text-white/40 tracking-widest truncate">{user.school || 'Sem vínculo'}</p>
-                        </div>
-                        <div className="text-right">
-                           <div className="font-black text-lg text-[#FFCE00]/80 leading-none">{user.points}</div>
-                           <div className="text-[7px] font-black tracking-widest text-[#FFCE00]/50 uppercase mt-0.5">{label}</div>
-                        </div>
-                     </div>
-                  );
-               })}
-            </div>
-         )}
-     </div>
-   )
+  return (
+    <div className="flex flex-col mt-4 w-full relative z-10">
+      <div className="flex flex-wrap bg-black/15 p-2 rounded-2xl shadow-inner backdrop-blur-md self-start max-w-full border border-white/10 gap-1.5">
+        <button onClick={() => setTab('GERAL')} className={`px-4 py-2.5 text-[11px] font-black uppercase tracking-widest transition-all rounded-xl cursor-pointer ${tab === 'GERAL' ? 'bg-[#FFCE00] text-emerald-900 shadow-md' : 'text-emerald-50 hover:bg-white/10'}`}>GERAL</button>
+        <button onClick={() => setTab('SCHOOLS')} className={`px-4 py-2.5 text-[11px] font-black uppercase tracking-widest transition-all rounded-xl cursor-pointer ${tab === 'SCHOOLS' ? 'bg-[#FFCE00] text-emerald-900 shadow-md' : 'text-emerald-50 hover:bg-white/10'}`}>ESCOLAS</button>
+        <button onClick={() => setTab('CATEGORIES')} className={`px-4 py-2.5 text-[11px] font-black uppercase tracking-widest transition-all rounded-xl cursor-pointer ${tab === 'CATEGORIES' ? 'bg-[#FFCE00] text-emerald-900 shadow-md' : 'text-emerald-50 hover:bg-white/10'}`}>NÍVEIS</button>
+        <button onClick={() => setTab('CREATOR')} className={`px-4 py-2.5 text-[11px] font-black uppercase tracking-widest transition-all rounded-xl cursor-pointer ${tab === 'CREATOR' ? 'bg-[#FFCE00] text-emerald-900 shadow-md' : 'text-emerald-50 hover:bg-white/10'}`}>AUTORES</button>
+      </div>
+
+      {!hasData ? (
+        <div className="flex flex-col items-center justify-center p-6 bg-black/10 rounded-[2rem] border border-white/10 text-center mt-5 backdrop-blur-sm self-start min-w-[200px]">
+          <span className="text-4xl opacity-50 grayscale mb-2">🏆</span>
+          <p className="text-emerald-100/40 italic text-[9px] font-bold uppercase tracking-widest mt-2">Nenhuma liderança ainda.</p>
+        </div>
+      ) : (
+        <div className="w-full flex justify-center">
+          <Podium mode={tab} top3={listData.slice(0, 3)} align="center" className="mt-16 sm:mt-20 mb-1" isWidget={true} />
+        </div>
+      )}
+
+      {/* Cartões do 4º e 5º Lado Esquerdo Verde */}
+      {listData.length > 3 && (
+        <div className="mt-2 flex flex-col gap-2.5 pl-2 max-w-[340px]">
+          {listData.slice(3, 5).map((user, idx) => {
+            const realPos = idx + 4;
+            return (
+              <div key={user.id || user.name} className="flex items-center gap-3 p-3 rounded-2xl bg-black/20 border border-white/5 shadow-sm backdrop-blur-sm opacity-90 transition-all hover:opacity-100 hover:bg-black/30">
+                <div className="w-8 h-8 rounded-full font-black text-xs text-white/50 bg-black/30 border border-white/10 shrink-0 flex items-center justify-center">
+                  {realPos}º
+                </div>
+                <div className="flex-1 overflow-hidden">
+                  <h3 className="font-black text-white/80 text-[11px] sm:text-xs truncate uppercase">{user.name}</h3>
+                  <p className="text-[8px] uppercase font-bold text-white/40 tracking-widest truncate">{user.school || 'Sem vínculo'}</p>
+                </div>
+                <div className="text-right">
+                  <div className="font-black text-lg text-[#FFCE00]/80 leading-none">{user.points}</div>
+                  <div className="text-[7px] font-black tracking-widest text-[#FFCE00]/50 uppercase mt-0.5">{label}</div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  )
 }
 
 const AuthScreen = ({ onAuthSuccess, onGuestStart, onJoinRoom }) => {
@@ -76,7 +76,7 @@ const AuthScreen = ({ onAuthSuccess, onGuestStart, onJoinRoom }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [schools, setSchools] = useState([]);
-  
+
   const [previews, setPreviews] = useState({ topPlayers: [], topCreators: [] });
   const [showDrawer, setShowDrawer] = useState(false);
 
@@ -90,7 +90,7 @@ const AuthScreen = ({ onAuthSuccess, onGuestStart, onJoinRoom }) => {
 
   useEffect(() => {
     AuthService.getSchools().then(s => setSchools(s || [])).catch(console.error);
-    
+
     fetch(`${API_URL}/ranking/preview`)
       .then(res => res.ok ? res.json() : null)
       .then(data => data && setPreviews(data))
@@ -130,31 +130,31 @@ const AuthScreen = ({ onAuthSuccess, onGuestStart, onJoinRoom }) => {
   return (
     <div className="h-screen w-full bg-slate-50 flex overflow-hidden font-sans relative">
       {/* ======= LADO ESQUERDO (AZUL/VERDE): Institucional & Ranking ======= */}
-      
+
       {/* Mobile Drawer (Sobrepõe o lado direito no celular) */}
       <div className={`fixed inset-y-0 left-0 w-[85%] max-w-sm bg-[#009660] z-50 transform transition-transform duration-300 flex flex-col p-8 overflow-y-auto ${showDrawer ? 'translate-x-0 shadow-2xl' : '-translate-x-full'} lg:hidden`}>
-         <div className="flex justify-between items-start mb-8 relative z-10">
-           <div className="flex flex-col">
-              {/* Logo EduGames Mobile Drawer - Exclusivo para < 480px */}
-              <div className="hidden max-[480px]:flex items-center gap-2 mb-4">
-                <div className="w-10 h-10 flex items-center justify-center bg-white/10 rounded-xl backdrop-blur-md border border-white/20 p-2">
-                  <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-sm">
-                    <path d="M50 5 L100 95 L80 95 L50 40 L20 95 L0 95 Z" fill="#FFCE00" />
-                    <path d="M50 45 L75 95 L58 95 L50 80 L42 95 L25 95 Z" fill="#FFFFFF" />
-                  </svg>
-                </div>
-                <span className="text-xl font-black text-white italic tracking-tighter uppercase">EduGames</span>
+        <div className="flex justify-between items-start mb-8 relative z-10">
+          <div className="flex flex-col">
+            {/* Logo EduGames Mobile Drawer - Exclusivo para < 480px */}
+            <div className="hidden max-[480px]:flex items-center gap-2 mb-4">
+              <div className="w-10 h-10 flex items-center justify-center p-1">
+                <svg viewBox="0 0 100 80" className="w-full h-full" preserveAspectRatio="xMidYMid meet">
+                  <path d="M50 0 L100 80 L80 80 L50 35 L20 80 L0 80 Z" fill="#FFCE00" />
+                  <path d="M50 40 L72 80 L55 80 L50 70 L45 80 L28 80 Z" fill="#FFFFFF" />
+                </svg>
               </div>
-              
-              <div>
-                <h2 className="text-3xl font-black italic uppercase text-[#FFCE00] leading-none mb-1">DOMINÓ</h2>
-                <p className="text-[10px] font-black uppercase text-emerald-100/30 tracking-[0.2em]">Educação & Diversão</p>
-              </div>
-           </div>
-           <button onClick={() => setShowDrawer(false)} className="text-white bg-black/20 w-8 h-8 rounded-full flex items-center justify-center">✕</button>
-         </div>
-         <p className="text-emerald-100/80 text-sm font-medium mb-6 relative z-10">Plataforma educacional para aprendizado lúdico através do dominó.</p>
-         <PreviewPanel previews={previews} />
+              <span className="text-xl font-black text-white italic tracking-tighter uppercase">EduGames</span>
+            </div>
+
+            <div>
+              <h2 className="text-3xl font-black italic uppercase text-[#FFCE00] leading-none mb-1">DOMINÓ</h2>
+              <p className="text-[10px] font-black uppercase text-emerald-100/30 tracking-[0.2em]">Educação & Diversão</p>
+            </div>
+          </div>
+          <button onClick={() => setShowDrawer(false)} className="text-white bg-black/20 w-8 h-8 rounded-full flex items-center justify-center">✕</button>
+        </div>
+        <p className="text-emerald-100/80 text-sm font-medium mb-6 relative z-10">Plataforma educacional para aprendizado lúdico através do dominó.</p>
+        <PreviewPanel previews={previews} />
       </div>
       {/* Overlay Escuro Mobile */}
       {showDrawer && <div className="fixed inset-0 bg-slate-900/40 z-40 lg:hidden backdrop-blur-sm" onClick={() => setShowDrawer(false)}></div>}
@@ -166,46 +166,45 @@ const AuthScreen = ({ onAuthSuccess, onGuestStart, onJoinRoom }) => {
         <div className="absolute bottom-0 right-0 w-96 h-96 bg-white/5 rounded-full blur-3xl translate-x-1/3 translate-y-1/3 pointer-events-none"></div>
 
         <div className="relative z-10 w-full max-w-md mx-auto flex flex-col justify-center">
-           <h1 className="text-5xl xl:text-6xl font-black drop-shadow-[0_5px_0_rgba(0,0,0,0.2)] tracking-tighter italic uppercase text-[#FFCE00] leading-none mb-3 text-left">
-             EDU <span className="text-white block">GAMES</span>
-           </h1>
-           <p className="text-emerald-100 text-base font-medium mb-4 border-l-4 border-[#FFCE00] pl-4 text-left leading-tight">
-             Plataforma unificada para educadores e alunos. Aprendizado e diversão nas mesas virtuais de dominó.
-           </p>
+          <h1 className="text-5xl xl:text-6xl font-black drop-shadow-[0_5px_0_rgba(0,0,0,0.2)] tracking-tighter italic uppercase text-[#FFCE00] leading-none mb-3 text-left">
+            EDU <span className="text-white block">GAMES</span>
+          </h1>
+          <p className="text-emerald-100 text-base font-medium mb-4 border-l-4 border-[#FFCE00] pl-4 text-left leading-tight">
+            Plataforma unificada para educadores e alunos. Aprendizado e diversão nas mesas virtuais de dominó.
+          </p>
 
-           <PreviewPanel previews={previews} />
+          <PreviewPanel previews={previews} />
         </div>
       </div>
 
 
       {/* ======= LADO DIREITO (BRANCO): Área do Input ======= */}
-      
+
       <div className="w-full lg:w-1/2 flex flex-col items-center justify-center p-6 sm:p-8 relative bg-slate-50 h-screen overflow-hidden">
-        
+
         {/* Botão Mobile para abrir o Menu Lateral (Lado Esquerdo) */}
         <div className="absolute top-6 left-6 lg:hidden w-full px-6 py-2">
-           <button onClick={() => setShowDrawer(true)} className="flex items-center gap-2 bg-[#009660]/10 text-[#009660] px-4 py-2 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-[#009660]/20 transition-colors">
-              <span>🏆</span> Destaques
-           </button>
+          <button onClick={() => setShowDrawer(true)} className="flex items-center gap-2 bg-[#009660]/10 text-[#009660] px-4 py-2 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-[#009660]/20 transition-colors">
+            <span>🏆</span> Destaques
+          </button>
         </div>
 
         {/* Logos Responsivos no Formulário (Lobby) */}
         <header className="flex flex-col items-center mb-5 mt-8 lg:mt-0 lg:mb-6 shrink-0 z-10">
           {/* Mobile Only: Branding Superior Animado - Exclusivo para < 480px */}
           <div className="hidden max-[480px]:flex flex-col items-center mb-8 animate-in fade-in slide-in-from-top-4 duration-700">
-            <div className="w-16 h-16 flex items-center justify-center bg-white rounded-[2rem] shadow-xl shadow-emerald-900/5 border border-emerald-100 p-3 mb-3 relative">
-               <div className="absolute inset-0 bg-emerald-500/5 rounded-full blur-xl scale-75 animate-pulse"></div>
-               <svg viewBox="0 0 100 100" className="w-full h-full relative z-10">
-                <path d="M50 5 L100 95 L80 95 L50 40 L20 95 L0 95 Z" fill="#009660" />
-                <path d="M50 45 L75 95 L58 95 L50 80 L42 95 L25 95 Z" fill="#FFCE00" />
+            <div className="w-16 h-16 flex items-center justify-center p-1 relative mb-3">
+              <svg viewBox="0 0 100 80" className="w-full h-full relative z-10" preserveAspectRatio="xMidYMid meet">
+                <path d="M50 0 L100 80 L80 80 L50 35 L20 80 L0 80 Z" fill="#009660" />
+                <path d="M50 40 L72 80 L55 80 L50 70 L45 80 L28 80 Z" fill="#FFCE00" />
               </svg>
             </div>
             <h1 className="text-3xl font-black text-slate-800 italic tracking-tighter leading-none mb-1">
               EDU <span className="text-[#009660]">GAMES</span>
             </h1>
             <div className="flex flex-col items-center">
-               <span className="text-xl font-black text-[#009660] italic tracking-tighter leading-none mb-0.5">DOMINÓ</span>
-               <span className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em]">Educação & Diversão</span>
+              <span className="text-xl font-black text-[#009660] italic tracking-tighter leading-none mb-0.5">DOMINÓ</span>
+              <span className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em]">Educação & Diversão</span>
             </div>
           </div>
 
@@ -214,7 +213,7 @@ const AuthScreen = ({ onAuthSuccess, onGuestStart, onJoinRoom }) => {
             <div className="w-px h-8 sm:h-10 bg-slate-200"></div>
             <img src={logoPrefeitura} alt="Prefeitura" className="h-8 sm:h-14 w-auto object-contain pointer-events-none px-1" />
           </div>
-          
+
           <p className="text-slate-500 font-medium text-xs text-center max-w-xs leading-relaxed">
             {view === "register" ? "Crie sua conta para começar a jogar" : "Bem-vindo de volta! Entre na sua conta para continuar"}
           </p>
@@ -222,7 +221,7 @@ const AuthScreen = ({ onAuthSuccess, onGuestStart, onJoinRoom }) => {
 
         {/* Caixote do Formulário */}
         <div className="bg-white p-7 sm:p-9 rounded-[2.5rem] shadow-[0_20px_60px_rgba(0,0,0,0.06)] border border-slate-100 w-full max-w-[26rem] flex flex-col z-10">
-          
+
           {error && (
             <div className="bg-red-50 text-red-500 p-3 rounded-xl border-2 border-red-100 font-black text-[10px] uppercase mb-6 animate-in shake">
               ⚠️ {error}
@@ -286,16 +285,16 @@ const AuthScreen = ({ onAuthSuccess, onGuestStart, onJoinRoom }) => {
             )}
           </button>
         </div>
-        
+
         {/* Guest & Room Fallbacks area (abaixo do card) */}
         <div className="flex justify-center gap-4 mt-6 z-10 shrink-0">
-           <button onClick={onGuestStart} className="text-slate-400 hover:text-[#009660] font-black text-[9px] uppercase tracking-widest transition-colors flex items-center gap-1.5">
-             <span>🎮</span> Jogar Sem Conta
-           </button>
-           <span className="text-slate-200">|</span>
-           <button onClick={onJoinRoom} className="text-slate-400 hover:text-[#009660] font-black text-[9px] uppercase tracking-widest transition-colors flex items-center gap-1.5">
-             <span>🔑</span> Entrar em Sala
-           </button>
+          <button onClick={onGuestStart} className="text-slate-400 hover:text-[#009660] font-black text-[9px] uppercase tracking-widest transition-colors flex items-center gap-1.5">
+            <span>🎮</span> Jogar Sem Conta
+          </button>
+          <span className="text-slate-200">|</span>
+          <button onClick={onJoinRoom} className="text-slate-400 hover:text-[#009660] font-black text-[9px] uppercase tracking-widest transition-colors flex items-center gap-1.5">
+            <span>🔑</span> Entrar em Sala
+          </button>
         </div>
 
         <p className="absolute bottom-4 text-[8px] font-black text-slate-300 uppercase tracking-widest pointer-events-none z-10">

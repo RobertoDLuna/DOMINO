@@ -4,6 +4,7 @@ import { themes as defaultThemes } from '../config/themes';
 import ThemeCreator from './ThemeCreator';
 import AuthService from '../services/AuthService';
 import RankingBoard from './RankingBoard';
+import logoCampina from '../assets/logo-campina.png';
 
 const GameCard = ({ theme, onClick }) => {
   const isDefault = theme.isDefault;
@@ -209,12 +210,7 @@ const HomeScreen = ({
           <div className="flex flex-col">
             {/* Branding EduGames - Sempre visível */}
             <div className="flex items-center gap-3 mb-6 animate-in fade-in slide-in-from-top-4">
-              <div className="w-12 h-12 flex items-center justify-center bg-white rounded-2xl shadow-sm border-2 border-emerald-100 p-2">
-                <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-sm">
-                  <path d="M50 5 L100 95 L80 95 L50 40 L20 95 L0 95 Z" fill="#009660" />
-                  <path d="M50 45 L75 95 L58 95 L50 80 L42 95 L25 95 Z" fill="#FFCE00" />
-                </svg>
-              </div>
+              <img src={logoCampina} alt="Seduc" className="h-6 sm:h-12 w-auto object-contain pointer-events-none" />
               <div className="flex flex-col">
                 <span className="text-2xl font-black text-emerald-900 italic tracking-tighter leading-none uppercase">EduGames</span>
               </div>

@@ -49,7 +49,7 @@ export default function GameContainer({ user, isGuest, initialTheme, onBack }) {
           });
           return merged;
         });
-      } catch (err) {}
+      } catch (err) { }
     };
     fetchThemes();
   }, []);
@@ -83,7 +83,7 @@ export default function GameContainer({ user, isGuest, initialTheme, onBack }) {
     const fetchUnknownTheme = async () => {
       const targetId = lobbyTheme || selectedTheme;
       if (!targetId) return;
-      
+
       const isDefault = defaultThemes.some(t => t.id === targetId);
       if (isDefault) return;
 
@@ -102,18 +102,18 @@ export default function GameContainer({ user, isGuest, initialTheme, onBack }) {
         console.error("Erro ao buscar tema desconhecido:", err);
       }
     };
-    
+
     fetchUnknownTheme();
   }, [lobbyTheme, selectedTheme, dbThemes]);
 
   const allThemes = [
     ...defaultThemes.map(t => ({ ...t, isDefault: true })),
-    ...dbThemes.map(t => ({ 
-      id: t.id, 
-      name: t.name, 
-      emoji: '🎨', 
+    ...dbThemes.map(t => ({
+      id: t.id,
+      name: t.name,
+      emoji: '🎨',
       description: t.description || 'Tema customizado 🎲',
-      isDefault: false 
+      isDefault: false
     }))
   ];
 
@@ -121,7 +121,7 @@ export default function GameContainer({ user, isGuest, initialTheme, onBack }) {
   const currentLobbyTheme = React.useMemo(() => {
     const targetId = (lobbyTheme || selectedTheme || '').toString().trim();
     if (!targetId) return null;
-    
+
     // Tenta encontrar nos temas da memória (padrões + banco)
     return allThemes.find(t => t.id.toString() === targetId);
   }, [lobbyTheme, selectedTheme, allThemes]);
@@ -248,7 +248,7 @@ export default function GameContainer({ user, isGuest, initialTheme, onBack }) {
 
   const handlePieceClick = (piece) => {
     if (!isMyTurn) return;
-    
+
     // Bloqueia qualquer peça que não seja a carroça inicial se o tabuleiro for vazio
     if (board.length === 0 && startingPieceId && piece.id !== startingPieceId) {
       return;
@@ -317,42 +317,42 @@ export default function GameContainer({ user, isGuest, initialTheme, onBack }) {
             <div className="w-full bg-white/0 sm:bg-white sm:p-8 rounded-[3.5rem] sm:shadow-[0_25px_80px_rgba(0,0,0,0.3)] text-center sm:border-b-[10px] sm:border-emerald-900/10 sm:overflow-hidden">
               <div className="mb-3 sm:mb-4 flex flex-col gap-2">
                 <div className="flex items-center gap-2 w-full p-0.5">
-                  <input 
-                    type="text" 
-                    placeholder="SEU NOME" 
-                    value={playerInfo.name} 
-                    disabled={!!user} 
-                    onChange={(e) => setPlayerInfo({...playerInfo, name: e.target.value.toUpperCase()})} 
-                    className="flex-1 bg-white sm:bg-emerald-50 border-2 sm:border-[3px] border-emerald-200/50 sm:border-emerald-100 p-4 sm:p-4 rounded-[2.5rem] sm:rounded-[1.5rem] focus:outline-none focus:border-[#FFCE00] sm:focus:border-[#009660] focus:ring-4 sm:focus:ring-0 focus:ring-[#FFCE00]/20 placeholder-emerald-900/20 sm:placeholder-emerald-900/30 text-center text-xl sm:text-xl font-black uppercase text-[#009660] transition-all shadow-xl sm:shadow-none min-w-0" 
+                  <input
+                    type="text"
+                    placeholder="SEU NOME"
+                    value={playerInfo.name}
+                    disabled={!!user}
+                    onChange={(e) => setPlayerInfo({ ...playerInfo, name: e.target.value.toUpperCase() })}
+                    className="flex-1 bg-white sm:bg-emerald-50 border-2 sm:border-[3px] border-emerald-200/50 sm:border-emerald-100 p-4 sm:p-4 rounded-[2.5rem] sm:rounded-[1.5rem] focus:outline-none focus:border-[#FFCE00] sm:focus:border-[#009660] focus:ring-4 sm:focus:ring-0 focus:ring-[#FFCE00]/20 placeholder-emerald-900/20 sm:placeholder-emerald-900/30 text-center text-xl sm:text-xl font-black uppercase text-[#009660] transition-all shadow-xl sm:shadow-none min-w-0"
                   />
                 </div>
 
                 {isGuest && <p className="text-[10px] font-black uppercase text-white/40 sm:text-emerald-900/40 tracking-[0.3em] mt-1 sm:mt-0 italic sm:not-italic">Modo Convidado</p>}
                 {user && <p className="text-[10px] font-black uppercase text-white/40 sm:text-emerald-900/40 tracking-[0.3em] mt-1 sm:mt-0 italic sm:not-italic">{user.role} | {user.school || 'Externo'}</p>}
               </div>
-              <button 
-                onClick={handleCreateRoom} 
+              <button
+                onClick={handleCreateRoom}
                 className="w-full bg-[#FFCE00] hover:bg-[#ffe050] text-[#009660] font-black py-5 sm:py-4 rounded-[2.5rem] sm:rounded-3xl shadow-[0_8px_0_#d1a900] sm:shadow-[0_6px_0_#d1a900] transition-all transform hover:scale-[1.02] sm:hover:scale-105 active:translate-y-1 active:shadow-[0_4px_0_#d1a900] mb-6 sm:mb-4 text-xl sm:text-lg uppercase tracking-tighter"
               >
                 Criar Sala 🏫
               </button>
-              
+
               <div className="flex flex-col gap-4 pt-6 sm:pt-3 border-t-2 sm:border-t-2 border-white/10 sm:border-dashed sm:border-gray-100">
-                <input 
-                  type="text" 
-                  placeholder="CÓDIGO DA SALA" 
-                  value={roomIdInput} 
-                  onChange={(e) => setRoomIdInput(e.target.value.toUpperCase())} 
-                  className="w-full bg-emerald-900/20 sm:bg-emerald-50 border-2 sm:border-[3px] border-white/20 sm:border-emerald-100 p-4 sm:p-4 rounded-[2.5rem] sm:rounded-[1.5rem] focus:outline-none focus:border-[#FFCE00] sm:focus:border-[#009660] focus:ring-4 sm:focus:ring-0 focus:ring-[#FFCE00]/20 placeholder-white/20 sm:placeholder-emerald-900/30 text-center text-xl sm:text-lg font-black uppercase text-white sm:text-[#009660] transition-all shadow-inner sm:shadow-none" 
+                <input
+                  type="text"
+                  placeholder="CÓDIGO DA SALA"
+                  value={roomIdInput}
+                  onChange={(e) => setRoomIdInput(e.target.value.toUpperCase())}
+                  className="w-full bg-emerald-900/20 sm:bg-emerald-50 border-2 sm:border-[3px] border-white/20 sm:border-emerald-100 p-4 sm:p-4 rounded-[2.5rem] sm:rounded-[1.5rem] focus:outline-none focus:border-[#FFCE00] sm:focus:border-[#009660] focus:ring-4 sm:focus:ring-0 focus:ring-[#FFCE00]/20 placeholder-white/20 sm:placeholder-emerald-900/30 text-center text-xl sm:text-lg font-black uppercase text-white sm:text-[#009660] transition-all shadow-inner sm:shadow-none"
                 />
-                <button 
-                  onClick={handleJoinRoom} 
+                <button
+                  onClick={handleJoinRoom}
                   className="w-full bg-white sm:bg-[#009660] hover:bg-white/90 sm:hover:bg-[#00a86b] text-[#009660] sm:text-white font-black py-5 sm:py-4 rounded-[2.5rem] sm:rounded-3xl shadow-[0_8px_0_#e5e7eb] sm:shadow-[0_6px_0_#006d46] transition-all transform hover:scale-[1.02] sm:hover:scale-105 active:translate-y-1 active:shadow-[0_4px_0_#e5e7eb] text-xl sm:text-lg uppercase tracking-tighter border-2 sm:border-b-2 border-transparent sm:border-emerald-400/20"
                 >
                   Entrar no Jogo 🧩
                 </button>
-                <button 
-                  onClick={onBack} 
+                <button
+                  onClick={onBack}
                   className="mt-4 text-emerald-900/40 hover:text-emerald-900 font-black text-sm uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 hover:translate-y-[-2px] active:translate-y-0"
                 >
                   VOLTAR PARA SELEÇÃO DE TEMAS
@@ -415,7 +415,7 @@ export default function GameContainer({ user, isGuest, initialTheme, onBack }) {
                     </div>
                   </div>
                 )}
-                
+
                 {!initialTheme && !selectedTheme && (
                   <ThemeSelector
                     selectedTheme={selectedTheme}
@@ -505,13 +505,13 @@ export default function GameContainer({ user, isGuest, initialTheme, onBack }) {
                       <span className="text-xl">🏠</span>
                       <span className="text-[#009660] font-black text-[10px] uppercase tracking-tight">Sair da Sala</span>
                     </button>
-                    
+
                     {isRoomOwner && (
-                      <button 
+                      <button
                         onClick={() => {
                           setShowThemeSelector(true);
                           setSelectingTheme(true);
-                        }} 
+                        }}
                         className="flex-1 bg-emerald-700/50 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl transition-all border-b-4 border-emerald-900/40 flex items-center justify-center gap-2 active:translate-y-0.5"
                       >
                         <span className="text-lg">🔄</span>
@@ -530,13 +530,13 @@ export default function GameContainer({ user, isGuest, initialTheme, onBack }) {
         </div>
 
         {showThemeSelector && isRoomOwner && (
-          <HomeScreen 
-            user={user} 
+          <HomeScreen
+            user={user}
             onSelectTheme={(theme) => {
               handleThemeSelect(theme.id);
               setShowThemeSelector(false);
               setGlobalSelectingTheme(false);
-            }} 
+            }}
             onJoinRoom={() => {
               // Já estamos em uma sala, mas caso precise trocar de sala
               setShowThemeSelector(false);
@@ -589,9 +589,9 @@ export default function GameContainer({ user, isGuest, initialTheme, onBack }) {
           {/* Logo + Som: compacto em mobile */}
           <div className="flex items-center gap-1.5 sm:gap-6 flex-shrink-0">
             <div className="flex items-center gap-1.5 sm:gap-5 bg-white px-2 py-1.5 sm:py-2.5 rounded-2xl shadow-sm border-2 border-emerald-900/5">
-              <img src={logoCampina} alt="Seduc" className="h-4 sm:h-7 w-auto object-contain pointer-events-none" style={{minWidth: '22px'}} />
+              <img src={logoCampina} alt="Seduc" className="h-4 sm:h-7 w-auto object-contain pointer-events-none" style={{ minWidth: '22px' }} />
               <div className="w-px h-3 sm:h-6 bg-gray-200 self-center"></div>
-              <img src={logoPrefeitura} alt="Prefeitura" className="h-4 sm:h-7 w-auto object-contain pointer-events-none" style={{minWidth: '22px'}} />
+              <img src={logoPrefeitura} alt="Prefeitura" className="h-4 sm:h-7 w-auto object-contain pointer-events-none" style={{ minWidth: '22px' }} />
             </div>
             <button onClick={() => setIsMuted(SoundService.toggleMute())} className="bg-white hover:bg-emerald-50 text-emerald-900 px-2 py-2 sm:py-2.5 rounded-2xl shadow-sm border-2 border-emerald-900/5 text-base sm:text-2xl transition-all active:scale-90 flex items-center justify-center">{isMuted ? '🔇' : '🔊'}</button>
           </div>
@@ -630,9 +630,9 @@ export default function GameContainer({ user, isGuest, initialTheme, onBack }) {
             .hand-scrollbar::-webkit-scrollbar-thumb { background: rgba(0, 150, 96, 0.4); border-radius: 8px; }
             .hand-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(0, 150, 96, 0.6); }
           `}</style>
-          
+
           {/* Container de peças: Adicionado touch-pan-x para forçar rolagem nativa, removido scrollbar-hide para dar affordance e pb-6 para n sobrepor */}
-          <div 
+          <div
             style={{ WebkitOverflowScrolling: 'touch' }}
             className="hand-scrollbar flex-1 flex justify-start sm:justify-center gap-3 sm:gap-8 overflow-x-auto overflow-y-hidden py-6 sm:py-12 w-full max-w-full mx-auto min-h-[200px] sm:min-h-[240px] items-center px-4 sm:px-10 pb-6 touch-pan-x"
           >
@@ -649,14 +649,14 @@ export default function GameContainer({ user, isGuest, initialTheme, onBack }) {
           <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-300">
             <div className="bg-white w-full max-w-2xl lg:max-w-4xl max-h-[92vh] rounded-[3rem] shadow-[0_40px_100px_rgba(0,0,0,0.5)] flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
               <h2 className="text-2xl font-black uppercase text-[#009660] text-center p-6">Onde colocar?</h2>
-              
+
               {(() => {
-                const API_BASE = import.meta.env.VITE_API_URL 
-                  ? import.meta.env.VITE_API_URL.replace('/api', '') 
+                const API_BASE = import.meta.env.VITE_API_URL
+                  ? import.meta.env.VITE_API_URL.replace('/api', '')
                   : (typeof window !== 'undefined' ? window.location.origin : '');
                 const renderSideLabel = (symbol) => {
                   if (!symbol) return null;
-                  
+
                   const isImagePath = typeof symbol === 'string' && (symbol.startsWith('/') || symbol.startsWith('http'));
 
                   if (isImagePath) {
@@ -695,7 +695,7 @@ export default function GameContainer({ user, isGuest, initialTheme, onBack }) {
                   </div>
                 );
               })()}
-              
+
               <button onClick={() => { setSideModal(null); setSelectedPiece(null); }} className="text-gray-400 text-xs uppercase font-bold tracking-widest hover:text-red-400 transition-colors pb-6">Cancelar</button>
             </div>
           </div>
@@ -797,7 +797,7 @@ export default function GameContainer({ user, isGuest, initialTheme, onBack }) {
         )}
 
         {showCreator && (
-          <ThemeCreator 
+          <ThemeCreator
             onClose={() => {
               setShowCreator(false);
               document.body.classList.remove('modal-open');

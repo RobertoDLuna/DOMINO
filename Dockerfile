@@ -32,5 +32,5 @@ EXPOSE 3001
 
 WORKDIR /app/backend
 
-# Startup: Attempt migrations and seed, then ALWAYS start the server
-CMD ["sh", "-c", "npx prisma migrate deploy ; node server.js"]
+# Startup: Wait for DB, attempt migrations, then start the server
+CMD ["sh", "-c", "until nc -z postgres 5432; do echo 'Aguardando Postgres...'; sleep 2; done; npx prisma migrate deploy ; node server.js"]

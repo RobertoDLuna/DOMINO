@@ -6,7 +6,7 @@ import SnakeBoard from "./SnakeBoard";
 import AvatarGuide from "./AvatarGuide";
 import ThemeSelector from "./ThemeSelector";
 import ThemeCreator from "./ThemeCreator";
-import HomeScreen from "./HomeScreen";
+import DominoHomeScreen from "./DominoHomeScreen";
 import AdminDashboard from "./AdminDashboard";
 import SoundService from "../services/SoundService";
 import AuthService from "../services/AuthService";

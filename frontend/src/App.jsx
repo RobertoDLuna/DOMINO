@@ -4,7 +4,8 @@ import GameContainer from "./components/GameContainer";
 import AuthScreen from "./components/AuthScreen";
 import ChangePasswordScreen from "./components/ChangePasswordScreen";
 import AdminDashboard from "./components/AdminDashboard";
-import HomeScreen from "./components/HomeScreen";
+import DominoHomeScreen from "./components/DominoHomeScreen";
+import GameHub from "./components/GameHub";
 import AuthService from "./services/AuthService";
 import { useGameContext } from "./context/GameContext";
 
@@ -17,6 +18,7 @@ function App() {
     return window.location.pathname.startsWith('/admin');
   });
   const [selectedTheme, setSelectedTheme] = useState(null);
+  const [activeGame, setActiveGame] = useState(null);
   // Checks if we should be in a game screen even if context hasn't updated yet
   const [manualJoin, setManualJoin] = useState(false);
   const isInRoomSession = !!room || !!localStorage.getItem('domino_current_room') || manualJoin;
@@ -70,6 +72,17 @@ function App() {
     );
   }
 
+  const handleLogout = () => {
+    if (confirm('Deseja realmente sair?')) {
+      AuthService.logout();
+      setUser(null);
+      setGuestMode(false);
+      setActiveGame(null);
+      setSelectedTheme(null);
+      window.location.reload();
+    }
+  };
+
   return (
     <>
       {(selectedTheme || isInRoomSession) ? (
@@ -84,11 +97,18 @@ function App() {
               if (!user) setGuestMode(false); 
           }}
         />
-      ) : (
-        <HomeScreen 
+      ) : activeGame === 'domino' ? (
+        <DominoHomeScreen 
           user={user} 
           onSelectTheme={setSelectedTheme} 
           onJoinRoom={() => setManualJoin(true)}
+          onBack={() => setActiveGame(null)}
+        />
+      ) : (
+        <GameHub 
+          user={user} 
+          onSelectGame={(gameId) => setActiveGame(gameId)}
+          onLogout={handleLogout}
         />
       )}
 

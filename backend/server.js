@@ -73,9 +73,17 @@ const io = setupSocket(server);
 // Importar e conectar handlers do socket
 try {
   require("./src/sockets/gameSocket")(io);
-  console.log("🔌 Handlers do Socket carregados com sucesso");
+  console.log("🔌 Handlers do Socket (Dominó) carregados com sucesso");
 } catch (err) {
   console.error("❌ Erro ao carregar gameSocket:", err);
+  process.exit(1);
+}
+
+try {
+  require("./src/sockets/chessSocket")(io);
+  console.log("♟️  Handlers do Socket (Xadrez) carregados com sucesso");
+} catch (err) {
+  console.error("❌ Erro ao carregar chessSocket:", err);
   process.exit(1);
 }
 

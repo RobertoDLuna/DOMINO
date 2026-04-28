@@ -6,6 +6,7 @@ import ChangePasswordScreen from "./components/ChangePasswordScreen";
 import AdminDashboard from "./components/AdminDashboard";
 import DominoHomeScreen from "./components/DominoHomeScreen";
 import GameHub from "./components/GameHub";
+import ChessHomeScreen from "./components/ChessHomeScreen";
 import AuthService from "./services/AuthService";
 import { useGameContext } from "./context/GameContext";
 
@@ -102,6 +103,11 @@ function App() {
           user={user} 
           onSelectTheme={setSelectedTheme} 
           onJoinRoom={() => setManualJoin(true)}
+          onBack={() => setActiveGame(null)}
+        />
+      ) : activeGame === 'xadrez' ? (
+        <ChessHomeScreen
+          user={user}
           onBack={() => setActiveGame(null)}
         />
       ) : (

@@ -70,7 +70,7 @@ const GameHub = ({ user, onSelectGame, onLogout }) => {
       icon: '♟️',
       color: '#0284c7',
       playersOnline: 42,
-      badge: 'Em Breve'
+      badge: 'Novo'
     },
     {
       id: 'quiz',
@@ -178,7 +178,12 @@ const GameHub = ({ user, onSelectGame, onLogout }) => {
             <GameCard
               key={game.id}
               {...game}
-              onClick={() => game.id === 'domino' ? onSelectGame(game.id) : alert('Este jogo estará disponível em breve!')}
+              onClick={() => {
+                if (game.id === 'domino' || game.id === 'xadrez') {
+                  onSelectGame(game.id);
+                }
+                // outros jogos ainda em desenvolvimento
+              }}
             />
           ))}
         </div>

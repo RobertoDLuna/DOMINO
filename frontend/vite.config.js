@@ -6,16 +6,28 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      // Redireciona /api para o backend local em dev
       '/api': {
         target: 'http://localhost:3001',
         changeOrigin: true,
       },
-      // Redireciona uploads de imagens para o backend
       '/uploads': {
         target: 'http://localhost:3001',
         changeOrigin: true,
       },
-    }
-  }
+    },
+    // Required headers for Stockfish WASM (SharedArrayBuffer)
+    headers: {
+      'Cross-Origin-Embedder-Policy': 'require-corp',
+      'Cross-Origin-Opener-Policy': 'same-origin',
+    },
+  },
+  optimizeDeps: {
+    exclude: ['stockfish'],
+  },
+  build: {
+    rollupOptions: {
+      external: [],
+    },
+  },
 })
+

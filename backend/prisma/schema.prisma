@@ -133,3 +133,71 @@ model Theme {
 
   @@map("themes")
 }
+
+// ─── XADREZ ────────────────────────────────────────────────────────────────
+
+enum ChessGameStatus {
+  WAITING    // aguardando 2º jogador
+  PLAYING    // partida em andamento
+  FINISHED   // partida encerrada
+  ABANDONED  // jogador abandonou
+}
+
+enum ChessResult {
+  WHITE_WIN
+  BLACK_WIN
+  DRAW
+}
+
+enum ChessGameMode {
+  PVP        // player vs player
+  PVC        // player vs computador
+}
+
+model ChessGame {
+  id          String           @id @default(uuid())
+  roomCode    String           @unique @map("room_code") @db.VarChar(20)
+  mode        ChessGameMode    @default(PVP)
+  status      ChessGameStatus  @default(WAITING)
+  result      ChessResult?
+
+  // FEN da posição atual (notação padrão de xadrez)
+  fen         String           @default("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
+  // Histórico de jogadas em notação algébrica (SAN)
+  moves       String[]         @default([])
+
+  // Brancas
+  whiteId     String?          @map("white_id")
+  whiteName   String?          @map("white_name") @db.VarChar(255)
+
+  // Negras
+  blackId     String?          @map("black_id")
+  blackName   String?          @map("black_name") @db.VarChar(255)
+
+  // Nível da IA (1-10), apenas para PVC
+  aiLevel     Int?             @default(5) @map("ai_level")
+
+  createdAt   DateTime         @default(now()) @map("created_at")
+  updatedAt   DateTime         @updatedAt @map("updated_at")
+  finishedAt  DateTime?        @map("finished_at")
+
+  @@map("chess_games")
+}
+
+model ChessRanking {
+  id        String   @id @default(uuid())
+  userId    String   @unique @map("user_id")
+  userName  String   @map("user_name") @db.VarChar(255)
+  schoolId  Int?     @map("school_id")
+  schoolName String? @map("school_name") @db.VarChar(255)
+
+  wins      Int      @default(0)
+  losses    Int      @default(0)
+  draws     Int      @default(0)
+  points    Int      @default(0)   // wins*3 + draws*1
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("chess_ranking")
+}

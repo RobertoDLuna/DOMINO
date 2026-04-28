@@ -193,33 +193,63 @@ export default function ChessBoard({
 
   const customSquareStyles = { ...lastMoveSquares, ...optionSquares };
 
-  return (
-    <div className="chess-board-wrapper">
-      <Chessboard
-        id="chess-main-board"
-        position={localFen}
-        onSquareClick={onSquareClick}
-        onPieceDragBegin={onPieceDragBegin}
-        onPieceDrop={onPieceDrop}
-        boardOrientation={myColor}
-        arePiecesDraggable={isMyTurn && !gameOver && !disabled}
-        showBoardNotation={true}
-        customBoardStyle={{
-          borderRadius: '8px',
-          boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
-        }}
-        customLightSquareStyle={{ backgroundColor: theme.lightSquare }}
-        customDarkSquareStyle={{ backgroundColor: theme.darkSquare }}
-        customSquareStyles={customSquareStyles}
-        animationDuration={180}
-      />
+  const ranks = myColor === 'white' ? ['8', '7', '6', '5', '4', '3', '2', '1'] : ['1', '2', '3', '4', '5', '6', '7', '8'];
+  const files = myColor === 'white' ? ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'] : ['H', 'G', 'F', 'E', 'D', 'C', 'B', 'A'];
 
-      {promotion && (
-        <ChessPromotion
-          color={myColor === 'white' ? 'w' : 'b'}
-          onSelect={handlePromotion}
-        />
-      )}
+  return (
+    <div className={`chess-board-wrapper theme-${boardTheme}`}>
+      
+      {/* Eixo X - Letras (Topo) */}
+      <div className="chess-notation-x chess-notation-x--top">
+        {files.map(f => <span key={`top-${f}`}>{f}</span>)}
+      </div>
+
+      {/* Meio (Eixo Y Esquerdo, Tabuleiro, Eixo Y Direito) */}
+      <div className="chess-board-middle">
+        
+        {/* Eixo Y - Números (Esquerda) */}
+        <div className="chess-notation-y chess-notation-y--left">
+          {ranks.map(r => <span key={`left-${r}`}>{r}</span>)}
+        </div>
+        
+        {/* Tabuleiro Centro */}
+        <div className="chess-board-inner">
+          <Chessboard
+            id="chess-main-board"
+            position={localFen}
+            onSquareClick={onSquareClick}
+            onPieceDragBegin={onPieceDragBegin}
+            onPieceDrop={onPieceDrop}
+            boardOrientation={myColor}
+            arePiecesDraggable={isMyTurn && !gameOver && !disabled}
+            showBoardNotation={false}
+            customBoardStyle={{
+              borderRadius: '4px',
+            }}
+            customLightSquareStyle={{ backgroundColor: theme.lightSquare }}
+            customDarkSquareStyle={{ backgroundColor: theme.darkSquare }}
+            customSquareStyles={customSquareStyles}
+            animationDuration={180}
+          />
+
+          {promotion && (
+            <ChessPromotion
+              color={myColor === 'white' ? 'w' : 'b'}
+              onSelect={handlePromotion}
+            />
+          )}
+        </div>
+
+        {/* Eixo Y - Números (Direita) */}
+        <div className="chess-notation-y chess-notation-y--right">
+          {ranks.map(r => <span key={`right-${r}`}>{r}</span>)}
+        </div>
+      </div>
+
+      {/* Eixo X - Letras (Base) */}
+      <div className="chess-notation-x chess-notation-x--bottom">
+        {files.map(f => <span key={`bottom-${f}`}>{f}</span>)}
+      </div>
     </div>
   );
 }

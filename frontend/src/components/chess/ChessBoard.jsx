@@ -20,25 +20,26 @@ export const BOARD_THEMES = {
   wood: {
     label: '🪵 Madeira Clássica',
     lightSquare: '#f0d9b5',
-    darkSquare:  '#b58863',
-    highlight:   'rgba(20, 85, 30, 0.5)',
-    lastMove:    'rgba(155, 199, 0, 0.41)',
+    darkSquare: '#b58863',
+    highlight: 'rgba(20, 85, 30, 0.5)',
+    lastMove: 'rgba(155, 199, 0, 0.41)',
   },
   dark: {
     label: '🌑 Dark Moderno',
     lightSquare: '#8ba6c0',
-    darkSquare:  '#1e3a5f',
-    highlight:   'rgba(0, 200, 255, 0.4)',
-    lastMove:    'rgba(0, 170, 255, 0.3)',
+    darkSquare: '#1e3a5f',
+    highlight: 'rgba(0, 200, 255, 0.4)',
+    lastMove: 'rgba(0, 170, 255, 0.3)',
   },
 };
 
 export default function ChessBoard({
   fen,
-  myColor,       // 'white' | 'black'
+  myColor,
   isMyTurn,
-  boardTheme,    // 'wood' | 'dark'
-  onMove,        // (moveObj) => void  — called when a legal move is made
+  boardTheme = 'wood',
+  viewMode = '2D',
+  onMove,
   gameOver,
   disabled,
 }) {
@@ -134,7 +135,7 @@ export default function ChessBoard({
 
     // If it's legal, we proceed
     attemptMove(sourceSquare, targetSquare);
-    
+
     // Check if it's a promotion. If it is, we should return false so it temporarily snaps back
     // while the promotion dialog is open. Otherwise, return true so the piece stays there.
     const isPromotion = piece && piece[1].toLowerCase() === 'p' && (targetSquare[1] === '8' || targetSquare[1] === '1');
@@ -176,7 +177,7 @@ export default function ChessBoard({
 
     setLastMoveSquares({
       [from]: { background: theme.lastMove },
-      [to]:   { background: theme.lastMove },
+      [to]: { background: theme.lastMove },
     });
     setSelectedSquare(null);
     setOptionSquares({});
@@ -196,9 +197,11 @@ export default function ChessBoard({
   const ranks = myColor === 'white' ? ['8', '7', '6', '5', '4', '3', '2', '1'] : ['1', '2', '3', '4', '5', '6', '7', '8'];
   const files = myColor === 'white' ? ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'] : ['H', 'G', 'F', 'E', 'D', 'C', 'B', 'A'];
 
+  const viewClass = viewMode === '3D' ? 'view-3d' : 'view-2d';
+
   return (
-    <div className={`chess-board-wrapper theme-${boardTheme}`}>
-      
+    <div className={`chess-board-wrapper theme-${boardTheme} ${viewClass}`}>
+
       {/* Eixo X - Letras (Topo) */}
       <div className="chess-notation-x chess-notation-x--top">
         {files.map(f => <span key={`top-${f}`}>{f}</span>)}
@@ -206,12 +209,12 @@ export default function ChessBoard({
 
       {/* Meio (Eixo Y Esquerdo, Tabuleiro, Eixo Y Direito) */}
       <div className="chess-board-middle">
-        
+
         {/* Eixo Y - Números (Esquerda) */}
         <div className="chess-notation-y chess-notation-y--left">
           {ranks.map(r => <span key={`left-${r}`}>{r}</span>)}
         </div>
-        
+
         {/* Tabuleiro Centro */}
         <div className="chess-board-inner">
           <Chessboard
@@ -230,6 +233,22 @@ export default function ChessBoard({
             customDarkSquareStyle={{ backgroundColor: theme.darkSquare }}
             customSquareStyles={customSquareStyles}
             animationDuration={180}
+            /* Peças 3D - Centralização de Base e Proporção Sólida */
+            customPieces={viewMode === '3D' ? {
+              wP: () => <img src="/assets/chess/3d/wP.png" alt="" style={{ width: '75%', transform: 'translate(0%, 0%) rotateX(-45deg) scale(0.9, 1.8)', transformOrigin: 'bottom center' }} />,
+              wN: () => <img src="/assets/chess/3d/wN.png" alt="" style={{ width: '75%', transform: 'translate(0%, 0%) rotateX(-45deg) scale(0.95, 2.0)', transformOrigin: 'bottom center' }} />,
+              wB: () => <img src="/assets/chess/3d/wB.png" alt="" style={{ width: '75%', transform: 'translate(0%, 0%) rotateX(-45deg) scale(0.95, 2.2)', transformOrigin: 'bottom center' }} />,
+              wR: () => <img src="/assets/chess/3d/wR.png" alt="" style={{ width: '75%', transform: 'translate(0%, 0%) rotateX(-45deg) scale(0.95, 1.8)', transformOrigin: 'bottom center' }} />,
+              wQ: () => <img src="/assets/chess/3d/wQ.png" alt="" style={{ width: '75%', transform: 'translate(0%, 0%) rotateX(-45deg) scale(1.0, 2.4)', transformOrigin: 'bottom center' }} />,
+              wK: () => <img src="/assets/chess/3d/wK.png" alt="" style={{ width: '75%', transform: 'translate(0%, 0%) rotateX(-45deg) scale(1.0, 2.5)', transformOrigin: 'bottom center' }} />,
+              
+              bP: () => <img src="/assets/chess/3d/bP.png" alt="" style={{ width: '75%', transform: 'translate(0%, 0%) rotateX(-45deg) scale(0.9, 1.8)', transformOrigin: 'bottom center' }} />,
+              bN: () => <img src="/assets/chess/3d/bN.png" alt="" style={{ width: '75%', transform: 'translate(0%, 0%) rotateX(-45deg) scale(0.95, 2.0)', transformOrigin: 'bottom center' }} />,
+              bB: () => <img src="/assets/chess/3d/bB.png" alt="" style={{ width: '75%', transform: 'translate(0%, 0%) rotateX(-45deg) scale(0.95, 2.2)', transformOrigin: 'bottom center' }} />,
+              bR: () => <img src="/assets/chess/3d/bR.png" alt="" style={{ width: '75%', transform: 'translate(0%, 0%) rotateX(-45deg) scale(0.95, 1.8)', transformOrigin: 'bottom center' }} />,
+              bQ: () => <img src="/assets/chess/3d/bQ.png" alt="" style={{ width: '75%', transform: 'translate(0%, 0%) rotateX(-45deg) scale(1.0, 2.4)', transformOrigin: 'bottom center' }} />,
+              bK: () => <img src="/assets/chess/3d/bK.png" alt="" style={{ width: '75%', transform: 'translate(0%, 0%) rotateX(-45deg) scale(1.0, 2.5)', transformOrigin: 'bottom center' }} />,
+            } : {}}
           />
 
           {promotion && (

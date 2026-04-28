@@ -43,6 +43,7 @@ export default function ChessScreen({
   const [gameOver, setGameOver] = useState(null);
   const [drawOffered, setDrawOffered] = useState(false);
   const [currentTheme, setCurrentTheme] = useState(boardTheme || 'wood');
+  const [viewMode, setViewMode] = useState('2D');
   const [isStarted, setIsStarted] = useState(mode === 'PVC'); // PVC começa direto
 
   const chessRef = useRef(new Chess(initialFen || INITIAL_FEN));
@@ -209,6 +210,16 @@ export default function ChessScreen({
             {t.label}
           </button>
         ))}
+        
+        <div className="chess-theme-divider" />
+
+        <button
+          className={`chess-theme-btn ${viewMode === '3D' ? 'chess-theme-btn--active' : ''}`}
+          onClick={() => setViewMode(v => v === '2D' ? '3D' : '2D')}
+          title="Alternar entre vista 2D e 3D"
+        >
+          {viewMode === '3D' ? '🎥 Vista 3D' : '🗺️ Vista 2D'}
+        </button>
       </div>
 
       <div className="chess-layout">
@@ -219,6 +230,7 @@ export default function ChessScreen({
             myColor={myColor}
             isMyTurn={isMyTurn}
             boardTheme={currentTheme}
+            viewMode={viewMode}
             onMove={handleMove}
             gameOver={!!gameOver}
             disabled={status !== 'playing'}

@@ -225,26 +225,28 @@ export default function ChessScreen({
           />
         </div>
 
-        {/* Sidebar */}
-        <ChessSidebar
-          myColor={myColor}
-          whiteName={whiteName}
-          blackName={blackName || (mode === 'PVC' ? `IA Nível ${aiLevel}` : null)}
-          moves={moves}
-          status={status}
-          gameOver={gameOver}
-          drawOffered={drawOffered}
-          isMyTurn={isMyTurn}
-          mode={mode}
-          aiLevel={aiLevel}
-          onStartGame={handleStartGame}
-          onResign={handleResign}
-          onOfferDraw={handleOfferDraw}
-          onAcceptDraw={handleAcceptDraw}
-          onDeclineDraw={handleDeclineDraw}
-          onBack={onBack}
-          roomCode={roomCode}
-        />
+        {/* Sidebar container para sincronização de altura */}
+        <div className="chess-sidebar-container">
+          <ChessSidebar
+            myColor={myColor}
+            whiteName={whiteName}
+            blackName={blackName || (mode === 'PVC' ? `IA Nível ${aiLevel}` : null)}
+            moves={moves}
+            status={status}
+            gameOver={gameOver}
+            drawOffered={drawOffered}
+            isMyTurn={isMyTurn}
+            mode={mode}
+            aiLevel={aiLevel}
+            onStartGame={handleStartGame}
+            onResign={handleResign}
+            onOfferDraw={handleOfferDraw}
+            onAcceptDraw={handleAcceptDraw}
+            onDeclineDraw={handleDeclineDraw}
+            onBack={onBack}
+            roomCode={roomCode}
+          />
+        </div>
       </div>
     </div>
   );

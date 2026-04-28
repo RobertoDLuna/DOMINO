@@ -297,23 +297,32 @@
 }
 
 /* ── Chess Screen (in-game) ───────────────────────────────── */
+/* Layout Principal: Sem Scroll Global */
 .chess-screen {
   position: relative;
-  min-height: 100vh;
-  background: transparent; /* Pega o radial-gradient do body */
+  height: 100vh;
+  height: 100dvh;
+  width: 100vw;
+  background: transparent;
   display: flex;
   flex-direction: column;
-  padding: 12px;
-  -webkit-overflow-scrolling: touch;
+  padding: 16px;
+  overflow: hidden; /* Proíbe scroll na página toda */
 }
 
-/* Theme switcher */
+/* Theme switcher fixo no topo */
 .chess-theme-switcher {
   display: flex;
   gap: 8px;
   justify-content: flex-end;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
   flex-wrap: wrap;
+  z-index: 10;
+  flex-shrink: 0;
+  width: 100%;
+  max-width: 1600px;
+  margin-left: auto;
+  margin-right: auto;
 }
 .chess-theme-btn {
   background: white;
@@ -334,28 +343,34 @@
   color: var(--color-accent);
 }
 
-/* Layout */
+/* Layout Split */
 .chess-layout {
   display: flex;
   flex-direction: column;
   gap: 16px;
   flex: 1;
+  min-height: 0; /* Permite que filhos encolham e usem scroll interno */
 }
 
 .chess-board-area {
   display: flex;
   justify-content: center;
   align-items: center;
+  flex: 1;
+  min-height: 0;
 }
+
 .chess-board-wrapper {
   position: relative;
-  width: min(90vw, 580px); /* Ligeiramente maior para caber as bordas simétricas */
+  /* Garante que o tabuleiro nunca ultrapasse a largura ou a altura disponível */
+  width: min(85vw, 75vh); 
+  aspect-ratio: 1 / 1;
   border-radius: 12px;
   box-shadow: 0 20px 50px rgba(0,0,0,0.3);
-  padding: 8px 12px; /* Padding geral para conter tudo */
+  padding: 8px 12px;
   display: flex;
   flex-direction: column;
-  transition: background-color 0.3s, border-color 0.3s;
+  transition: all 0.3s ease;
 }
 
 /* Temas da borda e notações */
@@ -432,6 +447,7 @@
   flex-direction: column;
   gap: 12px;
   min-width: 0;
+  min-height: 0;
   box-shadow: 0 10px 30px rgba(0,0,0,0.05);
 }
 
@@ -574,8 +590,8 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  min-height: 120px;
-  max-height: 260px;
+  min-height: 100px;
+  overflow: hidden;
 }
 .chess-history-header {
   display: flex;
@@ -599,11 +615,9 @@
 .chess-history-list {
   overflow-y: auto;
   flex: 1;
-  -webkit-overflow-scrolling: touch;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 8px 0;
+  padding-right: 4px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-primary) transparent;
 }
 .chess-log-item {
   display: flex;
@@ -739,33 +753,84 @@
 
 /* ── Responsive: Desktop ─────────────────────────────────── */
 @media (min-width: 768px) {
+  .chess-screen {
+    padding: 12px 24px;
+  }
+  
   .chess-layout {
+    display: flex;
     flex-direction: row;
-    align-items: flex-start;
-    gap: 24px;
+    align-items: center; /* Centraliza o conjunto verticalmente */
+    gap: 32px;
+    max-width: 1600px;
+    margin: 0 auto;
+    width: 100%;
+    min-height: 0;
+    position: relative;
   }
+
   .chess-board-area {
-    flex: 0 0 auto;
+    flex: 0 0 75%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 0;
+    /* O tabuleiro define a altura do .chess-layout */
   }
+
   .chess-board-wrapper {
-    max-width: 520px;
+    width: min(100%, 75vh);
+    aspect-ratio: 1 / 1;
+    max-width: none;
   }
-  .chess-sidebar {
+
+  /* Container da sidebar que segue a altura do pai (layout) */
+  .chess-sidebar-container {
     flex: 1;
-    max-height: 520px;
+    align-self: stretch; /* Estica para ter a altura do tabuleiro */
+    position: relative; /* Serve de âncora para a sidebar absoluta */
+    min-width: 0;
   }
-  .chess-history {
-    max-height: 100%;
+
+  .chess-sidebar {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    background: white;
+    border: 2px solid #e2e8f0;
+    border-radius: 20px;
+    padding: 16px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+    scrollbar-width: thin;
   }
-  .chess-mode-cards {
-    grid-template-columns: 1fr 1fr;
+
+  @media (min-width: 1280px) {
+    .chess-board-area { flex: 0 0 80%; }
+    .chess-board-wrapper { width: min(100%, 80vh); }
   }
+
   .chess-lobby-title { font-size: 36px; }
   .chess-section-title { font-size: 22px; }
 }
 
+@media (min-width: 1280px) {
+  .chess-board-area {
+    flex: 0 0 80%;
+  }
+  .chess-sidebar {
+    flex: 0 0 20%;
+  }
+  .chess-board-wrapper {
+    max-width: 900px;
+  }
+}
+
 @media (min-width: 1024px) {
-  .chess-screen { padding: 24px; }
-  .chess-board-wrapper { max-width: 600px; }
+  .chess-screen { padding: 32px; }
 }
 

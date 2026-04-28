@@ -98,10 +98,47 @@ export default function ChessBoard({
     setOptionSquares(getMoveOptions(square));
   }
 
-  function onPieceDrop(sourceSquare, targetSquare) {
+  function onPieceDragBegin(piece, sourceSquare) {
+    if (!isMyTurn || gameOver || disabled) return;
+
+    // React-chessboard gives us (piece, sourceSquare)
+    const square = sourceSquare;
+    const chessPiece = chessRef.current.get(square);
+    if (!chessPiece || chessPiece.color !== (myColor === 'white' ? 'w' : 'b')) {
+      return;
+    }
+
+    setSelectedSquare(square);
+    setOptionSquares(getMoveOptions(square));
+  }
+
+  function onPieceDrop(sourceSquare, targetSquare, piece) {
     if (!isMyTurn || gameOver || disabled) return false;
+
+    // Validate if the move is legal before returning true to allow drag-and-drop
+    let isLegal = false;
+    try {
+      const clone = new Chess(chessRef.current.fen());
+      const moveRes = clone.move({ from: sourceSquare, to: targetSquare, promotion: 'q' });
+      isLegal = !!moveRes;
+    } catch {
+      isLegal = false;
+    }
+
+    if (!isLegal) {
+      // Clear options if dropped on an invalid square
+      setSelectedSquare(null);
+      setOptionSquares({});
+      return false;
+    }
+
+    // If it's legal, we proceed
     attemptMove(sourceSquare, targetSquare);
-    return false; // We control the board update via fen prop
+    
+    // Check if it's a promotion. If it is, we should return false so it temporarily snaps back
+    // while the promotion dialog is open. Otherwise, return true so the piece stays there.
+    const isPromotion = piece && piece[1].toLowerCase() === 'p' && (targetSquare[1] === '8' || targetSquare[1] === '1');
+    return !isPromotion;
   }
 
   function attemptMove(from, to) {
@@ -162,9 +199,11 @@ export default function ChessBoard({
         id="chess-main-board"
         position={localFen}
         onSquareClick={onSquareClick}
+        onPieceDragBegin={onPieceDragBegin}
         onPieceDrop={onPieceDrop}
         boardOrientation={myColor}
         arePiecesDraggable={isMyTurn && !gameOver && !disabled}
+        showBoardNotation={true}
         customBoardStyle={{
           borderRadius: '8px',
           boxShadow: '0 20px 60px rgba(0,0,0,0.5)',

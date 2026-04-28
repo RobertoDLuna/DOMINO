@@ -2,38 +2,59 @@
  * useChessSocket.js
  * Custom hook that manages the Socket.IO connection to the /chess namespace.
  */
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { io } from 'socket.io-client';
 
 const SERVER_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
+// Singleton socket instance for the /chess namespace
+const socket = io(`${SERVER_URL}/chess`, { 
+  transports: ['websocket'], 
+  autoConnect: false 
+});
+
+let mountCount = 0;
+
 export function useChessSocket() {
-  const socketRef = useRef(null);
-  const [connected, setConnected] = useState(false);
+  const [connected, setConnected] = useState(socket.connected);
 
   useEffect(() => {
-    const socket = io(`${SERVER_URL}/chess`, { transports: ['websocket'] });
-    socketRef.current = socket;
+    mountCount++;
+    if (!socket.connected) {
+      socket.connect();
+    }
 
-    socket.on('connect', () => setConnected(true));
-    socket.on('disconnect', () => setConnected(false));
+    const onConnect = () => setConnected(true);
+    const onDisconnect = () => setConnected(false);
+
+    socket.on('connect', onConnect);
+    socket.on('disconnect', onDisconnect);
+
+    // Set initial state in case it connected before the listener was attached
+    setConnected(socket.connected);
 
     return () => {
-      socket.disconnect();
+      socket.off('connect', onConnect);
+      socket.off('disconnect', onDisconnect);
+      
+      mountCount--;
+      if (mountCount === 0) {
+        socket.disconnect();
+      }
     };
   }, []);
 
   const emit = useCallback((event, data) => {
-    socketRef.current?.emit(event, data);
+    socket.emit(event, data);
   }, []);
 
   const on = useCallback((event, handler) => {
-    socketRef.current?.on(event, handler);
-    return () => socketRef.current?.off(event, handler);
+    socket.on(event, handler);
+    return () => socket.off(event, handler);
   }, []);
 
   const off = useCallback((event, handler) => {
-    socketRef.current?.off(event, handler);
+    socket.off(event, handler);
   }, []);
 
   return { emit, on, off, connected };

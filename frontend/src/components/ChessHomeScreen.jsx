@@ -61,6 +61,14 @@ export default function ChessHomeScreen({ user, onBack }) {
       });
     });
 
+    const unsubOpponent = on('chess-opponent-joined', (data) => {
+      setGameSession(prev => prev ? {
+        ...prev,
+        blackName: data.blackName,
+        blackId: data.blackId,
+      } : null);
+    });
+
     const unsubError = on('chess-error', ({ message }) => {
       setLoading(false);
       setError(message);
@@ -69,6 +77,7 @@ export default function ChessHomeScreen({ user, onBack }) {
     return () => {
       unsubCreated();
       unsubJoined();
+      unsubOpponent();
       unsubError();
     };
   }, [on, user]);

@@ -5,6 +5,36 @@
  */
 import React from 'react';
 
+const PIECE_NAMES = {
+  p: 'Peão',
+  n: 'Cavalo',
+  b: 'Bispo',
+  r: 'Torre',
+  q: 'Rainha',
+  k: 'Rei'
+};
+
+function describeMove(move) {
+  if (typeof move === 'string') return move; // Fallback
+  
+  if (move.san === 'O-O') return 'Roque Menor';
+  if (move.san === 'O-O-O') return 'Roque Maior';
+  
+  const piece = PIECE_NAMES[move.piece] || move.piece;
+  const to = move.to.toUpperCase();
+  
+  let desc = `${piece} para ${to}`;
+  if (move.captured) {
+    desc = `${piece} captura ${PIECE_NAMES[move.captured]} em ${to}`;
+  }
+  
+  if (move.san.includes('+')) desc += ' (Xeque)';
+  if (move.san.includes('#')) desc += ' (Xeque-Mate)';
+  if (move.promotion) desc += ` e promove p/ ${PIECE_NAMES[move.promotion]}`;
+  
+  return desc;
+}
+
 const RESULT_LABELS = {
   WHITE_WIN: '⬜ Brancas venceram',
   BLACK_WIN: '⬛ Negras venceram',
@@ -33,17 +63,15 @@ export default function ChessSidebar({
   isMyTurn,
   mode,
   aiLevel,
+  onStartGame,
   onResign,
   onOfferDraw,
   onAcceptDraw,
   onDeclineDraw,
   onBack,
+  roomCode,
 }) {
-  // Pair moves into [ [white, black], ... ]
-  const pairedMoves = [];
-  for (let i = 0; i < moves.length; i += 2) {
-    pairedMoves.push([moves[i], moves[i + 1]]);
-  }
+  // Removemos o pairedMoves, pois faremos uma lista vertical descritiva
 
   return (
     <aside className="chess-sidebar">
@@ -64,10 +92,33 @@ export default function ChessSidebar({
 
       {/* Status banner */}
       {status === 'waiting' && (
-        <div className="chess-status-banner chess-status-waiting">
-          ⏳ Aguardando adversário…
+        <>
+          <div className="chess-status-banner chess-status-waiting">
+            ⏳ Aguardando adversário…
+          </div>
+          {mode === 'PVP' && roomCode && (
+            <div className="chess-room-code">
+              <span>Código da Sala</span>
+              <strong>{roomCode}</strong>
+            </div>
+          )}
+        </>
+      )}
+      
+      {status === 'ready' && (
+        <div className="chess-actions">
+          {myColor === 'white' ? (
+            <button className="chess-btn chess-btn-start" onClick={onStartGame}>
+              ▶ Iniciar Partida
+            </button>
+          ) : (
+            <div className="chess-status-banner chess-status-wait">
+              ⏳ Aguardando anfitrião iniciar...
+            </div>
+          )}
         </div>
       )}
+
       {status === 'playing' && (
         <div className={`chess-status-banner ${isMyTurn ? 'chess-status-myturn' : 'chess-status-wait'}`}>
           {isMyTurn ? '🎯 Sua vez de jogar' : '⏳ Vez do adversário'}
@@ -100,21 +151,29 @@ export default function ChessSidebar({
           <span className="chess-history-count">{moves.length}</span>
         </div>
         <div className="chess-history-list" id="chess-history-list">
-          {pairedMoves.map(([white, black], i) => (
-            <div key={i} className="chess-history-row">
-              <span className="chess-history-num">{i + 1}.</span>
-              <span className="chess-history-white">{white}</span>
-              <span className="chess-history-black">{black ?? ''}</span>
-            </div>
-          ))}
-          {pairedMoves.length === 0 && (
+          {moves.map((move, i) => {
+            const isWhite = i % 2 === 0;
+            const turnNum = Math.floor(i / 2) + 1;
+            return (
+              <div key={i} className={`chess-log-item ${isWhite ? 'chess-log-item--white' : 'chess-log-item--black'}`}>
+                <div className="chess-log-header">
+                  <span>{turnNum}. {isWhite ? 'Brancas' : 'Negras'}</span>
+                  <span className="chess-log-san">{typeof move === 'string' ? move : move.san}</span>
+                </div>
+                <div className="chess-log-text">
+                  {describeMove(move)}
+                </div>
+              </div>
+            );
+          })}
+          {moves.length === 0 && (
             <p className="chess-history-empty">Nenhuma jogada ainda</p>
           )}
         </div>
       </div>
 
       {/* Action buttons */}
-      {status === 'playing' && !gameOver && mode === 'PVP' && (
+      {status === 'playing' && !gameOver && (
         <div className="chess-actions">
           <button className="chess-btn chess-btn-draw" onClick={onOfferDraw}>
             🤝 Propor Empate

@@ -40,14 +40,18 @@ export default function ChessScreen({
 
   const [fen, setFen] = useState(initialFen || INITIAL_FEN);
   const [moves, setMoves] = useState([]);
-  const [status, setStatus] = useState('playing');
   const [gameOver, setGameOver] = useState(null);
   const [drawOffered, setDrawOffered] = useState(false);
   const [currentTheme, setCurrentTheme] = useState(boardTheme || 'wood');
+  const [isStarted, setIsStarted] = useState(mode === 'PVC'); // PVC começa direto
 
   const chessRef = useRef(new Chess(initialFen || INITIAL_FEN));
   const stockfishRef = useRef(null);
   const isMyTurn = chessRef.current.turn() === (myColor === 'white' ? 'w' : 'b');
+
+  // Compute status
+  const isWaiting = mode === 'PVP' && (!whiteName || !blackName);
+  const status = gameOver ? 'finished' : (isWaiting ? 'waiting' : (!isStarted ? 'ready' : 'playing'));
 
   // ── Stockfish setup (PVC) ───────────────────────────────────────────────
   useEffect(() => {
@@ -97,7 +101,7 @@ export default function ChessScreen({
     if (!result) return;
 
     setFen(chessRef.current.fen());
-    setMoves(chessRef.current.history());
+    setMoves(chessRef.current.history({ verbose: true }));
     _checkGameOver();
   }
 
@@ -110,9 +114,12 @@ export default function ChessScreen({
       _checkGameOver();
     });
 
+    const unsubStarted = on('chess-game-started', () => {
+      setIsStarted(true);
+    });
+
     const unsubOver = on('chess-game-over', ({ result, reason }) => {
       setGameOver({ result, reason });
-      setStatus('finished');
     });
 
     const unsubDrawOffer = on('chess-draw-offered', () => setDrawOffered(true));
@@ -120,6 +127,7 @@ export default function ChessScreen({
 
     return () => {
       unsubMove();
+      unsubStarted();
       unsubOver();
       unsubDrawOffer();
       unsubDrawDecline();
@@ -143,24 +151,47 @@ export default function ChessScreen({
     else if (chess.isDraw()) reason = 'fifty_move_rule';
 
     setGameOver({ result, reason });
-    setStatus('finished');
   }
 
   // ── Player move handler ────────────────────────────────────────────────
   const handleMove = useCallback(({ from, to, promotion }) => {
     if (mode === 'PVP') {
       emit('chess-move', { roomCode, move: { from, to, promotion } });
+    } else {
+      // For PVC, we MUST apply the move locally
+      try {
+        chessRef.current.move({ from, to, promotion });
+      } catch (err) {
+        return; // Invalid move
+      }
     }
-    // For PVC, ChessBoard already applied the move locally;
-    // the useEffect above will trigger Stockfish
+    
+    // For PVC, updating FEN will trigger Stockfish useEffect
     setFen(chessRef.current.fen());
-    setMoves(chessRef.current.history());
+    setMoves(chessRef.current.history({ verbose: true }));
     _checkGameOver();
   }, [emit, mode, roomCode]);
 
   // ── Action handlers ────────────────────────────────────────────────────
-  const handleResign   = () => emit('chess-resign', { roomCode });
-  const handleOfferDraw   = () => emit('chess-offer-draw', { roomCode });
+  const handleStartGame = () => emit('chess-start-game', { roomCode });
+  
+  const handleResign = () => {
+    if (mode === 'PVP') {
+      emit('chess-resign', { roomCode });
+    } else {
+      setGameOver({ result: myColor === 'white' ? 'BLACK_WIN' : 'WHITE_WIN', reason: 'resignation' });
+    }
+  };
+
+  const handleOfferDraw = () => {
+    if (mode === 'PVP') {
+      emit('chess-offer-draw', { roomCode });
+    } else {
+      // In PVC mode, the AI "accepts" the draw offer automatically.
+      setGameOver({ result: 'DRAW', reason: 'agreement' });
+    }
+  };
+
   const handleAcceptDraw  = () => { setDrawOffered(false); emit('chess-accept-draw', { roomCode }); };
   const handleDeclineDraw = () => { setDrawOffered(false); emit('chess-decline-draw', { roomCode }); };
 
@@ -206,11 +237,13 @@ export default function ChessScreen({
           isMyTurn={isMyTurn}
           mode={mode}
           aiLevel={aiLevel}
+          onStartGame={handleStartGame}
           onResign={handleResign}
           onOfferDraw={handleOfferDraw}
           onAcceptDraw={handleAcceptDraw}
           onDeclineDraw={handleDeclineDraw}
           onBack={onBack}
+          roomCode={roomCode}
         />
       </div>
     </div>

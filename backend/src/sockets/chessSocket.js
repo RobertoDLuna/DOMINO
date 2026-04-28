@@ -90,7 +90,7 @@ module.exports = function chessSocket(io) {
 
       const payload = {
         fen: room.chess.fen(),
-        moves: room.chess.history(),
+        moves: room.chess.history({ verbose: true }),
         whiteId: room.white.userId,
         whiteName: room.white.userName,
         blackId: room.black.userId,
@@ -108,6 +108,19 @@ module.exports = function chessSocket(io) {
       });
 
       console.log(`[Chess] ${userName} joined room ${roomCode}`);
+    });
+
+    // ── START GAME ────────────────────────────────────────────────────────────
+    socket.on('chess-start-game', ({ roomCode }) => {
+      const room = rooms.get(roomCode);
+      if (!room) return;
+      
+      // Only the room creator (white) can start
+      if (room.white.socketId === socket.id) {
+        room.status = 'PLAYING';
+        chessNsp.to(roomCode).emit('chess-game-started');
+        console.log(`[Chess] Room ${roomCode} started by host.`);
+      }
     });
 
     // ── MAKE MOVE ─────────────────────────────────────────────────────────────
@@ -153,7 +166,7 @@ module.exports = function chessSocket(io) {
         fen: room.chess.fen(),
         move: result,
         san: result.san,
-        moves: room.chess.history(),
+        moves: room.chess.history({ verbose: true }),
       };
 
       // Broadcast to all in room

@@ -268,6 +268,8 @@ module.exports = function chessSocket(io) {
   });
 };
 
+const chessRankingService = require('../services/ChessRankingService');
+
 /**
  * Persists game result to the database (PVP only, for ranking).
  * Runs async without blocking the socket.
@@ -305,46 +307,11 @@ async function _persistGameResult(room, result, reason) {
       },
     });
 
-    // Update ranking (only for registered players in PVP)
-    const whitePoints = result === 'WHITE_WIN' ? 3 : result === 'DRAW' ? 1 : 0;
-    const blackPoints = result === 'BLACK_WIN' ? 3 : result === 'DRAW' ? 1 : 0;
-
-    await _updateRanking(prisma, room.white, {
-      win: result === 'WHITE_WIN',
-      loss: result === 'BLACK_WIN',
-      draw: result === 'DRAW',
-      points: whitePoints,
-    });
-
-    await _updateRanking(prisma, room.black, {
-      win: result === 'BLACK_WIN',
-      loss: result === 'WHITE_WIN',
-      draw: result === 'DRAW',
-      points: blackPoints,
-    });
+    // Update ranking using the centralized service
+    await chessRankingService.updateRanking(room.white.userId, room.black.userId, result);
 
     console.log(`[Chess] Game ${room.roomCode} persisted. Result: ${result}`);
   } catch (err) {
     console.error('[Chess] Error persisting game result:', err);
   }
-}
-
-async function _updateRanking(prisma, player, { win, loss, draw, points }) {
-  await prisma.chessRanking.upsert({
-    where: { userId: player.userId },
-    update: {
-      wins: win ? { increment: 1 } : undefined,
-      losses: loss ? { increment: 1 } : undefined,
-      draws: draw ? { increment: 1 } : undefined,
-      points: { increment: points },
-    },
-    create: {
-      userId: player.userId,
-      userName: player.userName,
-      wins: win ? 1 : 0,
-      losses: loss ? 1 : 0,
-      draws: draw ? 1 : 0,
-      points,
-    },
-  });
 }

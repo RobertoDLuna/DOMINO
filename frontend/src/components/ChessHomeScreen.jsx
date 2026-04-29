@@ -17,6 +17,8 @@ const AI_LEVELS = [
   { value: 10, label: 'Mestre', description: 'Quase imbatível' },
 ];
 
+import ChessRankingBoard from './ChessRankingBoard';
+
 export default function ChessHomeScreen({ user, onBack }) {
   const { emit, on, connected } = useChessSocket();
 
@@ -27,6 +29,7 @@ export default function ChessHomeScreen({ user, onBack }) {
   const [joinCode, setJoinCode] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showRanking, setShowRanking] = useState(false);
 
   // game session
   const [gameSession, setGameSession] = useState(null);
@@ -167,7 +170,16 @@ export default function ChessHomeScreen({ user, onBack }) {
               <p className="chess-lobby-sub">Estratégia • Raciocínio • Domínio</p>
             </div>
           </div>
-          <div className={`chess-conn-dot ${connected ? 'chess-conn-dot--ok' : 'chess-conn-dot--off'}`} />
+          
+          <div className="flex items-center gap-4">
+            <button 
+              onClick={() => setShowRanking(true)}
+              className="bg-[#f1c40f] text-black px-4 py-2 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-[0_4px_0_#b7950b] hover:brightness-110 transition-all active:translate-y-1 active:shadow-none flex items-center gap-2"
+            >
+              <span>🏆</span> Ranking
+            </button>
+            <div className={`chess-conn-dot ${connected ? 'chess-conn-dot--ok' : 'chess-conn-dot--off'}`} />
+          </div>
         </header>
 
         {/* Mode selector */}
@@ -310,6 +322,7 @@ export default function ChessHomeScreen({ user, onBack }) {
           <span>Empate por repetição · 50 lances · Afogamento</span>
         </footer>
       </div>
+      {showRanking && <ChessRankingBoard onClose={() => setShowRanking(false)} />}
     </div>
   );
 }

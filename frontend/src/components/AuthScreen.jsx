@@ -7,15 +7,17 @@ import { API_URL } from '../config/api';
 
 import { Podium } from './RankingBoard';
 
-const PreviewPanel = ({ previews }) => {
+const PreviewPanel = ({ previews, chessPreviews }) => {
+  const [game, setGame] = useState('DOMINO'); // DOMINO, CHESS
   const [tab, setTab] = useState('GERAL');
 
   const getPodiumData = () => {
+    const activeData = game === 'DOMINO' ? previews : chessPreviews;
     switch (tab) {
-      case 'GERAL': return previews?.topPlayers;
-      case 'SCHOOLS': return previews?.topSchools;
-      case 'CATEGORIES': return previews?.topCategories;
-      case 'CREATOR': return previews?.topCreators;
+      case 'GERAL': return activeData?.topPlayers;
+      case 'SCHOOLS': return activeData?.topSchools;
+      case 'CATEGORIES': return activeData?.topCategories;
+      case 'CREATOR': return activeData?.topCreators;
       default: return [];
     }
   }
@@ -23,14 +25,26 @@ const PreviewPanel = ({ previews }) => {
   const label = (tab === 'CREATOR' || tab === 'CATEGORIES') ? 'PARTIDAS' : 'PTS';
   const listData = getPodiumData() || [];
   const hasData = listData.length > 0;
+  const activeColor = game === 'DOMINO' ? '#FFCE00' : '#f1c40f';
+  const activeBg = game === 'DOMINO' ? 'bg-[#FFCE00]' : 'bg-[#f1c40f]';
 
   return (
     <div className="flex flex-col mt-4 w-full relative z-10">
+      {/* Game Selector */}
+      <div className="flex bg-black/20 p-1 rounded-xl gap-1 mb-4 self-start border border-white/5">
+        <button onClick={() => { setGame('DOMINO'); setTab('GERAL'); }} className={`px-4 py-1.5 text-[10px] font-black rounded-lg transition-all ${game === 'DOMINO' ? 'bg-white/20 text-white' : 'text-white/40 hover:text-white/60'}`}>🀄 DOMINÓ</button>
+        <button onClick={() => { setGame('CHESS'); setTab('GERAL'); }} className={`px-4 py-1.5 text-[10px] font-black rounded-lg transition-all ${game === 'CHESS' ? 'bg-white/20 text-white' : 'text-white/40 hover:text-white/60'}`}>♟️ XADREZ</button>
+      </div>
+
       <div className="flex flex-wrap bg-black/15 p-2 rounded-2xl shadow-inner backdrop-blur-md self-start max-w-full border border-white/10 gap-1.5">
-        <button onClick={() => setTab('GERAL')} className={`px-4 py-2.5 text-[11px] font-black uppercase tracking-widest transition-all rounded-xl cursor-pointer ${tab === 'GERAL' ? 'bg-[#FFCE00] text-emerald-900 shadow-md' : 'text-emerald-50 hover:bg-white/10'}`}>GERAL</button>
-        <button onClick={() => setTab('SCHOOLS')} className={`px-4 py-2.5 text-[11px] font-black uppercase tracking-widest transition-all rounded-xl cursor-pointer ${tab === 'SCHOOLS' ? 'bg-[#FFCE00] text-emerald-900 shadow-md' : 'text-emerald-50 hover:bg-white/10'}`}>ESCOLAS</button>
-        <button onClick={() => setTab('CATEGORIES')} className={`px-4 py-2.5 text-[11px] font-black uppercase tracking-widest transition-all rounded-xl cursor-pointer ${tab === 'CATEGORIES' ? 'bg-[#FFCE00] text-emerald-900 shadow-md' : 'text-emerald-50 hover:bg-white/10'}`}>NÍVEIS</button>
-        <button onClick={() => setTab('CREATOR')} className={`px-4 py-2.5 text-[11px] font-black uppercase tracking-widest transition-all rounded-xl cursor-pointer ${tab === 'CREATOR' ? 'bg-[#FFCE00] text-emerald-900 shadow-md' : 'text-emerald-50 hover:bg-white/10'}`}>AUTORES</button>
+        <button onClick={() => setTab('GERAL')} className={`px-4 py-2.5 text-[11px] font-black uppercase tracking-widest transition-all rounded-xl cursor-pointer ${tab === 'GERAL' ? `${activeBg} text-emerald-900 shadow-md` : 'text-emerald-50 hover:bg-white/10'}`}>GERAL</button>
+        <button onClick={() => setTab('SCHOOLS')} className={`px-4 py-2.5 text-[11px] font-black uppercase tracking-widest transition-all rounded-xl cursor-pointer ${tab === 'SCHOOLS' ? `${activeBg} text-emerald-900 shadow-md` : 'text-emerald-50 hover:bg-white/10'}`}>ESCOLAS</button>
+        {game === 'DOMINO' && (
+          <>
+            <button onClick={() => setTab('CATEGORIES')} className={`px-4 py-2.5 text-[11px] font-black uppercase tracking-widest transition-all rounded-xl cursor-pointer ${tab === 'CATEGORIES' ? `${activeBg} text-emerald-900 shadow-md` : 'text-emerald-50 hover:bg-white/10'}`}>NÍVEIS</button>
+            <button onClick={() => setTab('CREATOR')} className={`px-4 py-2.5 text-[11px] font-black uppercase tracking-widest transition-all rounded-xl cursor-pointer ${tab === 'CREATOR' ? `${activeBg} text-emerald-900 shadow-md` : 'text-emerald-50 hover:bg-white/10'}`}>AUTORES</button>
+          </>
+        )}
       </div>
 
       {!hasData ? (
@@ -44,7 +58,6 @@ const PreviewPanel = ({ previews }) => {
         </div>
       )}
 
-      {/* Cartões do 4º e 5º Lado Esquerdo Verde */}
       {listData.length > 3 && (
         <div className="mt-2 flex flex-col gap-2.5 pl-2 max-w-[340px]">
           {listData.slice(3, 5).map((user, idx) => {
@@ -59,8 +72,8 @@ const PreviewPanel = ({ previews }) => {
                   <p className="text-[8px] uppercase font-bold text-white/40 tracking-widest truncate">{user.school || 'Sem vínculo'}</p>
                 </div>
                 <div className="text-right">
-                  <div className="font-black text-lg text-[#FFCE00]/80 leading-none">{user.points}</div>
-                  <div className="text-[7px] font-black tracking-widest text-[#FFCE00]/50 uppercase mt-0.5">{label}</div>
+                  <div className="font-black text-lg leading-none" style={{ color: activeColor }}>{user.points}</div>
+                  <div className="text-[7px] font-black tracking-widest uppercase mt-0.5" style={{ color: activeColor + '80' }}>{label}</div>
                 </div>
               </div>
             );
@@ -72,12 +85,13 @@ const PreviewPanel = ({ previews }) => {
 }
 
 const AuthScreen = ({ onAuthSuccess, onGuestStart, onJoinRoom }) => {
-  const [view, setView] = useState("login"); // login, register
+  const [view, setView] = useState("login"); 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [schools, setSchools] = useState([]);
 
-  const [previews, setPreviews] = useState({ topPlayers: [], topCreators: [] });
+  const [previews, setPreviews] = useState({ topPlayers: [], topCreators: [], topSchools: [], topCategories: [] });
+  const [chessPreviews, setChessPreviews] = useState({ topPlayers: [], topSchools: [] });
   const [showDrawer, setShowDrawer] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -91,9 +105,16 @@ const AuthScreen = ({ onAuthSuccess, onGuestStart, onJoinRoom }) => {
   useEffect(() => {
     AuthService.getSchools().then(s => setSchools(s || [])).catch(console.error);
 
+    // Domino Previews
     fetch(`${API_URL}/ranking/preview`)
       .then(res => res.ok ? res.json() : null)
       .then(data => data && setPreviews(data))
+      .catch(console.error);
+
+    // Chess Previews
+    fetch(`${API_URL}/chess/ranking/preview`)
+      .then(res => res.ok ? res.json() : null)
+      .then(data => data && setChessPreviews(data))
       .catch(console.error);
   }, []);
 
@@ -154,7 +175,7 @@ const AuthScreen = ({ onAuthSuccess, onGuestStart, onJoinRoom }) => {
           <button onClick={() => setShowDrawer(false)} className="text-white bg-black/20 w-8 h-8 rounded-full flex items-center justify-center">✕</button>
         </div>
         <p className="text-emerald-100/80 text-sm font-medium mb-6 relative z-10">Plataforma educacional para aprendizado lúdico através do dominó.</p>
-        <PreviewPanel previews={previews} />
+        <PreviewPanel previews={previews} chessPreviews={chessPreviews} />
       </div>
       {/* Overlay Escuro Mobile */}
       {showDrawer && <div className="fixed inset-0 bg-slate-900/40 z-40 lg:hidden backdrop-blur-sm" onClick={() => setShowDrawer(false)}></div>}
@@ -173,7 +194,7 @@ const AuthScreen = ({ onAuthSuccess, onGuestStart, onJoinRoom }) => {
             Plataforma unificada para educadores e alunos. Aprendizado e diversão nas mesas virtuais de dominó.
           </p>
 
-          <PreviewPanel previews={previews} />
+          <PreviewPanel previews={previews} chessPreviews={chessPreviews} />
         </div>
       </div>
 

@@ -537,16 +537,50 @@
 }
 
 .view-3d.chess-board-wrapper {
-  transform: rotateX(45deg); /* Visão Frontal com Profundidade (Igual à referência) */
-  transform-style: preserve-3d;
-  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 40px 80px rgba(0,0,0,0.4);
-  margin: 20px auto;
+  background-image: url('/assets/chess/board-3d.png');
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  background-position: 55% center;
+  transform: none;
+  box-shadow: none !important;
+  border: none !important;
+  outline: none !important;
+  background-color: transparent !important;
+  margin: 0 auto;
+  position: relative;
+  aspect-ratio: 1.5 / 1;
+  width: 100%;
+  max-width: 900px;
 }
 
+/* LIMPEZA RADICAL - REMOVE A "BORDA FEIA" EM QUALQUER CIRCUNSTÂNCIA */
+.view-3d div,
+.view-3d .chess-board-inner,
+.view-3d #chess-main-board,
+.view-3d [data-boardid] {
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  background-image: none !important;
+}
+
+/* Achatamento do grid lógico para casar com a perspectiva da imagem */
 .view-3d .chess-board-inner {
+  padding: 16% 25% 23% 17% !important;
+  /* Padding assimétrico para centralizar na madeira */
+  box-sizing: border-box;
+  background: transparent !important;
   transform-style: preserve-3d;
   overflow: visible !important;
+}
+
+/* REMOÇÃO RADICAL DE NOTAÇÕES E RECURSOS VISUAIS EXTRAS */
+.view-3d [data-board-notation],
+.view-3d .board-notation,
+.view-3d text,
+.view-3d .chess-notation-x,
+.view-3d .chess-notation-y {
+  display: none !important;
 }
 
 .view-3d [data-square] {

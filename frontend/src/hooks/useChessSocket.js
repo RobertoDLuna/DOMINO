@@ -5,10 +5,10 @@
 import { useEffect, useState, useCallback } from 'react';
 import { io } from 'socket.io-client';
 
-const SERVER_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+import { SOCKET_URL } from '../config/api';
 
 // Singleton socket instance for the /chess namespace
-const socket = io(`${SERVER_URL}/chess`, { 
+const socket = io(`${SOCKET_URL}/chess`, { 
   transports: ['websocket'], 
   autoConnect: false 
 });

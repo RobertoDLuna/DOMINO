@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { GameProvider } from "./context/GameContext";
-import GameContainer from "./components/GameContainer";
-import AuthScreen from "./components/AuthScreen";
-import ChangePasswordScreen from "./components/ChangePasswordScreen";
-import AdminDashboard from "./components/AdminDashboard";
-import DominoHomeScreen from "./components/DominoHomeScreen";
-import GameHub from "./components/GameHub";
-import ChessHomeScreen from "./components/ChessHomeScreen";
+import GameContainer from "./modules/domino/components/GameContainer";
+import AuthScreen from "./core/auth/AuthScreen";
+import ChangePasswordScreen from "./core/auth/ChangePasswordScreen";
+import AdminDashboard from "./core/auth/AdminDashboard";
+import DominoHomeScreen from "./modules/domino/screens/DominoHomeScreen";
+import GameHub from "./core/hub/GameHub";
+import ChessHomeScreen from "./modules/chess/screens/ChessHomeScreen";
 import AuthService from "./services/AuthService";
 import { useGameContext } from "./context/GameContext";
 

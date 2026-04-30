@@ -1,0 +1,21 @@
+const express = require('express');
+const router = express.Router();
+const AdminController = require('./AdminController');
+const { authMiddleware, restrictRole } = require('../../shared/middleware/authMiddleware');
+
+// Check token and enforce ADMIN roll
+router.use(authMiddleware);
+router.use(restrictRole(['ADMIN']));
+
+router.get('/stats', AdminController.getStats);
+router.get('/pending', AdminController.getPendingApprovals);
+router.get('/approved', AdminController.getApprovedThemes);
+router.put('/approve-theme/:id', AdminController.approveTheme);
+router.delete('/reject-theme/:id', AdminController.rejectTheme);
+router.get('/users', AdminController.getUsers);
+router.post('/users', AdminController.createUser);
+router.put('/users/:id/reset-password', AdminController.resetUserPassword);
+router.delete('/users/:id', AdminController.deleteUser);
+router.post('/import-schools', AdminController.importSchools);
+
+module.exports = router;

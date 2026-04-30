@@ -4,12 +4,12 @@ const http = require("http");
 const cors = require("cors");
 const path = require("path");
 
-const themeRoutes = require("./src/routes/themeRoutes");
-const authRoutes = require("./src/routes/authRoutes");
-const schoolRoutes = require("./src/routes/schoolRoutes");
-const adminRoutes = require("./src/routes/adminRoutes");
-const rankingRoutes = require("./src/routes/rankingRoutes");
-const chessRankingRoutes = require("./src/routes/chessRankingRoutes");
+const themeRoutes = require("./src/modules/domino/themeRoutes");
+const authRoutes = require("./src/core/auth/authRoutes");
+const schoolRoutes = require("./src/core/schools/schoolRoutes");
+const adminRoutes = require("./src/core/admin/adminRoutes");
+const rankingRoutes = require("./src/modules/domino/rankingRoutes");
+const chessRankingRoutes = require("./src/modules/chess/chessRoutes");
 
 // Global error handlers for Docker troubleshooting
 process.on("uncaughtException", (err) => {
@@ -38,8 +38,8 @@ if (!fs.existsSync(themesDir)) {
   console.log(`🔍 Auditoria de Uploads: ${JSON.stringify(files)}`);
 }
 
-const setupSocket = require("./src/config/socketConfig");
-const errorMiddleware = require("./src/middleware/errorMiddleware");
+const setupSocket = require("./src/shared/config/socketConfig");
+const errorMiddleware = require("./src/shared/middleware/errorMiddleware");
 
 const app = express();
 app.use(cors());
@@ -74,7 +74,7 @@ const io = setupSocket(server);
 
 // Importar e conectar handlers do socket
 try {
-  require("./src/sockets/gameSocket")(io);
+  require("./src/modules/domino/gameSocket")(io);
   console.log("🔌 Handlers do Socket (Dominó) carregados com sucesso");
 } catch (err) {
   console.error("❌ Erro ao carregar gameSocket:", err);
@@ -82,7 +82,7 @@ try {
 }
 
 try {
-  require("./src/sockets/chessSocket")(io);
+  require("./src/modules/chess/chessSocket")(io);
   console.log("♟️  Handlers do Socket (Xadrez) carregados com sucesso");
 } catch (err) {
   console.error("❌ Erro ao carregar chessSocket:", err);
@@ -126,7 +126,7 @@ app.use((req, res) => {
 app.use(errorMiddleware);
 
 const syncDefaultThemes = async () => {
-  const { getPrisma } = require('./src/config/prismaClient');
+  const { getPrisma } = require('./src/shared/config/prismaClient');
   const prisma = getPrisma();
   
   const defaultThemes = [

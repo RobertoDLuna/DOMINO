@@ -3,7 +3,7 @@ import { GameProvider } from "./context/GameContext";
 import GameContainer from "./modules/domino/components/GameContainer";
 import AuthScreen from "./core/auth/AuthScreen";
 import ChangePasswordScreen from "./core/auth/ChangePasswordScreen";
-import AdminDashboard from "./core/auth/AdminDashboard";
+import AdminDashboard from "./core/admin/AdminDashboard";
 import DominoHomeScreen from "./modules/domino/screens/DominoHomeScreen";
 import GameHub from "./core/hub/GameHub";
 import ChessHomeScreen from "./modules/chess/screens/ChessHomeScreen";

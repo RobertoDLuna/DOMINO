@@ -282,15 +282,6 @@ const HomeScreen = ({
         </nav>
 
         <div className="mt-auto pt-8 border-t-2 border-emerald-50 space-y-4">
-          {user?.role === 'ADMIN' && (
-            <button
-              onClick={() => window.dispatchEvent(new CustomEvent('openAdminPanel'))}
-              className="w-full bg-slate-800 hover:bg-slate-900 text-white p-4 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2 border-b-4 border-slate-950"
-            >
-              <span>🛡️</span> PAINEL ADMIN
-            </button>
-          )}
-
           <div className="flex items-center gap-3 p-4 bg-emerald-50 rounded-3xl relative group">
             <div className="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center text-white font-black shrink-0">
               {user?.fullName?.charAt(0) || 'U'}

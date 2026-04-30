@@ -7,7 +7,7 @@ import AvatarGuide from "../../../shared/ui/AvatarGuide";
 import ThemeSelector from "./ThemeSelector";
 import ThemeCreator from "./ThemeCreator";
 import DominoHomeScreen from "../screens/DominoHomeScreen";
-import AdminDashboard from "../../../core/auth/AdminDashboard";
+
 import SoundService from "../../../services/SoundService";
 import AuthService from "../../../services/AuthService";
 import ThemeService from "../../../services/ThemeService";

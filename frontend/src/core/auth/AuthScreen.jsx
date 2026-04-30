@@ -259,12 +259,12 @@ const AuthScreen = ({ onAuthSuccess, onGuestStart, onJoinRoom }) => {
 
             <div>
               <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 pl-4 mb-0.5 block">Endereço de E-mail</label>
-              <input required type="email" placeholder="seu@email.com" className="w-full bg-slate-50 border-2 border-slate-100 p-3 sm:p-3.5 rounded-[1.25rem] font-bold text-slate-800 text-sm outline-none focus:border-[#009660] transition-all" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value.toLowerCase() })} />
+              <input data-testid="email-input" required type="email" placeholder="seu@email.com" className="w-full bg-slate-50 border-2 border-slate-100 p-3 sm:p-3.5 rounded-[1.25rem] font-bold text-slate-800 text-sm outline-none focus:border-[#009660] transition-all" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value.toLowerCase() })} />
             </div>
 
             <div>
               <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 pl-4 mb-0.5 block">Sua Senha</label>
-              <input required type="password" ref={passwordRef} placeholder="••••••••" className="w-full bg-slate-50 border-2 border-slate-100 p-3 sm:p-3.5 rounded-[1.25rem] font-bold text-slate-800 text-sm outline-none focus:border-[#009660] transition-all" />
+              <input data-testid="password-input" required type="password" ref={passwordRef} placeholder="••••••••" className="w-full bg-slate-50 border-2 border-slate-100 p-3 sm:p-3.5 rounded-[1.25rem] font-bold text-slate-800 text-sm outline-none focus:border-[#009660] transition-all" />
             </div>
 
             {view === "register" && (
@@ -293,7 +293,7 @@ const AuthScreen = ({ onAuthSuccess, onGuestStart, onJoinRoom }) => {
               </>
             )}
 
-            <button disabled={loading} className="w-full bg-[#009660] text-emerald-50 py-4 sm:py-4 rounded-[1.25rem] font-black text-sm uppercase tracking-widest hover:brightness-110 active:scale-95 transition-all mt-4 disabled:opacity-50">
+            <button data-testid="login-button" disabled={loading} className="w-full bg-[#009660] text-emerald-50 py-4 sm:py-4 rounded-[1.25rem] font-black text-sm uppercase tracking-widest hover:brightness-110 active:scale-95 transition-all mt-4 disabled:opacity-50">
               {loading ? "PROCESSANDO..." : view === "register" ? "CRIAR CONTA" : "ENTRAR NO JOGO"}
             </button>
           </form>

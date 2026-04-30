@@ -5,9 +5,15 @@
   "scripts": {
     "dev": "concurrently \"npm run dev --prefix frontend\" \"npm start --prefix backend\"",
     "install:all": "npm install --prefix backend && npm install --prefix frontend",
-    "test": "concurrently \"npm test --prefix frontend\" \"npm test --prefix backend\""
+    "test": "concurrently \"npm test --prefix frontend\" \"npm test --prefix backend\"",
+    "db:seed:test": "node backend/src/scripts/seedTestUser.js",
+    "test:e2e": "npm run db:seed:test && start-server-and-test dev http://localhost:5173 cy:run",
+    "cy:open": "npx cypress open",
+    "cy:run": "npx cypress run"
   },
   "devDependencies": {
-    "concurrently": "^8.2.2"
+    "concurrently": "^8.2.2",
+    "cypress": "^15.14.2",
+    "start-server-and-test": "^3.0.2"
   }
 }

@@ -202,7 +202,7 @@ const RankingBoard = ({ onClose }) => {
 
   return (
     <div className="fixed inset-0 z-[400] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 sm:p-6 animate-in fade-in duration-300">
-      <div className="bg-slate-50 w-full lg:max-w-5xl xl:max-w-6xl shadow-[0_40px_100px_rgba(0,0,0,0.5)] overflow-hidden flex flex-col h-full sm:h-auto max-h-[100vh] sm:max-h-[90vh] rounded-2xl sm:rounded-[3rem] animate-in zoom-in-95 duration-300 border border-emerald-900/10">
+      <div data-testid="ranking-board" className="bg-slate-50 w-full lg:max-w-5xl xl:max-w-6xl shadow-[0_40px_100px_rgba(0,0,0,0.5)] overflow-hidden flex flex-col h-full sm:h-auto max-h-[100vh] sm:max-h-[90vh] rounded-2xl sm:rounded-[3rem] animate-in zoom-in-95 duration-300 border border-emerald-900/10">
         
         {/* Header Elegante */}
         <div className="relative bg-gradient-to-r from-[#009660] to-[#007b4f] p-6 flex flex-col sm:flex-row sm:items-center justify-between shrink-0 shadow-md z-20">

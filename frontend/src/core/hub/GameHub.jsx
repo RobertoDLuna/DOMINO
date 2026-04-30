@@ -52,7 +52,7 @@ const GameCard = ({ title, description, icon, color, playersOnline, onClick, bad
   );
 };
 
-const Sidebar = ({ user, onLogout }) => {
+export const Sidebar = ({ user, onLogout }) => {
   return (
     <aside className="w-20 lg:w-72 bg-white h-screen fixed left-0 top-0 border-r-2 border-emerald-50 flex flex-col items-center lg:items-stretch p-4 lg:p-6 z-30 transition-all duration-300">
       {/* Logos */}

@@ -159,7 +159,14 @@ export default function ChessHomeScreen({ user, onBack }) {
       <div className="chess-lobby-content">
         {/* Header */}
         <header className="chess-lobby-header">
-          <button className="chess-lobby-back" onClick={onBack}>
+          <button 
+            className="chess-lobby-back" 
+            onClick={() => {
+              if (subMode) setSubMode(null);
+              else if (mode) setMode(null);
+              else onBack();
+            }}
+          >
             ← Voltar
           </button>
           <div className="chess-lobby-title-wrap">
@@ -177,7 +184,12 @@ export default function ChessHomeScreen({ user, onBack }) {
             >
               <span>🏆</span> Ranking
             </button>
-            <div className={`chess-conn-dot ${connected ? 'chess-conn-dot--ok' : 'chess-conn-dot--off'}`} />
+            <div className="flex items-center gap-2 bg-black/5 px-3 py-1.5 rounded-full border border-black/5">
+              <div className={`chess-conn-dot ${connected ? 'chess-conn-dot--ok' : 'chess-conn-dot--off'}`} />
+              <span className={`text-[9px] font-bold tracking-widest ${connected ? 'text-green-600' : 'text-red-600'}`}>
+                {connected ? 'LIVE' : 'OFFLINE'}
+              </span>
+            </div>
           </div>
         </header>
 
@@ -212,7 +224,6 @@ export default function ChessHomeScreen({ user, onBack }) {
         {/* PVP sub-options */}
         {mode === 'PVP' && !subMode && (
           <section className="chess-pvp-options">
-            <button className="chess-lobby-back" onClick={() => setMode(null)}>← Voltar</button>
             <h2 className="chess-section-title">Multiplayer</h2>
             <div className="chess-mode-cards">
               <button
@@ -238,7 +249,6 @@ export default function ChessHomeScreen({ user, onBack }) {
         {/* PVP — Create */}
         {mode === 'PVP' && subMode === 'create' && (
           <section className="chess-action-panel">
-            <button className="chess-lobby-back" onClick={() => setSubMode(null)}>← Voltar</button>
             <h2 className="chess-section-title">Criar Nova Sala</h2>
             <p className="chess-action-desc">
               Uma sala será criada e você jogará com as <strong>peças brancas</strong>.
@@ -259,7 +269,6 @@ export default function ChessHomeScreen({ user, onBack }) {
         {/* PVP — Join */}
         {mode === 'PVP' && subMode === 'join' && (
           <section className="chess-action-panel">
-            <button className="chess-lobby-back" onClick={() => setSubMode(null)}>← Voltar</button>
             <h2 className="chess-section-title">Entrar em Sala</h2>
             <p className="chess-action-desc">
               Digite o código de 6 letras compartilhado pelo criador da sala.
@@ -288,7 +297,6 @@ export default function ChessHomeScreen({ user, onBack }) {
         {/* PVC — Level selector */}
         {mode === 'PVC' && (
           <section className="chess-action-panel">
-            <button className="chess-lobby-back" onClick={() => setMode(null)}>← Voltar</button>
             <h2 className="chess-section-title">Escolha a Dificuldade</h2>
             <div className="chess-ai-levels">
               {AI_LEVELS.map((lvl) => (

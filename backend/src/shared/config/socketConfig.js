@@ -1,6 +1,6 @@
 const { Server } = require("socket.io");
 const { createAdapter } = require("@socket.io/redis-adapter");
-const RedisService = require("../services/RedisService");
+const RedisService = require("../utils/RedisService");
 
 const setupSocket = (server) => {
   const io = new Server(server, {

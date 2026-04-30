@@ -166,7 +166,11 @@ const syncDefaultThemes = async () => {
   }
 };
 
-server.listen(PORT, async () => {
-  console.log(`🚀 Servidor rodando na porta ${PORT}`);
-  await syncDefaultThemes();
-});
+if (require.main === module) {
+  server.listen(PORT, async () => {
+    console.log(`🚀 Servidor rodando na porta ${PORT}`);
+    await syncDefaultThemes();
+  });
+}
+
+module.exports = app;

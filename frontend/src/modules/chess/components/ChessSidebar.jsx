@@ -21,7 +21,7 @@ function describeMove(move) {
   if (move.san === 'O-O-O') return 'Roque Maior';
   
   const piece = PIECE_NAMES[move.piece] || move.piece;
-  const to = move.to.toUpperCase();
+  const to = move.to.toLowerCase();
   
   let desc = `${piece} para ${to}`;
   if (move.captured) {

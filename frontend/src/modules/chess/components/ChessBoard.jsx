@@ -195,7 +195,7 @@ export default function ChessBoard({
   const customSquareStyles = { ...lastMoveSquares, ...optionSquares };
 
   const ranks = myColor === 'white' ? ['8', '7', '6', '5', '4', '3', '2', '1'] : ['1', '2', '3', '4', '5', '6', '7', '8'];
-  const files = myColor === 'white' ? ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'] : ['H', 'G', 'F', 'E', 'D', 'C', 'B', 'A'];
+  const files = myColor === 'white' ? ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'] : ['h', 'g', 'f', 'e', 'd', 'c', 'b', 'a'];
 
   const viewClass = viewMode === '3D' ? 'view-3d' : 'view-2d';
 

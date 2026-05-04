@@ -504,7 +504,7 @@
   color: rgba(255, 255, 255, 0.9);
   font-weight: 800;
   font-size: 12px;
-  text-transform: uppercase;
+  text-transform: none;
   margin: 0 24px;
   /* Empurra para o lado de forma a alinhar com o centro, igual a largura do Y */
   user-select: none;

@@ -151,7 +151,8 @@ export default function ChessSidebar({
           <span className="chess-history-count">{moves.length}</span>
         </div>
         <div className="chess-history-list" id="chess-history-list">
-          {moves.map((move, i) => {
+          {[...moves].reverse().map((move, j) => {
+            const i = moves.length - 1 - j;
             const isWhite = i % 2 === 0;
             const turnNum = Math.floor(i / 2) + 1;
             return (

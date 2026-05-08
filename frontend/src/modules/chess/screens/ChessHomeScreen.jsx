@@ -5,6 +5,7 @@
  */
 import React, { useState, useEffect } from 'react';
 import ChessScreen from './ChessScreen';
+import XadrezVelhaScreen from './XadrezVelhaScreen';
 import { useChessSocket } from '../../../hooks/useChessSocket';
 import '../components/chess.css';
 
@@ -20,6 +21,9 @@ import ChessRankingBoard from '../components/ChessRankingBoard';
 
 export default function ChessHomeScreen({ user, onBack }) {
   const { emit, on, connected } = useChessSocket();
+
+  // game type state
+  const [gameType, setGameType] = useState(null); // null | 'classic' | 'velha'
 
   // lobby state
   const [mode, setMode] = useState(null); // null | 'PVP' | 'PVC'
@@ -130,6 +134,46 @@ export default function ChessHomeScreen({ user, onBack }) {
     setError('');
   }
 
+  // ── Render: Mode Selector ────────────────────────────────────────────────
+  if (!gameType) {
+    return (
+      <div className="chess-lobby">
+         <div className="chess-lobby-bg" aria-hidden="true"><div className="chess-lobby-grid" /></div>
+         <div className="chess-lobby-content flex flex-col items-center justify-center pt-8 sm:pt-20">
+           <h2 className="chess-section-title text-center text-3xl mb-8">Escolha o Jogo</h2>
+           <div className="flex flex-col sm:flex-row gap-6 justify-center w-full max-w-2xl px-4">
+             <button 
+               className="chess-mode-card flex-1 shadow-2xl hover:scale-105 transition-transform" 
+               onClick={() => setGameType('classic')}
+             >
+                <span className="chess-mode-emoji text-6xl mb-4 block">♟️</span>
+                <strong className="text-xl">Xadrez Real</strong>
+                <p>O clássico jogo de estratégia</p>
+             </button>
+             <button 
+               className="chess-mode-card flex-1 shadow-2xl hover:scale-105 transition-transform" 
+               onClick={() => setGameType('velha')}
+             >
+                <span className="chess-mode-emoji text-6xl mb-4 block text-[#769656]">⚔️</span>
+                <strong className="text-xl">Xadrez da Velha</strong>
+                <p>Mistura de Jogo da Velha com Xadrez</p>
+             </button>
+           </div>
+           <button 
+             className="mt-12 px-6 py-3 bg-white/10 hover:bg-white/20 text-white font-bold rounded-xl transition" 
+             onClick={onBack}
+           >
+             ← Voltar para o Game Hub
+           </button>
+         </div>
+      </div>
+    );
+  }
+
+  if (gameType === 'velha') {
+    return <XadrezVelhaScreen user={user} onBack={() => setGameType(null)} />;
+  }
+
   // ── Render: Game active ──────────────────────────────────────────────────
   if (gameSession) {
     return (
@@ -164,7 +208,7 @@ export default function ChessHomeScreen({ user, onBack }) {
             onClick={() => {
               if (subMode) setSubMode(null);
               else if (mode) setMode(null);
-              else onBack();
+              else setGameType(null);
             }}
           >
             ← Voltar

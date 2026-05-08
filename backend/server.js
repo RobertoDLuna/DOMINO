@@ -51,6 +51,8 @@ app.use((req, res, next) => {
   next();
 });
 
+const velhaRoutes = require("./src/modules/chess/velhaRoutes");
+
 // API Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/schools", schoolRoutes);
@@ -58,6 +60,7 @@ app.use("/api/themes", themeRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/ranking", rankingRoutes);
 app.use("/api/chess/ranking", chessRankingRoutes);
+app.use("/api/velha/ranking", velhaRoutes);
 
 // Serving Static Frontend Files (Production)
 const frontendPath = path.join(__dirname, "../frontend/dist");
@@ -86,6 +89,14 @@ try {
   console.log("♟️  Handlers do Socket (Xadrez) carregados com sucesso");
 } catch (err) {
   console.error("❌ Erro ao carregar chessSocket:", err);
+  process.exit(1);
+}
+
+try {
+  require("./src/modules/chess/velhaSocket")(io);
+  console.log("♟️  Handlers do Socket (Xadrez da Velha) carregados com sucesso");
+} catch (err) {
+  console.error("❌ Erro ao carregar velhaSocket:", err);
   process.exit(1);
 }
 

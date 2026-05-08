@@ -139,32 +139,64 @@ export default function ChessHomeScreen({ user, onBack }) {
     return (
       <div className="chess-lobby">
          <div className="chess-lobby-bg" aria-hidden="true"><div className="chess-lobby-grid" /></div>
-         <div className="chess-lobby-content flex flex-col items-center justify-center pt-8 sm:pt-20">
-           <h2 className="chess-section-title text-center text-3xl mb-8">Escolha o Jogo</h2>
-           <div className="flex flex-col sm:flex-row gap-6 justify-center w-full max-w-2xl px-4">
-             <button 
-               className="chess-mode-card flex-1 shadow-2xl hover:scale-105 transition-transform" 
-               onClick={() => setGameType('classic')}
-             >
-                <span className="chess-mode-emoji text-6xl mb-4 block">♟️</span>
-                <strong className="text-xl">Xadrez Real</strong>
-                <p>O clássico jogo de estratégia</p>
-             </button>
-             <button 
-               className="chess-mode-card flex-1 shadow-2xl hover:scale-105 transition-transform" 
-               onClick={() => setGameType('velha')}
-             >
-                <span className="chess-mode-emoji text-6xl mb-4 block text-[#769656]">⚔️</span>
-                <strong className="text-xl">Xadrez da Velha</strong>
-                <p>Mistura de Jogo da Velha com Xadrez</p>
-             </button>
-           </div>
-           <button 
-             className="mt-12 px-6 py-3 bg-white/10 hover:bg-white/20 text-white font-bold rounded-xl transition" 
-             onClick={onBack}
-           >
-             ← Voltar para o Game Hub
-           </button>
+         
+         <div className="chess-lobby-content">
+           <header className="chess-lobby-header">
+              <button 
+                className="chess-lobby-back group flex items-center gap-2" 
+                onClick={onBack}
+              >
+                <span className="transition-transform group-hover:-translate-x-1">←</span> 
+                Voltar
+              </button>
+              
+              <div className="chess-lobby-title-wrap">
+                <span className="chess-lobby-icon" aria-hidden="true">🎮</span>
+                <div>
+                  <h1 className="chess-lobby-title">EduGames</h1>
+                  <p className="chess-lobby-sub">SELECIONE O SEU DESAFIO</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2 bg-black/5 px-3 py-1.5 rounded-full border border-black/5">
+                  <div className="chess-conn-dot chess-conn-dot--ok" />
+                  <span className="text-[9px] font-bold tracking-widest text-green-600">LIVE</span>
+                </div>
+              </div>
+           </header>
+
+           <section className="chess-mode-select">
+             <h2 className="chess-section-title">Como deseja jogar?</h2>
+             <div className="chess-mode-cards">
+               <button 
+                 className="chess-mode-card chess-mode-card--pvp" 
+                 onClick={() => setGameType('classic')}
+               >
+                  <span className="chess-mode-emoji">♟️</span>
+                  <strong>Xadrez Real</strong>
+                  <p>O clássico jogo de estratégia</p>
+                  <span className="chess-mode-badge">Competitivo</span>
+               </button>
+               <button 
+                 className="chess-mode-card chess-mode-card--pvc" 
+                 onClick={() => setGameType('velha')}
+               >
+                  <span className="chess-mode-emoji text-[#769656]">⚔️</span>
+                  <strong>Xadrez da Velha</strong>
+                  <p>Mistura de Velha com Xadrez</p>
+                  <span className="chess-mode-badge chess-mode-badge--gray">Modo Casual</span>
+               </button>
+             </div>
+           </section>
+           
+           <footer className="chess-lobby-footer mt-12">
+             <span>🎮 Plataforma EduGames v2.0</span>
+             <span>·</span>
+             <span>Ambiente Educativo Integrado</span>
+             <span>·</span>
+             <span>Desenvolvimento de Raciocínio</span>
+           </footer>
          </div>
       </div>
     );

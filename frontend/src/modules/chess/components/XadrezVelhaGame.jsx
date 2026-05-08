@@ -403,7 +403,18 @@ export default function XadrezVelhaGame({ roomData, onExit }) {
 
   return (
     <div className="velha-container pt-4 pb-20 relative">
-      <div className="velha-info-panel">
+      {/* Botão de Voltar no topo */}
+      <div className="absolute top-4 left-4 z-10">
+        <button 
+          className="chess-lobby-back group flex items-center gap-2" 
+          onClick={onExit}
+        >
+          <span className="transition-transform group-hover:-translate-x-1">←</span> 
+          Voltar
+        </button>
+      </div>
+
+      <div className="velha-info-panel mt-12 sm:mt-0">
         <h2 className="velha-info-title">
           {phase === 'DROP' ? 'Fase de Colocação' : 'Fase de Movimento'}
         </h2>

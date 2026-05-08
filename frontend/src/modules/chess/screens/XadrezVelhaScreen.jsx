@@ -136,27 +136,28 @@ export default function XadrezVelhaScreen({ user, onBack }) {
       <div className="chess-lobby-content">
         <header className="chess-lobby-header">
           <button 
-            className="chess-lobby-back" 
+            className="chess-lobby-back group flex items-center gap-2" 
             onClick={() => {
               if (subMode) setSubMode(null);
               else if (mode) setMode(null);
               else onBack();
             }}
           >
-            ← Voltar
+            <span className="transition-transform group-hover:-translate-x-1">←</span> 
+            Voltar
           </button>
           <div className="chess-lobby-title-wrap">
-            <span className="chess-lobby-icon" aria-hidden="true">♟️</span>
+            <span className="chess-lobby-icon" aria-hidden="true">⚔️</span>
             <div>
               <h1 className="chess-lobby-title text-[#769656]">Xadrez da Velha</h1>
-              <p className="chess-lobby-sub">Estratégia do Xadrez, Simplicidade da Velha</p>
+              <p className="chess-lobby-sub">ESTRATÉGIA • SIMPLICIDADE • DIVERSÃO</p>
             </div>
           </div>
           
           <div className="flex items-center gap-4">
             <button 
               onClick={() => setShowRanking(true)}
-              className="bg-[#f1c40f] text-black px-4 py-2 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-[0_4px_0_#b7950b] hover:brightness-110 transition-all active:translate-y-1 active:shadow-none flex items-center gap-2"
+              className="bg-[#f1c40f] hover:bg-[#f39c12] text-black px-4 py-2 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-[0_4px_0_#b7950b] active:shadow-none active:translate-y-1 transition-all flex items-center gap-2"
             >
               <span>🏆</span> Ranking
             </button>
@@ -221,70 +222,71 @@ export default function XadrezVelhaScreen({ user, onBack }) {
         )}
 
         {mode === 'PVP' && subMode === 'create' && (
-          <section className="chess-sub-action">
-            <div className="chess-action-card">
-              <h3>Criar Sala Privada</h3>
-              <p>Você será as Brancas. Compartilhe o código gerado com seu amigo.</p>
-              {error && <div className="chess-error">{error}</div>}
-              <button className="chess-btn chess-btn--primary" onClick={handleCreateRoom} disabled={loading}>
-                {loading ? 'Criando...' : 'Criar Sala Agora'}
-              </button>
-            </div>
+          <section className="chess-action-panel">
+            <h2 className="chess-section-title">Criar Sala Privada</h2>
+            <p className="chess-action-desc">
+              Você será as <strong>Brancas</strong>. Compartilhe o código gerado com seu amigo para que ele possa entrar.
+            </p>
+            {error && <div className="chess-error">{error}</div>}
+            <button className="chess-primary-btn mt-4" onClick={handleCreateRoom} disabled={loading}>
+              {loading ? '⏳ Criando...' : '🎮 Criar Sala Agora'}
+            </button>
           </section>
         )}
 
         {mode === 'PVP' && subMode === 'join' && (
-          <section className="chess-sub-action">
-            <div className="chess-action-card">
-              <h3>Entrar em Sala</h3>
-              <p>Você jogará de Negras. Digite o código da sala criada pelo seu amigo.</p>
+          <section className="chess-action-panel">
+            <h2 className="chess-section-title">Entrar em Sala</h2>
+            <p className="chess-action-desc">
+              Você jogará de <strong>Negras</strong>. Digite abaixo o código da sala criada pelo seu amigo.
+            </p>
+            <div className="my-4">
               <input
                 type="text"
                 placeholder="Ex: AB12CD"
                 value={joinCode}
-                onChange={e => setJoinCode(e.target.value)}
-                className="chess-input text-center text-xl uppercase tracking-widest"
+                onChange={e => setJoinCode(e.target.value.toUpperCase())}
+                className="chess-code-input"
                 maxLength={6}
               />
-              {error && <div className="chess-error">{error}</div>}
-              <button className="chess-btn chess-btn--primary" onClick={handleJoinRoom} disabled={loading}>
-                {loading ? 'Conectando...' : 'Entrar na Sala'}
-              </button>
             </div>
+            {error && <div className="chess-error mb-4">{error}</div>}
+            <button className="chess-primary-btn" onClick={handleJoinRoom} disabled={loading || !joinCode}>
+              {loading ? '⏳ Conectando...' : '🔗 Entrar na Sala'}
+            </button>
           </section>
         )}
 
         {mode === 'PVC' && (
-          <section className="chess-sub-action">
-            <div className="chess-action-card chess-action-card--ai">
-              <h3>Nível de Dificuldade</h3>
-              <p>Escolha a força do computador.</p>
-              
-              <div className="chess-ai-levels">
-                {AI_LEVELS.map(lvl => (
-                  <label key={lvl.value} className={`chess-ai-label ${aiLevel === lvl.value ? 'selected' : ''}`}>
-                    <input
-                      type="radio"
-                      name="aiLevel"
-                      value={lvl.value}
-                      checked={aiLevel === lvl.value}
-                      onChange={() => setAiLevel(lvl.value)}
-                      className="hidden"
-                    />
-                    <div className="chess-ai-label-content">
-                      <span className="chess-ai-name">{lvl.label}</span>
-                      <span className="chess-ai-desc">{lvl.description}</span>
-                    </div>
-                  </label>
-                ))}
-              </div>
-
-              <button className="chess-btn chess-btn--primary" onClick={handlePlayVsAI}>
-                Iniciar Partida
-              </button>
+          <section className="chess-action-panel">
+            <h2 className="chess-section-title">Nível de Dificuldade</h2>
+            <p className="chess-action-desc mb-4">Escolha a força do computador para este desafio.</p>
+            
+            <div className="chess-ai-levels mb-6">
+              {AI_LEVELS.map(lvl => (
+                <button 
+                  key={lvl.value} 
+                  className={`chess-ai-level-btn ${aiLevel === lvl.value ? 'chess-ai-level-btn--active' : ''}`}
+                  onClick={() => setAiLevel(lvl.value)}
+                >
+                  <strong>{lvl.label}</strong>
+                  <span>{lvl.description}</span>
+                </button>
+              ))}
             </div>
+
+            <button className="chess-primary-btn w-full" onClick={handlePlayVsAI}>
+              🤖 Iniciar Partida
+            </button>
           </section>
         )}
+        <footer className="chess-lobby-footer mt-12">
+          <span>⚔️ Xadrez da Velha v1.0</span>
+          <span>·</span>
+          <span>Peças com movimentos reais</span>
+          <span>·</span>
+          <span>Objetivo: Linha ou Diagonal</span>
+        </footer>
       </div>
 
       {showRanking && (

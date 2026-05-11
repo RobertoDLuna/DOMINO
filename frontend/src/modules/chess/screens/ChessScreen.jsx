@@ -298,11 +298,24 @@ export default function ChessScreen({
   if (setupPhase === 'WAITING' && mode === 'PVP') {
     return (
       <div className="velha-container flex flex-col items-center justify-center min-h-[60vh]">
-        <div className="text-center p-8 bg-white rounded-2xl shadow-xl">
-          <div className="w-16 h-16 border-4 border-t-[#769656] border-gray-200 rounded-full animate-spin mx-auto mb-4"></div>
-          <h2 className="text-xl font-bold mb-2">Aguardando Oponente...</h2>
-          <p className="text-gray-500">O sorteio começará assim que alguém entrar.</p>
-          <button onClick={onBack} className="mt-6 text-sm text-red-500 font-bold hover:underline">Sair</button>
+        <div className="text-center p-8 bg-white rounded-2xl shadow-xl w-full max-w-sm">
+          <div className="w-16 h-16 border-4 border-t-[#769656] border-gray-200 rounded-full animate-spin mx-auto mb-6"></div>
+          
+          <h2 className="text-2xl font-black mb-2 uppercase text-gray-800">Aguardando Oponente</h2>
+          <p className="text-gray-500 mb-8 font-medium">Compartilhe o código abaixo com seu adversário:</p>
+          
+          <div className="bg-gray-50 p-6 rounded-2xl border-2 border-dashed border-gray-200 mb-8">
+            <span className="text-4xl font-black tracking-[0.2em] text-[#769656]">{roomCode}</span>
+          </div>
+
+          <p className="text-xs text-gray-400 mb-6 italic">O sorteio começará automaticamente assim que alguém entrar.</p>
+          
+          <button 
+            onClick={onBack} 
+            className="w-full py-3 text-sm text-red-500 font-bold hover:bg-red-50 rounded-xl transition-colors border border-transparent hover:border-red-100"
+          >
+            Cancelar e Sair
+          </button>
         </div>
       </div>
     );

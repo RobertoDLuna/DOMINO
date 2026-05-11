@@ -27,31 +27,38 @@ const INITIAL_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
 export default function ChessScreen({
   user,
   roomCode,
-  myColor,       // 'white' | 'black'
   mode,          // 'PVP' | 'PVC'
   aiLevel,       // 1-10
-  whiteName,
-  blackName,
-  initialFen,
   boardTheme,
   onBack,
 }) {
-  const { emit, on, off, connected } = useChessSocket();
+  const { emit, on } = useChessSocket();
 
-  const [fen, setFen] = useState(initialFen || INITIAL_FEN);
+  // Fases de Setup: 'WAITING' (PVP) | 'DRAWING' | 'CHOOSING' | 'READY'
+  const [setupPhase, setSetupPhase] = useState(mode === 'PVC' ? 'DRAWING' : 'WAITING');
+  const [drawWinner, setDrawWinner] = useState(null); // { userId, userName }
+  const [assignedColors, setAssignedColors] = useState(null); // { white: {userId}, black: {userId} }
+
+  const [fen, setFen] = useState(INITIAL_FEN);
   const [moves, setMoves] = useState([]);
   const [gameOver, setGameOver] = useState(null);
   const [drawOffered, setDrawOffered] = useState(false);
   const [currentTheme, setCurrentTheme] = useState(boardTheme || 'wood');
-  const [isStarted, setIsStarted] = useState(mode === 'PVC'); // PVC começa direto
+  const [rematchRequested, setRematchRequested] = useState(false);
+  const [opponentWantsRematch, setOpponentWantsRematch] = useState(false);
 
-  const chessRef = useRef(new Chess(initialFen || INITIAL_FEN));
+  const chessRef = useRef(new Chess());
   const stockfishRef = useRef(null);
-  const isMyTurn = chessRef.current.turn() === (myColor === 'white' ? 'w' : 'b');
+
+  const myColor = assignedColors ? (assignedColors.white.userId === user.id ? 'white' : 'black') : 'white';
+  const whiteName = assignedColors?.white?.userName || 'Aguardando...';
+  const blackName = assignedColors?.black?.userName || 'Aguardando...';
+  
+  const isMyTurn = assignedColors && chessRef.current.turn() === (myColor === 'white' ? 'w' : 'b');
 
   // Compute status
-  const isWaiting = mode === 'PVP' && (!whiteName || !blackName);
-  const status = gameOver ? 'finished' : (isWaiting ? 'waiting' : (!isStarted ? 'ready' : 'playing'));
+  const isWaiting = mode === 'PVP' && !assignedColors;
+  const status = gameOver ? 'finished' : (isWaiting ? 'waiting' : 'playing');
 
   // ── Stockfish setup (PVC) ───────────────────────────────────────────────
   useEffect(() => {
@@ -114,8 +121,21 @@ export default function ChessScreen({
       _checkGameOver();
     });
 
-    const unsubStarted = on('chess-game-started', () => {
-      setIsStarted(true);
+    const unsubDrawResult = on('chess-draw-result', (data) => {
+      setDrawWinner(data);
+      setSetupPhase('DRAWING');
+      setTimeout(() => setSetupPhase('CHOOSING'), 2000);
+    });
+
+    const unsubGameReady = on('chess-game-ready', (data) => {
+      setAssignedColors({ white: data.white, black: data.black });
+      chessRef.current.load(data.fen || INITIAL_FEN);
+      setFen(data.fen || INITIAL_FEN);
+      setMoves(data.moves || []);
+      setSetupPhase('READY');
+      setGameOver(null);
+      setRematchRequested(false);
+      setOpponentWantsRematch(false);
     });
 
     const unsubOver = on('chess-game-over', ({ result, reason }) => {
@@ -124,15 +144,69 @@ export default function ChessScreen({
 
     const unsubDrawOffer = on('chess-draw-offered', () => setDrawOffered(true));
     const unsubDrawDecline = on('chess-draw-declined', () => setDrawOffered(false));
+    const unsubRematchReq = on('chess-rematch-requested', () => setOpponentWantsRematch(true));
 
     return () => {
       unsubMove();
-      unsubStarted();
+      unsubDrawResult();
+      unsubGameReady();
       unsubOver();
       unsubDrawOffer();
       unsubDrawDecline();
+      unsubRematchReq();
     };
   }, [on]);
+
+  // Sorteio Local para PVC
+  useEffect(() => {
+    if (mode === 'PVC' && setupPhase === 'DRAWING') {
+      const winner = Math.random() > 0.5 ? { userId: user.id, userName: user.fullName || 'Você' } : { userId: 'AI', userName: 'Computador' };
+      setTimeout(() => {
+        setDrawWinner(winner);
+        setTimeout(() => setSetupPhase('CHOOSING'), 2000);
+      }, 1000);
+    }
+  }, [mode, setupPhase, user]);
+
+  const handlePickColor = (color) => {
+    if (mode === 'PVC') {
+      const iAmWinner = drawWinner.userId === user.id;
+      let white, black;
+      if (iAmWinner) {
+        white = color === 'white' ? { userId: user.id, userName: user.fullName || 'Você' } : { userId: 'AI', userName: 'Computador' };
+        black = color === 'black' ? { userId: user.id, userName: user.fullName || 'Você' } : { userId: 'AI', userName: 'Computador' };
+      } else {
+        // IA escolhe (já tratado no useEffect abaixo)
+        return;
+      }
+      setAssignedColors({ white, black });
+      setSetupPhase('READY');
+    } else {
+      emit('chess-pick-color', { roomCode, color });
+    }
+  };
+
+  const [aiChoiceFeedback, setAiChoiceFeedback] = useState(null);
+
+  // IA escolhe cor se vencer sorteio
+  useEffect(() => {
+    if (mode === 'PVC' && setupPhase === 'CHOOSING' && drawWinner?.userId === 'AI') {
+      const timer = setTimeout(() => {
+        const aiChoice = Math.random() > 0.5 ? 'white' : 'black';
+        setAiChoiceFeedback(aiChoice);
+        
+        // Pequeno delay para o player ver a escolha antes de iniciar
+        setTimeout(() => {
+          const white = aiChoice === 'white' ? { userId: 'AI', userName: 'Computador' } : { userId: user.id, userName: user.fullName || 'Você' };
+          const black = aiChoice === 'black' ? { userId: 'AI', userName: 'Computador' } : { userId: user.id, userName: user.fullName || 'Você' };
+          setAssignedColors({ white, black });
+          setSetupPhase('READY');
+          setAiChoiceFeedback(null);
+        }, 1500);
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [mode, setupPhase, drawWinner, user]);
 
   function _checkGameOver() {
     const chess = chessRef.current;
@@ -173,27 +247,137 @@ export default function ChessScreen({
   }, [emit, mode, roomCode]);
 
   // ── Action handlers ────────────────────────────────────────────────────
-  const handleStartGame = () => emit('chess-start-game', { roomCode });
-  
-  const handleResign = () => {
-    if (mode === 'PVP') {
-      emit('chess-resign', { roomCode });
+  const handleRematch = () => {
+    if (mode === 'PVC') {
+      const oldWhite = assignedColors.white;
+      const oldBlack = assignedColors.black;
+      setAssignedColors({ white: oldBlack, black: oldWhite });
+      chessRef.current = new Chess();
+      setFen(INITIAL_FEN);
+      setMoves([]);
+      setGameOver(null);
+      setRematchRequested(false);
+      setOpponentWantsRematch(false);
     } else {
+      setRematchRequested(true);
+      emit('chess-request-rematch', { roomCode });
+    }
+  };
+
+  const handleResign = () => {
+    if (gameOver) return;
+    if (mode === 'PVC') {
       setGameOver({ result: myColor === 'white' ? 'BLACK_WIN' : 'WHITE_WIN', reason: 'resignation' });
+    } else {
+      emit('chess-resign', { roomCode });
     }
   };
 
   const handleOfferDraw = () => {
-    if (mode === 'PVP') {
-      emit('chess-offer-draw', { roomCode });
-    } else {
-      // In PVC mode, the AI "accepts" the draw offer automatically.
-      setGameOver({ result: 'DRAW', reason: 'agreement' });
-    }
+    if (gameOver || mode === 'PVC') return;
+    emit('chess-offer-draw', { roomCode });
   };
 
-  const handleAcceptDraw  = () => { setDrawOffered(false); emit('chess-accept-draw', { roomCode }); };
-  const handleDeclineDraw = () => { setDrawOffered(false); emit('chess-decline-draw', { roomCode }); };
+  const handleAcceptDraw = () => {
+    if (gameOver || mode === 'PVC') return;
+    emit('chess-accept-draw', { roomCode });
+    setDrawOffered(false);
+  };
+
+  const handleDeclineDraw = () => {
+    if (gameOver || mode === 'PVC') return;
+    emit('chess-decline-draw', { roomCode });
+    setDrawOffered(false);
+  };
+
+  const handleStartGame = () => {
+    // No novo fluxo, o jogo inicia após a escolha da cor ou sorteio
+    // mas mantemos para compatibilidade com o sidebar se necessário
+  };
+
+  if (setupPhase === 'WAITING' && mode === 'PVP') {
+    return (
+      <div className="velha-container flex flex-col items-center justify-center min-h-[60vh]">
+        <div className="text-center p-8 bg-white rounded-2xl shadow-xl">
+          <div className="w-16 h-16 border-4 border-t-[#769656] border-gray-200 rounded-full animate-spin mx-auto mb-4"></div>
+          <h2 className="text-xl font-bold mb-2">Aguardando Oponente...</h2>
+          <p className="text-gray-500">O sorteio começará assim que alguém entrar.</p>
+          <button onClick={onBack} className="mt-6 text-sm text-red-500 font-bold hover:underline">Sair</button>
+        </div>
+      </div>
+    );
+  }
+
+  if (setupPhase === 'DRAWING') {
+    return (
+      <div className="velha-container flex flex-col items-center justify-center min-h-[60vh]">
+        <div className="text-center p-8 bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden relative">
+          <h2 className="text-2xl font-black mb-8 uppercase tracking-tighter text-gray-800">Realizando Sorteio...</h2>
+          <div className="velha-draw-coin-wrapper mb-8">
+            <div className="velha-draw-coin">
+              <div className="coin-face front">?</div>
+              <div className="coin-face back">⚔️</div>
+            </div>
+          </div>
+          {drawWinner && (
+            <div className="animate-bounce font-black text-[#769656] text-xl">
+              Vencedor: {drawWinner.userName}!
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  if (setupPhase === 'CHOOSING') {
+    const iAmWinner = drawWinner.userId === user.id;
+    return (
+      <div className="velha-container flex flex-col items-center justify-center min-h-[60vh]">
+        <div className="text-center p-8 bg-white rounded-2xl shadow-xl w-full max-w-sm">
+          {iAmWinner ? (
+            <>
+              <h2 className="text-2xl font-black mb-2 uppercase text-gray-800">Você Venceu!</h2>
+              <p className="text-gray-500 mb-8 font-medium">Escolha sua cor para começar:</p>
+              <div className="flex gap-4">
+                <button 
+                  onClick={() => handlePickColor('white')}
+                  className="flex-1 p-6 rounded-2xl border-2 border-gray-200 hover:border-[#769656] transition-all group"
+                >
+                  <span className="text-4xl mb-2 block group-hover:scale-110 transition-transform">⚪</span>
+                  <strong className="block text-sm uppercase">Brancas</strong>
+                  <span className="text-[10px] text-gray-400">Começa o Jogo</span>
+                </button>
+                <button 
+                  onClick={() => handlePickColor('black')}
+                  className="flex-1 p-6 rounded-2xl border-2 border-gray-200 hover:border-[#769656] transition-all group"
+                >
+                  <span className="text-4xl mb-2 block group-hover:scale-110 transition-transform">⚫</span>
+                  <strong className="block text-sm uppercase">Pretas</strong>
+                  <span className="text-[10px] text-gray-400">Joga depois</span>
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <h2 className="text-2xl font-black mb-2 uppercase text-gray-800">{drawWinner.userName} Venceu</h2>
+              <p className="text-gray-500 mb-8 font-medium">
+                {aiChoiceFeedback 
+                  ? `O Computador escolheu as ${aiChoiceFeedback === 'white' ? 'BRANCAS' : 'PRETAS'}!` 
+                  : 'Aguardando escolha da cor...'}
+              </p>
+              {aiChoiceFeedback ? (
+                <div className="text-6xl animate-bounce mb-4">
+                  {aiChoiceFeedback === 'white' ? '⚪' : '⚫'}
+                </div>
+              ) : (
+                <div className="w-12 h-12 border-4 border-t-[#769656] border-gray-100 rounded-full animate-spin mx-auto"></div>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="chess-screen">
@@ -243,6 +427,9 @@ export default function ChessScreen({
             onOfferDraw={handleOfferDraw}
             onAcceptDraw={handleAcceptDraw}
             onDeclineDraw={handleDeclineDraw}
+            onRematch={handleRematch}
+            rematchRequested={rematchRequested}
+            opponentWantsRematch={opponentWantsRematch}
             onBack={onBack}
             roomCode={roomCode}
           />

@@ -68,6 +68,9 @@ export default function ChessSidebar({
   onOfferDraw,
   onAcceptDraw,
   onDeclineDraw,
+  onRematch,
+  rematchRequested,
+  opponentWantsRematch,
   onBack,
   roomCode,
 }) {
@@ -105,31 +108,32 @@ export default function ChessSidebar({
         </>
       )}
       
-      {status === 'ready' && (
-        <div className="chess-actions">
-          {myColor === 'white' ? (
-            <button className="chess-btn chess-btn-start" onClick={onStartGame}>
-              ▶ Iniciar Partida
+      {/* Game over banner */}
+      {gameOver && (
+        <div className="chess-gameover-banner">
+          <div className="chess-gameover-result">{RESULT_LABELS[gameOver.result] || 'Fim de jogo'}</div>
+          <div className="chess-gameover-reason">{REASON_LABELS[gameOver.reason] || ''}</div>
+          
+          <div className="mt-4 flex flex-col gap-2 w-full">
+            <button 
+              className={`chess-btn ${rematchRequested ? 'chess-btn-disabled' : 'chess-btn-rematch'}`}
+              onClick={onRematch}
+              disabled={rematchRequested}
+            >
+              {rematchRequested ? '⏳ Aguardando...' : (opponentWantsRematch ? '🤝 Aceitar Revanche' : '🔄 Jogar Novamente')}
             </button>
-          ) : (
-            <div className="chess-status-banner chess-status-wait">
-              ⏳ Aguardando anfitrião iniciar...
-            </div>
-          )}
+            {opponentWantsRematch && !rematchRequested && (
+              <div className="text-[10px] text-green-600 font-bold uppercase text-center animate-pulse">
+                Oponente quer revanche!
+              </div>
+            )}
+          </div>
         </div>
       )}
 
       {status === 'playing' && (
         <div className={`chess-status-banner ${isMyTurn ? 'chess-status-myturn' : 'chess-status-wait'}`}>
           {isMyTurn ? '🎯 Sua vez de jogar' : '⏳ Vez do adversário'}
-        </div>
-      )}
-
-      {/* Game over banner */}
-      {gameOver && (
-        <div className="chess-gameover-banner">
-          <div className="chess-gameover-result">{RESULT_LABELS[gameOver.result] || 'Fim de jogo'}</div>
-          <div className="chess-gameover-reason">{REASON_LABELS[gameOver.reason] || ''}</div>
         </div>
       )}
 
@@ -185,11 +189,9 @@ export default function ChessSidebar({
         </div>
       )}
 
-      {(gameOver || status !== 'playing') && (
-        <button className="chess-btn chess-btn-back" onClick={onBack}>
-          ← Voltar ao Lobby
-        </button>
-      )}
+      <button className="chess-btn chess-btn-back" onClick={onBack}>
+        ← Voltar
+      </button>
     </aside>
   );
 }

@@ -88,8 +88,8 @@ module.exports = function velhaSocket(io) {
         turn: 'W',
         phase: 'DROP',
         moves: [],
-        white: { socketId: socket.id, userId, userName },
-        black: null,
+        player1: { socketId: socket.id, userId, userName },
+        player2: null,
       };
 
       rooms.set(roomCode, room);
@@ -110,35 +110,119 @@ module.exports = function velhaSocket(io) {
       if (!room) {
         return socket.emit('velha-error', { message: 'Sala não encontrada.' });
       }
-      if (room.black) {
+      if (room.player2) {
         return socket.emit('velha-error', { message: 'Sala já está cheia.' });
       }
-      if (room.white.userId === userId) {
+      if (room.player1.userId === userId) {
         return socket.emit('velha-error', { message: 'Você já está nesta sala.' });
       }
 
-      room.black = { socketId: socket.id, userId, userName };
+      room.player2 = { socketId: socket.id, userId, userName };
       socket.join(roomCode);
 
-      const payload = {
-        roomCode,
-        whiteId: room.white.userId,
-        whiteName: room.white.userName,
-        blackId: room.black.userId,
-        blackName: room.black.userName,
+      // 1. Notifica o criador
+      velhaNsp.to(room.player1.socketId).emit('velha-opponent-joined', {
+        opponentName: userName,
+        opponentId: userId,
+      });
+
+      // 2. Notifica o joiner
+      socket.emit('velha-room-joined', {
+        roomCode: room.roomCode,
+        whiteName: room.player1.userName,
+        blackName: userName,
+        color: 'black',
+        board: room.board,
+        turn: room.turn,
+        phase: room.phase
+      });
+
+      // 3. Inicia o Sorteio automaticamente (com delay)
+      setTimeout(() => {
+        if (!rooms.has(roomCode)) return;
+        const winnerId = Math.random() > 0.5 ? room.player1.userId : room.player2.userId;
+        room.drawWinnerId = winnerId;
+        room.phase = 'DRAW';
+
+        velhaNsp.to(roomCode).emit('velha-draw-result', {
+          winnerId,
+          winnerName: winnerId === room.player1.userId ? room.player1.userName : room.player2.userName
+        });
+        console.log(`[Velha] Draw result for ${roomCode}: ${winnerId}`);
+      }, 1000);
+    });
+
+    // ── PICK COLOR ───────────────────────────────────────────────────────────
+    socket.on('velha-pick-color', ({ roomCode, color }) => {
+      const room = rooms.get(roomCode);
+      if (!room || room.phase !== 'DRAW' || room.drawWinnerId !== (socket.id === room.player1.socketId ? room.player1.userId : room.player2.userId)) return;
+
+      const p1IsWinner = room.player1.userId === room.drawWinnerId;
+      const winner = p1IsWinner ? room.player1 : room.player2;
+      const loser = p1IsWinner ? room.player2 : room.player1;
+
+      if (color === 'white') {
+        room.white = winner;
+        room.black = loser;
+      } else {
+        room.white = loser;
+        room.black = winner;
+      }
+
+      room.phase = 'DROP';
+      room.board = Array(9).fill(null);
+      room.inventory = { W: { T: 1, C: 1, B: 1 }, B: { T: 1, C: 1, B: 1 } };
+      room.turn = 'W';
+
+      velhaNsp.to(roomCode).emit('velha-game-ready', {
+        white: { userId: room.white.userId, userName: room.white.userName },
+        black: { userId: room.black.userId, userName: room.black.userName },
         board: room.board,
         turn: room.turn,
         phase: room.phase,
-      };
+        inventory: room.inventory
+      });
+    });
 
-      socket.emit('velha-room-joined', { ...payload, color: 'black' });
+    // ── REMATCH ──────────────────────────────────────────────────────────────
+    socket.on('velha-request-rematch', ({ roomCode }) => {
+      const room = rooms.get(roomCode);
+      if (!room) return;
 
-      velhaNsp.to(room.white.socketId).emit('velha-opponent-joined', {
-        opponentName: userName,
-        blackId: userId,
+      const isP1 = socket.id === room.player1.socketId;
+      if (isP1) room.p1WantsRematch = true;
+      else room.p2WantsRematch = true;
+
+      socket.to(roomCode).emit('velha-rematch-requested', {
+        fromName: isP1 ? room.player1.userName : room.player2.userName
       });
 
-      console.log(`[Velha] ${userName} joined room ${roomCode}`);
+      if (room.p1WantsRematch && room.p2WantsRematch) {
+        // Inverte as cores da última partida
+        const oldWhite = room.white;
+        const oldBlack = room.black;
+        
+        room.white = oldBlack;
+        room.black = oldWhite;
+        
+        room.board = Array(9).fill(null);
+        room.inventory = { W: { T: 1, C: 1, B: 1 }, B: { T: 1, C: 1, B: 1 } };
+        room.turn = 'W';
+        room.phase = 'DROP';
+        room.moves = [];
+        room.p1WantsRematch = false;
+        room.p2WantsRematch = false;
+
+        velhaNsp.to(roomCode).emit('velha-game-ready', {
+          white: { userId: room.white.userId, userName: room.white.userName },
+          black: { userId: room.black.userId, userName: room.black.userName },
+          board: room.board,
+          turn: room.turn,
+          phase: room.phase,
+          inventory: room.inventory,
+          isRematch: true
+        });
+      }
     });
 
     // ── DROP PIECE ───────────────────────────────────────────────────────────
@@ -225,11 +309,11 @@ module.exports = function velhaSocket(io) {
     // ── DISCONNECT ────────────────────────────────────────────────────────────
     socket.on('disconnect', () => {
       for (const [roomCode, room] of rooms.entries()) {
-        const wasWhite = room.white?.socketId === socket.id;
-        const wasBlack = room.black?.socketId === socket.id;
+        const wasP1 = room.player1?.socketId === socket.id;
+        const wasP2 = room.player2?.socketId === socket.id;
 
-        if (wasWhite || wasBlack) {
-          const result = wasWhite ? 'BLACK_WIN' : 'WHITE_WIN';
+        if (wasP1 || wasP2) {
+          const result = wasP1 ? 'BLACK_WIN' : 'WHITE_WIN';
           velhaNsp.to(roomCode).emit('velha-game-over', {
             result,
             reason: 'disconnection',

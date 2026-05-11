@@ -1021,6 +1021,20 @@
   background: #dc2626;
 }
 
+.chess-btn-rematch {
+  background: #769656;
+  color: white;
+}
+.chess-btn-rematch:hover {
+  background: #6a874d;
+}
+
+.chess-btn-disabled {
+  background: #f1f1f1;
+  color: #aaa;
+  cursor: not-allowed;
+}
+
 .chess-btn-back {
   background: white;
   color: #64748b;

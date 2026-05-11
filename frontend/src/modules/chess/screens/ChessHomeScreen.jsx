@@ -327,7 +327,7 @@ export default function ChessHomeScreen({ user, onBack }) {
           <section className="chess-action-panel">
             <h2 className="chess-section-title">Criar Nova Sala</h2>
             <p className="chess-action-desc">
-              Uma sala será criada e você jogará com as <strong>peças brancas</strong>.
+              Uma sala será criada e será realizado um <strong>sorteio</strong> para definir quem escolhe as peças.
               Compartilhe o código com seu adversário.
             </p>
             {error && <p className="chess-error">{error}</p>}

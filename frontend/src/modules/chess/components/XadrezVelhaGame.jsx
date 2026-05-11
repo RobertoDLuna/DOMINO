@@ -188,12 +188,14 @@ export default function XadrezVelhaGame({ roomData, onExit }) {
   const { emit, on } = useVelhaSocket();
 
   const isPVC = roomData.mode === 'PVC';
-  const myColor = roomData.color; // 'white' ou 'black'
-  const myColorCode = myColor === 'white' ? 'W' : 'B';
-  const oppColorCode = myColorCode === 'W' ? 'B' : 'W';
+  
+  // Fases de Setup: 'WAITING' (PVP) | 'DRAWING' | 'CHOOSING' | 'READY'
+  const [setupPhase, setSetupPhase] = useState(isPVC ? 'DRAWING' : 'WAITING');
+  const [drawWinner, setDrawWinner] = useState(null); // { userId, userName }
+  const [assignedColors, setAssignedColors] = useState(null); // { white: {userId}, black: {userId} }
 
-  // Estado Local (pode ser sobrescrito pelo Socket em PVP)
-  const [board, setBoard] = useState(roomData.board || Array(9).fill(null));
+  // Estado Local do Jogo
+  const [board, setBoard] = useState(Array(9).fill(null));
   const [inventory, setInventory] = useState({ W: {T:1,C:1,B:1}, B: {T:1,C:1,B:1} });
   const [turn, setTurn] = useState('W');
   const [phase, setPhase] = useState('DROP'); // DROP | MOVE
@@ -203,9 +205,38 @@ export default function XadrezVelhaGame({ roomData, onExit }) {
   const [validMoves, setValidMoves] = useState([]);
 
   const [gameOver, setGameOver] = useState(null); // { result, reason, winLine }
+  const [rematchRequested, setRematchRequested] = useState(false);
+  const [opponentWantsRematch, setOpponentWantsRematch] = useState(false);
+
+  // Derivados de Cor
+  const myColor = assignedColors ? (assignedColors.white.userId === roomData.whiteName ? 'white' : 'black') : 'white';
+  const myColorCode = myColor === 'white' ? 'W' : 'B';
+  const oppColorCode = myColorCode === 'W' ? 'B' : 'W';
 
   // ── ATUALIZAÇÕES DO SOCKET (PVP/PVC) ───────────────────────────────────
   useEffect(() => {
+    const unsubOpponent = on('velha-opponent-joined', () => {
+      // No backend, o sorteio é automático ao entrar o segundo player
+    });
+
+    const unsubDrawResult = on('velha-draw-result', (data) => {
+      setDrawWinner(data);
+      setSetupPhase('DRAWING');
+      setTimeout(() => setSetupPhase('CHOOSING'), 2000);
+    });
+
+    const unsubGameReady = on('velha-game-ready', (data) => {
+      setAssignedColors({ white: data.white, black: data.black });
+      setBoard(data.board);
+      setInventory(data.inventory);
+      setTurn(data.turn);
+      setPhase(data.phase);
+      setSetupPhase('READY');
+      setGameOver(null);
+      setRematchRequested(false);
+      setOpponentWantsRematch(false);
+    });
+
     const unsubDrop = on('velha-piece-dropped', (data) => {
       setBoard(data.board);
       setInventory(data.inventory);
@@ -225,14 +256,73 @@ export default function XadrezVelhaGame({ roomData, onExit }) {
       setGameOver(data);
     });
 
-    return () => { unsubDrop(); unsubMove(); unsubOver(); };
-  }, [on]);
+    const unsubRematchReq = on('velha-rematch-requested', () => {
+      setOpponentWantsRematch(true);
+    });
+
+    return () => { 
+      unsubOpponent(); unsubDrawResult(); unsubGameReady(); 
+      unsubDrop(); unsubMove(); unsubOver(); unsubRematchReq();
+    };
+  }, [on, roomData]);
+
+  // Sorteio Local para PVC
+  useEffect(() => {
+    if (isPVC && setupPhase === 'DRAWING') {
+      const winner = Math.random() > 0.5 ? { userId: 'YOU', userName: roomData.whiteName } : { userId: 'AI', userName: 'Computador' };
+      setTimeout(() => {
+        setDrawWinner(winner);
+        setTimeout(() => setSetupPhase('CHOOSING'), 2000);
+      }, 1000);
+    }
+  }, [isPVC, setupPhase, roomData]);
+
+  const handlePickColor = (color) => {
+    if (isPVC) {
+      const iAmWinner = drawWinner.userId === 'YOU';
+      const pickedColor = color; // 'white' | 'black'
+      
+      let white, black;
+      if (iAmWinner) {
+        white = pickedColor === 'white' ? { userId: 'YOU', userName: roomData.whiteName } : { userId: 'AI', userName: 'Computador' };
+        black = pickedColor === 'black' ? { userId: 'YOU', userName: roomData.whiteName } : { userId: 'AI', userName: 'Computador' };
+      } else {
+        // Se a IA ganhou o sorteio, ela escolhe aleatoriamente
+        // Já tratado no useEffect de IA escolha
+      }
+      
+      setAssignedColors({ white, black });
+      setSetupPhase('READY');
+    } else {
+      emit('velha-pick-color', { roomCode: roomData.roomCode, color });
+    }
+  };
+
+  const [aiChoiceFeedback, setAiChoiceFeedback] = useState(null);
+
+  // Se a IA ganhar o sorteio, ela escolhe automaticamente
+  useEffect(() => {
+    if (isPVC && setupPhase === 'CHOOSING' && drawWinner?.userId === 'AI') {
+      const timer = setTimeout(() => {
+        const aiChoice = Math.random() > 0.5 ? 'white' : 'black';
+        setAiChoiceFeedback(aiChoice);
+
+        setTimeout(() => {
+          const white = aiChoice === 'white' ? { userId: 'AI', userName: 'Computador' } : { userId: 'YOU', userName: roomData.whiteName };
+          const black = aiChoice === 'black' ? { userId: 'AI', userName: 'Computador' } : { userId: 'YOU', userName: roomData.whiteName };
+          setAssignedColors({ white, black });
+          setSetupPhase('READY');
+          setAiChoiceFeedback(null);
+        }, 1500);
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [isPVC, setupPhase, drawWinner, roomData]);
 
   // ── IA JOGANDO (PVC) ────────────────────────────────────────────────────
   useEffect(() => {
-    if (isPVC && !gameOver && turn === oppColorCode) {
+    if (isPVC && !gameOver && turn === oppColorCode && setupPhase === 'READY') {
       const timer = setTimeout(() => {
-        // Nível define profundidade: 1=random(depth 0), 2=depth2, 3=depth3, 4=depth5, 5=depth7
         const depths = { 1: 0, 2: 2, 3: 3, 4: 5, 5: 7 };
         const depth = depths[roomData.aiLevel || 3];
         
@@ -252,10 +342,10 @@ export default function XadrezVelhaGame({ roomData, onExit }) {
             handleLocalMove(actionToPlay.from, actionToPlay.to, oppColorCode);
           }
         }
-      }, 600); // delay para dar sensação de "pensamento"
+      }, 600);
       return () => clearTimeout(timer);
     }
-  }, [turn, isPVC, gameOver, board, inventory, phase]);
+  }, [turn, isPVC, gameOver, board, inventory, phase, setupPhase]);
 
   // Lógica local para PVC
   const handleLocalDrop = (idx, pieceType, colorCode) => {
@@ -309,7 +399,6 @@ export default function XadrezVelhaGame({ roomData, onExit }) {
     }
   };
 
-
   // ── INTERAÇÕES DO USUÁRIO ───────────────────────────────────────────────
   const handleCellClick = (idx) => {
     if (gameOver || turn !== myColorCode) return;
@@ -325,14 +414,12 @@ export default function XadrezVelhaGame({ roomData, onExit }) {
     } else if (phase === 'MOVE') {
       const piece = board[idx];
       
-      // Se clicou na própria peça, seleciona ela
       if (piece && piece[0] === myColorCode) {
         setSelectedMoveIdx(idx);
         setValidMoves(getValidMoves(board, idx));
         return;
       }
 
-      // Se clicou numa casa vazia e tem peça selecionada
       if (!piece && selectedMoveIdx !== null && validMoves.includes(idx)) {
         if (isPVC) {
           handleLocalMove(selectedMoveIdx, idx, myColorCode);
@@ -343,7 +430,26 @@ export default function XadrezVelhaGame({ roomData, onExit }) {
     }
   };
 
+  const handleRematch = () => {
+    if (isPVC) {
+      const oldWhite = assignedColors.white;
+      const oldBlack = assignedColors.black;
+      setAssignedColors({ white: oldBlack, black: oldWhite });
+      setBoard(Array(9).fill(null));
+      setInventory({ W: {T:1,C:1,B:1}, B: {T:1,C:1,B:1} });
+      setTurn('W');
+      setPhase('DROP');
+      setGameOver(null);
+      setRematchRequested(false);
+      setOpponentWantsRematch(false);
+    } else {
+      setRematchRequested(true);
+      emit('velha-request-rematch', { roomCode: roomData.roomCode });
+    }
+  };
+
   const handleResign = () => {
+    if (gameOver) return;
     if (isPVC) {
       setGameOver({ result: myColorCode === 'W' ? 'BLACK_WIN' : 'WHITE_WIN', reason: 'resignation' });
     } else {
@@ -352,6 +458,90 @@ export default function XadrezVelhaGame({ roomData, onExit }) {
   };
 
   // ── RENDERIZAÇÃO ────────────────────────────────────────────────────────
+  if (setupPhase === 'WAITING' && !isPVC) {
+    return (
+      <div className="velha-container flex flex-col items-center justify-center min-h-[60vh]">
+        <div className="text-center p-8 bg-white rounded-2xl shadow-xl">
+          <div className="w-16 h-16 border-4 border-t-[#769656] border-gray-200 rounded-full animate-spin mx-auto mb-4"></div>
+          <h2 className="text-xl font-bold mb-2">Aguardando Oponente...</h2>
+          <p className="text-gray-500">O sorteio começará assim que alguém entrar.</p>
+          <button onClick={onExit} className="mt-6 text-sm text-red-500 font-bold hover:underline">Sair</button>
+        </div>
+      </div>
+    );
+  }
+
+  if (setupPhase === 'DRAWING') {
+    return (
+      <div className="velha-container flex flex-col items-center justify-center min-h-[60vh]">
+        <div className="text-center p-8 bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden relative">
+          <h2 className="text-2xl font-black mb-8 uppercase tracking-tighter text-gray-800">Realizando Sorteio...</h2>
+          <div className="velha-draw-coin-wrapper mb-8">
+            <div className="velha-draw-coin">
+              <div className="coin-face front">?</div>
+              <div className="coin-face back">⚔️</div>
+            </div>
+          </div>
+          {drawWinner && (
+            <div className="animate-bounce font-black text-[#769656] text-xl">
+              Vencedor: {drawWinner.userName}!
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  if (setupPhase === 'CHOOSING') {
+    const iAmWinner = isPVC ? drawWinner.userId === 'YOU' : drawWinner.userId === roomData.whiteName;
+    return (
+      <div className="velha-container flex flex-col items-center justify-center min-h-[60vh]">
+        <div className="text-center p-8 bg-white rounded-2xl shadow-xl w-full max-w-sm">
+          {iAmWinner ? (
+            <>
+              <h2 className="text-2xl font-black mb-2 uppercase text-gray-800">Você Venceu!</h2>
+              <p className="text-gray-500 mb-8 font-medium">Escolha sua cor para começar:</p>
+              <div className="flex gap-4">
+                <button 
+                  onClick={() => handlePickColor('white')}
+                  className="flex-1 p-6 rounded-2xl border-2 border-gray-200 hover:border-[#769656] transition-all group"
+                >
+                  <span className="text-4xl mb-2 block group-hover:scale-110 transition-transform">⚪</span>
+                  <strong className="block text-sm uppercase">Brancas</strong>
+                  <span className="text-[10px] text-gray-400">Começa o Jogo</span>
+                </button>
+                <button 
+                  onClick={() => handlePickColor('black')}
+                  className="flex-1 p-6 rounded-2xl border-2 border-gray-200 hover:border-[#769656] transition-all group"
+                >
+                  <span className="text-4xl mb-2 block group-hover:scale-110 transition-transform">⚫</span>
+                  <strong className="block text-sm uppercase">Pretas</strong>
+                  <span className="text-[10px] text-gray-400">Joga depois</span>
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <h2 className="text-2xl font-black mb-2 uppercase text-gray-800">{drawWinner.userName} Venceu</h2>
+              <p className="text-gray-500 mb-8 font-medium">
+                {aiChoiceFeedback 
+                  ? `O Computador escolheu as ${aiChoiceFeedback === 'white' ? 'BRANCAS' : 'PRETAS'}!` 
+                  : 'Aguardando escolha da cor...'}
+              </p>
+              {aiChoiceFeedback ? (
+                <div className="text-6xl animate-bounce mb-4">
+                  {aiChoiceFeedback === 'white' ? '⚪' : '⚫'}
+                </div>
+              ) : (
+                <div className="w-12 h-12 border-4 border-t-[#769656] border-gray-100 rounded-full animate-spin mx-auto"></div>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   const renderCell = (idx) => {
     const piece = board[idx];
     const isLight = (Math.floor(idx / 3) + (idx % 3)) % 2 === 0;
@@ -410,7 +600,6 @@ export default function XadrezVelhaGame({ roomData, onExit }) {
 
   return (
     <div className="velha-container pt-4 pb-20 relative">
-      {/* Botão de Voltar no topo */}
       <div className="absolute top-4 left-4 z-10">
         <button 
           className="chess-lobby-back group flex items-center gap-2" 
@@ -447,7 +636,6 @@ export default function XadrezVelhaGame({ roomData, onExit }) {
         </button>
       </div>
 
-      {/* MODAL DE FIM DE JOGO */}
       {gameOver && (
         <div className="velha-overlay">
           <div className={`velha-modal ${
@@ -463,12 +651,32 @@ export default function XadrezVelhaGame({ roomData, onExit }) {
                gameOver.reason === 'stalemate' ? 'Sem movimentos possíveis.' :
                gameOver.reason === 'resignation' ? 'Desistência.' : 'Oponente desconectou.'}
             </p>
-            <button 
-              onClick={onExit}
-              className="w-full py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 shadow"
-            >
-              Voltar ao Início
-            </button>
+            
+            <div className="flex flex-col gap-3">
+              <button 
+                onClick={handleRematch}
+                disabled={rematchRequested}
+                className={`w-full py-4 rounded-xl font-black text-sm uppercase tracking-wider shadow-lg transition-all active:scale-95 ${
+                  rematchRequested 
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                  : 'bg-[#769656] text-white hover:bg-[#6a874d]'
+                }`}
+              >
+                {rematchRequested ? '⏳ Aguardando...' : (opponentWantsRematch ? '🤝 Aceitar Revanche' : '🔄 Jogar Novamente')}
+              </button>
+
+              <button 
+                onClick={onExit}
+                className="w-full py-4 bg-white border-2 border-gray-100 text-gray-500 font-bold rounded-xl hover:bg-gray-50 transition"
+              >
+                Sair do Jogo
+              </button>
+            </div>
+            {opponentWantsRematch && !rematchRequested && (
+              <div className="mt-4 p-2 bg-green-50 text-green-700 text-[10px] font-black uppercase rounded-lg animate-pulse">
+                Oponente quer jogar de novo!
+              </div>
+            )}
           </div>
         </div>
       )}

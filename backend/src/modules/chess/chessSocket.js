@@ -51,9 +51,12 @@ module.exports = function chessSocket(io) {
         mode,
         aiLevel: mode === 'PVC' ? aiLevel : null,
         chess,
-        white: { socketId: socket.id, userId, userName },
+        player1: { socketId: socket.id, userId, userName },
+        player2: null,
+        white: null,
         black: null,
         drawOfferedBy: null,
+        rematchRequests: new Set(),
       };
 
       rooms.set(roomCode, room);
@@ -61,7 +64,6 @@ module.exports = function chessSocket(io) {
 
       socket.emit('chess-room-created', {
         roomCode,
-        color: 'white',
         fen: chess.fen(),
       });
 
@@ -76,38 +78,95 @@ module.exports = function chessSocket(io) {
         socket.emit('chess-error', { message: 'Sala não encontrada.' });
         return;
       }
-      if (room.black) {
+      if (room.player2) {
         socket.emit('chess-error', { message: 'Sala já está cheia.' });
         return;
       }
-      if (room.white.userId === userId) {
+      if (room.player1.userId === userId) {
         socket.emit('chess-error', { message: 'Você já está nesta sala.' });
         return;
       }
 
-      room.black = { socketId: socket.id, userId, userName };
+      room.player2 = { socketId: socket.id, userId, userName };
       socket.join(roomCode);
 
-      const payload = {
-        fen: room.chess.fen(),
-        moves: room.chess.history({ verbose: true }),
-        whiteId: room.white.userId,
-        whiteName: room.white.userName,
-        blackId: room.black.userId,
-        blackName: room.black.userName,
-        roomCode,
-      };
-
-      // Notify the joiner
-      socket.emit('chess-room-joined', { ...payload, color: 'black' });
-
-      // Notify the creator that opponent joined
-      chessNsp.to(room.white.socketId).emit('chess-opponent-joined', {
-        ...payload,
-        opponentName: userName,
+      // 1. Notifica o criador
+      socket.to(room.player1.socketId).emit('chess-opponent-joined', {
+        blackId: userId,
+        blackName: userName,
       });
 
-      console.log(`[Chess] ${userName} joined room ${roomCode}`);
+      // 2. Notifica o joiner (ele entra no ChessScreen)
+      socket.emit('chess-room-joined', {
+        roomCode,
+        whiteName: room.player1.userName,
+        blackName: userName,
+        fen: room.chess.fen(),
+        color: 'black',
+      });
+
+      // 3. SORTEIO AUTOMÁTICO (com delay para garantir mount no client)
+      setTimeout(() => {
+        if (!rooms.has(roomCode)) return;
+        const winner = Math.random() > 0.5 ? room.player1 : room.player2;
+        chessNsp.to(roomCode).emit('chess-draw-result', {
+          userId: winner.userId,
+          userName: winner.userName,
+        });
+        console.log(`[Chess] Draw result for ${roomCode}: ${winner.userName}`);
+      }, 1000);
+    });
+
+    // ── COLOR PICKING ─────────────────────────────────────────────────────────
+    socket.on('chess-pick-color', ({ roomCode, color }) => {
+      const room = rooms.get(roomCode);
+      if (!room || room.white || room.black) return;
+
+      const p1 = room.player1;
+      const p2 = room.player2;
+
+      if (color === 'white') {
+        room.white = socket.id === p1.socketId ? p1 : p2;
+        room.black = socket.id === p1.socketId ? p2 : p1;
+      } else {
+        room.black = socket.id === p1.socketId ? p1 : p2;
+        room.white = socket.id === p1.socketId ? p2 : p1;
+      }
+
+      chessNsp.to(roomCode).emit('chess-game-ready', {
+        white: room.white,
+        black: room.black,
+        fen: room.chess.fen(),
+        turn: 'w',
+      });
+    });
+
+    // ── REMATCH ───────────────────────────────────────────────────────────────
+    socket.on('chess-request-rematch', ({ roomCode }) => {
+      const room = rooms.get(roomCode);
+      if (!room) return;
+
+      room.rematchRequests.add(socket.id);
+      socket.to(roomCode).emit('chess-rematch-requested');
+
+      if (room.rematchRequests.size === 2) {
+        // Swap colors
+        const oldWhite = room.white;
+        const oldBlack = room.black;
+        room.white = oldBlack;
+        room.black = oldWhite;
+
+        room.chess = new Chess();
+        room.rematchRequests.clear();
+        room.drawOfferedBy = null;
+
+        chessNsp.to(roomCode).emit('chess-game-ready', {
+          white: room.white,
+          black: room.black,
+          fen: room.chess.fen(),
+          turn: 'w',
+        });
+      }
     });
 
     // ── START GAME ────────────────────────────────────────────────────────────
@@ -250,11 +309,19 @@ module.exports = function chessSocket(io) {
     // ── DISCONNECT ────────────────────────────────────────────────────────────
     socket.on('disconnect', () => {
       for (const [roomCode, room] of rooms.entries()) {
-        const wasWhite = room.white?.socketId === socket.id;
-        const wasBlack = room.black?.socketId === socket.id;
+        const wasP1 = room.player1?.socketId === socket.id;
+        const wasP2 = room.player2?.socketId === socket.id;
 
-        if (wasWhite || wasBlack) {
-          const result = wasWhite ? 'BLACK_WIN' : 'WHITE_WIN';
+        if (wasP1 || wasP2) {
+          const result = (wasP1 && room.white?.socketId === socket.id) || (!wasP1 && room.black?.socketId === socket.id) ? 'BLACK_WIN' : 'WHITE_WIN';
+          
+          // Simplificando logicamente para o Real Chess: 
+          // Se as cores ainda não foram atribuídas, apenas fecha a sala.
+          if (!room.white) {
+             rooms.delete(roomCode);
+             break;
+          }
+
           chessNsp.to(roomCode).emit('chess-game-over', {
             result,
             reason: 'disconnection',

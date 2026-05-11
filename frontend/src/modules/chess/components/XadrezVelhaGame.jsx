@@ -116,7 +116,7 @@ function minimax(board, inventory, turn, phase, depth, alpha, beta, isMaximizing
   const win = checkWin(board);
   if (win) return { score: win.winner === myColor ? 1000 + depth : -1000 - depth };
   
-  if (phase === 'MOVE' && checkDraw(board, turn)) return { score: 0 };
+  if (phase === 'MOVE' && checkDraw(board, turn)) return { score: turn === myColor ? -1000 - depth : 1000 + depth };
   if (depth === 0) return { score: evaluateBoard(board, myColor) };
 
   const actions = getPossibleActions(board, inventory, turn, phase);
@@ -279,6 +279,12 @@ export default function XadrezVelhaGame({ roomData, onExit }) {
       setGameOver({ result: win.winner === 'W' ? 'WHITE_WIN' : 'BLACK_WIN', reason: 'checkmate', winLine: win.line });
       return;
     }
+
+    if (newPhase === 'MOVE' && checkDraw(newBoard, colorCode === 'W' ? 'B' : 'W')) {
+      const winner = colorCode === 'W' ? 'WHITE_WIN' : 'BLACK_WIN';
+      setGameOver({ result: winner, reason: 'stalemate' });
+      return;
+    }
   };
 
   const handleLocalMove = (from, to, colorCode) => {
@@ -297,7 +303,8 @@ export default function XadrezVelhaGame({ roomData, onExit }) {
       return;
     }
     if (checkDraw(newBoard, colorCode === 'W' ? 'B' : 'W')) {
-      setGameOver({ result: 'DRAW', reason: 'stalemate' });
+      const winner = colorCode === 'W' ? 'WHITE_WIN' : 'BLACK_WIN';
+      setGameOver({ result: winner, reason: 'stalemate' });
       return;
     }
   };

@@ -253,8 +253,10 @@ module.exports = function velhaSocket(io) {
     }
 
     if (room.phase === 'MOVE' && checkDraw(room.board, room.turn)) {
-      velhaNsp.to(roomCode).emit('velha-game-over', { result: 'DRAW', reason: 'stalemate' });
-      _persistVelhaResult(room, 'DRAW', 'stalemate');
+      const winnerColor = room.turn === 'W' ? 'B' : 'W';
+      const result = winnerColor === 'W' ? 'WHITE_WIN' : 'BLACK_WIN';
+      velhaNsp.to(roomCode).emit('velha-game-over', { result, reason: 'stalemate' });
+      _persistVelhaResult(room, result, 'stalemate');
       rooms.delete(roomCode);
     }
   }

@@ -276,4 +276,7 @@
 }
 
 .velha-modal p {
+  color: #666;
+  font-weight: 500;
+  margin-bottom: 2rem;
 }

@@ -20,6 +20,7 @@
 .velha-board {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
   width: min(90vw, 360px);
   height: min(90vw, 360px);
   border: 4px solid #333;
@@ -39,6 +40,9 @@
   user-select: none;
   -webkit-tap-highlight-color: transparent;
   transition: background-color 0.2s ease;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .velha-cell-light {
@@ -75,9 +79,14 @@
 
 /* Peças */
 .velha-piece {
-  font-size: clamp(3rem, 15vw, 4.5rem);
+  font-size: clamp(2.5rem, 12vw, 4rem);
   line-height: 1;
-  pointer-events: none; /* Deixa o clique passar para a casa */
+  pointer-events: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
 }
 
 .velha-piece-W {

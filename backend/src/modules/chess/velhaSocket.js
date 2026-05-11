@@ -303,7 +303,6 @@ module.exports = function velhaSocket(io) {
 
       velhaNsp.to(roomCode).emit('velha-game-over', { result, reason: 'resignation' });
       _persistVelhaResult(room, result, 'resignation');
-      rooms.delete(roomCode);
     });
 
     // ── DISCONNECT ────────────────────────────────────────────────────────────
@@ -332,7 +331,6 @@ module.exports = function velhaSocket(io) {
       const result = win.winner === 'W' ? 'WHITE_WIN' : 'BLACK_WIN';
       velhaNsp.to(roomCode).emit('velha-game-over', { result, reason: 'checkmate', winLine: win.line });
       _persistVelhaResult(room, result, 'checkmate');
-      rooms.delete(roomCode);
       return;
     }
 
@@ -341,7 +339,6 @@ module.exports = function velhaSocket(io) {
       const result = winnerColor === 'W' ? 'WHITE_WIN' : 'BLACK_WIN';
       velhaNsp.to(roomCode).emit('velha-game-over', { result, reason: 'stalemate' });
       _persistVelhaResult(room, result, 'stalemate');
-      rooms.delete(roomCode);
     }
   }
 

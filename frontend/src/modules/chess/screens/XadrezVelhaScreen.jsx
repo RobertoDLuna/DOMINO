@@ -121,6 +121,7 @@ export default function XadrezVelhaScreen({ user, onBack }) {
   if (gameSession) {
     return (
       <XadrezVelhaGame
+        user={user}
         roomData={gameSession}
         onExit={handleBack}
       />

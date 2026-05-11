@@ -251,7 +251,6 @@ module.exports = function chessSocket(io) {
 
         chessNsp.to(roomCode).emit('chess-game-over', { result, reason });
         _persistGameResult(room, result, reason);
-        rooms.delete(roomCode);
       }
     });
 
@@ -265,7 +264,6 @@ module.exports = function chessSocket(io) {
 
       chessNsp.to(roomCode).emit('chess-game-over', { result, reason: 'resignation' });
       _persistGameResult(room, result, 'resignation');
-      rooms.delete(roomCode);
     });
 
     // ── OFFER DRAW ────────────────────────────────────────────────────────────
@@ -290,7 +288,6 @@ module.exports = function chessSocket(io) {
 
       chessNsp.to(roomCode).emit('chess-game-over', { result: 'DRAW', reason: 'agreement' });
       _persistGameResult(room, 'DRAW', 'agreement');
-      rooms.delete(roomCode);
     });
 
     // ── DECLINE DRAW ──────────────────────────────────────────────────────────

@@ -184,7 +184,7 @@ function minimax(board, inventory, turn, phase, depth, alpha, beta, isMaximizing
 }
 
 // ── COMPONENTE PRINCIPAL ─────────────────────────────────────────────────
-export default function XadrezVelhaGame({ roomData, onExit }) {
+export default function XadrezVelhaGame({ user, roomData, onExit }) {
   const { emit, on } = useVelhaSocket();
 
   const isPVC = roomData.mode === 'PVC';
@@ -209,7 +209,8 @@ export default function XadrezVelhaGame({ roomData, onExit }) {
   const [opponentWantsRematch, setOpponentWantsRematch] = useState(false);
 
   // Derivados de Cor
-  const myColor = assignedColors ? (assignedColors.white.userId === roomData.whiteName ? 'white' : 'black') : 'white';
+  const currentUserId = user?.id || 'YOU';
+  const myColor = assignedColors ? (assignedColors.white.userId === currentUserId ? 'white' : 'black') : 'white';
   const myColorCode = myColor === 'white' ? 'W' : 'B';
   const oppColorCode = myColorCode === 'W' ? 'B' : 'W';
 
@@ -284,8 +285,8 @@ export default function XadrezVelhaGame({ roomData, onExit }) {
       
       let white, black;
       if (iAmWinner) {
-        white = pickedColor === 'white' ? { userId: 'YOU', userName: roomData.whiteName } : { userId: 'AI', userName: 'Computador' };
-        black = pickedColor === 'black' ? { userId: 'YOU', userName: roomData.whiteName } : { userId: 'AI', userName: 'Computador' };
+        white = pickedColor === 'white' ? { userId: currentUserId, userName: roomData.whiteName } : { userId: 'AI', userName: 'Computador' };
+        black = pickedColor === 'black' ? { userId: currentUserId, userName: roomData.whiteName } : { userId: 'AI', userName: 'Computador' };
       } else {
         // Se a IA ganhou o sorteio, ela escolhe aleatoriamente
         // Já tratado no useEffect de IA escolha
@@ -308,8 +309,8 @@ export default function XadrezVelhaGame({ roomData, onExit }) {
         setAiChoiceFeedback(aiChoice);
 
         setTimeout(() => {
-          const white = aiChoice === 'white' ? { userId: 'AI', userName: 'Computador' } : { userId: 'YOU', userName: roomData.whiteName };
-          const black = aiChoice === 'black' ? { userId: 'AI', userName: 'Computador' } : { userId: 'YOU', userName: roomData.whiteName };
+          const white = aiChoice === 'white' ? { userId: 'AI', userName: 'Computador' } : { userId: currentUserId, userName: roomData.whiteName };
+          const black = aiChoice === 'black' ? { userId: 'AI', userName: 'Computador' } : { userId: currentUserId, userName: roomData.whiteName };
           setAssignedColors({ white, black });
           setSetupPhase('READY');
           setAiChoiceFeedback(null);

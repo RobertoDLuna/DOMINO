@@ -5,34 +5,28 @@
  */
 import React from 'react';
 
-const PIECE_NAMES = {
-  p: 'Peão',
-  n: 'Cavalo',
-  b: 'Bispo',
-  r: 'Torre',
-  q: 'Dama',
-  k: 'Rei'
+const PIECE_INITIALS = {
+  p: 'P',
+  n: 'C',
+  b: 'B',
+  r: 'T',
+  q: 'D',
+  k: 'R'
 };
 
 function describeMove(move) {
-  if (typeof move === 'string') return move; // Fallback
+  if (typeof move === 'string') return move;
   
-  if (move.san === 'O-O') return 'Roque Menor';
-  if (move.san === 'O-O-O') return 'Roque Maior';
+  if (move.san === 'O-O') return 'O-O';
+  if (move.san === 'O-O-O') return 'O-O-O';
   
-  const piece = PIECE_NAMES[move.piece] || move.piece;
+  const piece = PIECE_INITIALS[move.piece] || '';
   const to = move.to.toLowerCase();
-  
-  let desc = `${piece} para ${to}`;
-  if (move.captured) {
-    desc = `${piece} captura ${PIECE_NAMES[move.captured]} em ${to}`;
-  }
-  
-  if (move.san.includes('+')) desc += ' (Xeque)';
-  if (move.san.includes('#')) desc += ' (Xeque-Mate)';
-  if (move.promotion) desc += ` e promove p/ ${PIECE_NAMES[move.promotion]}`;
-  
-  return desc;
+  const capture = move.captured ? 'x' : '';
+  const check = move.san.includes('#') ? '#' : (move.san.includes('+') ? '+' : '');
+  const promotion = move.promotion ? `=${PIECE_INITIALS[move.promotion] || move.promotion.toUpperCase()}` : '';
+
+  return `${piece}${capture}${to}${promotion}${check}`;
 }
 
 const RESULT_LABELS = {

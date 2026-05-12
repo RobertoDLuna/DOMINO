@@ -30,6 +30,7 @@ export default function ChessScreen({
   mode,          // 'PVP' | 'PVC'
   aiLevel,       // 1-10
   timeLimit,     // Em segundos
+  myId,          // ID do jogador nesta sessão
   boardTheme,
   onBack,
 }) {
@@ -181,7 +182,7 @@ export default function ChessScreen({
   // Sorteio Local para PVC
   useEffect(() => {
     if (mode === 'PVC' && setupPhase === 'DRAWING') {
-      const winner = Math.random() > 0.5 ? { userId: user.id, userName: user.fullName || 'Você' } : { userId: 'AI', userName: 'Computador' };
+      const winner = Math.random() > 0.5 ? { userId: myId, userName: user?.fullName || 'Você' } : { userId: 'AI', userName: 'Computador' };
       setTimeout(() => {
         setDrawWinner(winner);
         setTimeout(() => setSetupPhase('CHOOSING'), 2000);
@@ -191,7 +192,7 @@ export default function ChessScreen({
 
   const handlePickColor = (color) => {
     if (mode === 'PVC') {
-      const iAmWinner = drawWinner.userId === user.id;
+      const iAmWinner = drawWinner.userId == myId;
       let white, black;
       if (iAmWinner) {
         white = color === 'white' ? { userId: user.id, userName: user.fullName || 'Você' } : { userId: 'AI', userName: 'Computador' };
@@ -218,8 +219,8 @@ export default function ChessScreen({
         
         // Pequeno delay para o player ver a escolha antes de iniciar
         setTimeout(() => {
-          const white = aiChoice === 'white' ? { userId: 'AI', userName: 'Computador' } : { userId: user.id, userName: user.fullName || 'Você' };
-          const black = aiChoice === 'black' ? { userId: 'AI', userName: 'Computador' } : { userId: user.id, userName: user.fullName || 'Você' };
+          const white = aiChoice === 'white' ? { userId: 'AI', userName: 'Computador' } : { userId: myId, userName: user?.fullName || 'Você' };
+          const black = aiChoice === 'black' ? { userId: 'AI', userName: 'Computador' } : { userId: myId, userName: user?.fullName || 'Você' };
           setAssignedColors({ white, black });
           setSetupPhase('READY');
           setAiChoiceFeedback(null);
@@ -364,7 +365,7 @@ export default function ChessScreen({
   }
 
   if (setupPhase === 'CHOOSING') {
-    const iAmWinner = drawWinner.userId === user.id;
+    const iAmWinner = drawWinner.userId == myId;
     return (
       <div className="velha-container flex flex-col items-center justify-center min-h-[60vh]">
         <div className="text-center p-8 bg-white rounded-2xl shadow-xl w-full max-w-sm">

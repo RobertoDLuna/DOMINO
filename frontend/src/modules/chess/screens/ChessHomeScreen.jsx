@@ -42,27 +42,29 @@ export default function ChessHomeScreen({ user, onBack }) {
   const [loading, setLoading] = useState(false);
   const [showRanking, setShowRanking] = useState(false);
 
-  // game session
-  const [gameSession, setGameSession] = useState(null);
+  // Identidade do usuário para esta sessão
+  const myId = user?.id || `guest_${Date.now().toString().slice(-6)}`;
+  const myName = user?.fullName || 'Convidado';
 
   // ── Socket event listeners ──────────────────────────────────────────────
   useEffect(() => {
-    const unsubCreated = on('chess-room-created', ({ roomCode, color, fen, timeLimit: serverTimeLimit }) => {
+    const unsubCreated = ({ roomCode, color, fen, timeLimit: serverTimeLimit }) => {
       setLoading(false);
       setGameSession({
         roomCode,
         myColor: color,
         mode: 'PVP',
         aiLevel: null,
-        whiteName: user?.fullName || 'Você',
+        whiteName: myName,
         blackName: null,
         initialFen: fen,
         status: 'waiting',
         timeLimit: serverTimeLimit,
+        myId: myId,
       });
-    });
+    };
 
-    const unsubJoined = on('chess-room-joined', (data) => {
+    const unsubJoined = (data) => {
       setLoading(false);
       setGameSession({
         roomCode: data.roomCode,
@@ -74,8 +76,12 @@ export default function ChessHomeScreen({ user, onBack }) {
         initialFen: data.fen,
         status: 'playing',
         timeLimit: data.timeLimit,
+        myId: myId,
       });
-    });
+    };
+
+    const offCreated = on('chess-room-created', unsubCreated);
+    const offJoined = on('chess-room-joined', unsubJoined);
 
     const unsubOpponent = on('chess-opponent-joined', (data) => {
       setGameSession(prev => prev ? {
@@ -91,12 +97,12 @@ export default function ChessHomeScreen({ user, onBack }) {
     });
 
     return () => {
-      unsubCreated();
-      unsubJoined();
+      offCreated();
+      offJoined();
       unsubOpponent();
       unsubError();
     };
-  }, [on, user]);
+  }, [on, user, myId, myName]);
 
   // ── Handlers ────────────────────────────────────────────────────────────
   function handleCreateRoom() {
@@ -104,8 +110,8 @@ export default function ChessHomeScreen({ user, onBack }) {
     setError('');
     setLoading(true);
     emit('create-chess-room', {
-      userId: user?.id || `guest_${Date.now()}`,
-      userName: user?.fullName || 'Convidado',
+      userId: myId,
+      userName: myName,
       mode: 'PVP',
       timeLimit,
     });
@@ -119,8 +125,8 @@ export default function ChessHomeScreen({ user, onBack }) {
     setLoading(true);
     emit('join-chess-room', {
       roomCode: code,
-      userId: user?.id || `guest_${Date.now()}`,
-      userName: user?.fullName || 'Convidado',
+      userId: myId,
+      userName: myName,
     });
   }
 
@@ -130,11 +136,12 @@ export default function ChessHomeScreen({ user, onBack }) {
       myColor: 'white',
       mode: 'PVC',
       aiLevel,
-      whiteName: user?.fullName || 'Você',
+      whiteName: myName,
       blackName: `IA Nível ${aiLevel}`,
       initialFen: null,
       status: 'playing',
       timeLimit,
+      myId: myId,
     });
   }
 
@@ -231,6 +238,7 @@ export default function ChessHomeScreen({ user, onBack }) {
         blackName={gameSession.blackName}
         initialFen={gameSession.initialFen}
         timeLimit={gameSession.timeLimit}
+        myId={gameSession.myId}
         boardTheme="wood"
         onBack={handleBack}
       />

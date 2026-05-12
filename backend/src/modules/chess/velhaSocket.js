@@ -156,9 +156,10 @@ module.exports = function velhaSocket(io) {
     // ── PICK COLOR ───────────────────────────────────────────────────────────
     socket.on('velha-pick-color', ({ roomCode, color }) => {
       const room = rooms.get(roomCode);
-      if (!room || room.phase !== 'DRAW' || room.drawWinnerId !== (socket.id === room.player1.socketId ? room.player1.userId : room.player2.userId)) return;
+      const currentPlayerId = socket.id === room.player1.socketId ? room.player1.userId : room.player2.userId;
+      if (!room || room.phase !== 'DRAW' || room.drawWinnerId != currentPlayerId) return;
 
-      const p1IsWinner = room.player1.userId === room.drawWinnerId;
+      const p1IsWinner = room.player1.userId == room.drawWinnerId;
       const winner = p1IsWinner ? room.player1 : room.player2;
       const loser = p1IsWinner ? room.player2 : room.player1;
 

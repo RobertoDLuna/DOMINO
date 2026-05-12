@@ -27,20 +27,25 @@ export default function XadrezVelhaScreen({ user, onBack }) {
   // game session
   const [gameSession, setGameSession] = useState(null);
 
+  // Identidade do usuário para esta sessão
+  const myId = user?.id || `guest_${Date.now().toString().slice(-6)}`;
+  const myName = user?.fullName || 'Convidado';
+
   useEffect(() => {
-    const unsubCreated = on('velha-room-created', ({ roomCode, color }) => {
+    const unsubCreated = ({ roomCode, color }) => {
       setLoading(false);
       setGameSession({
         roomCode,
         color,
         mode: 'PVP',
         aiLevel: null,
-        whiteName: user?.fullName || 'Você',
+        whiteName: myName,
         blackName: null,
+        myId: myId,
       });
-    });
+    };
 
-    const unsubJoined = on('velha-room-joined', (data) => {
+    const unsubJoined = (data) => {
       setLoading(false);
       setGameSession({
         roomCode: data.roomCode,
@@ -51,9 +56,13 @@ export default function XadrezVelhaScreen({ user, onBack }) {
         blackName: data.blackName,
         board: data.board,
         turn: data.turn,
-        phase: data.phase
+        phase: data.phase,
+        myId: myId,
       });
-    });
+    };
+
+    const offCreated = on('velha-room-created', unsubCreated);
+    const offJoined = on('velha-room-joined', unsubJoined);
 
     const unsubOpponent = on('velha-opponent-joined', (data) => {
       setGameSession(prev => prev ? {
@@ -68,20 +77,20 @@ export default function XadrezVelhaScreen({ user, onBack }) {
     });
 
     return () => {
-      unsubCreated();
-      unsubJoined();
+      offCreated();
+      offJoined();
       unsubOpponent();
       unsubError();
     };
-  }, [on, user]);
+  }, [on, user, myId, myName]);
 
   function handleCreateRoom() {
     if (!isConnected) { setError('Sem conexão com o servidor.'); return; }
     setError('');
     setLoading(true);
     emit('create-velha-room', {
-      userId: user?.id || `guest_${Date.now()}`,
-      userName: user?.fullName || 'Convidado',
+      userId: myId,
+      userName: myName,
       mode: 'PVP',
     });
   }
@@ -94,19 +103,20 @@ export default function XadrezVelhaScreen({ user, onBack }) {
     setLoading(true);
     emit('join-velha-room', {
       roomCode: code,
-      userId: user?.id || `guest_${Date.now()}`,
-      userName: user?.fullName || 'Convidado',
+      userId: myId,
+      userName: myName,
     });
   }
 
   function handlePlayVsAI() {
     setGameSession({
       roomCode: `ai_${Date.now()}`,
-      color: 'white', // always white vs AI in this simple impl
+      color: 'white', 
       mode: 'PVC',
       aiLevel,
-      whiteName: user?.fullName || 'Você',
+      whiteName: myName,
       blackName: `Computador (Nív.${aiLevel})`,
+      myId: myId,
     });
   }
 

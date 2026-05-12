@@ -210,8 +210,8 @@ export default function XadrezVelhaGame({ user, roomData, onExit }) {
   const [opponentWantsRematch, setOpponentWantsRematch] = useState(false);
 
   // Derivados de Cor
-  const currentUserId = user?.id || 'YOU';
-  const myColor = assignedColors ? (assignedColors.white.userId === currentUserId ? 'white' : 'black') : 'white';
+  const myId = roomData.myId || user?.id || 'YOU';
+  const myColor = assignedColors ? (assignedColors.white.userId == myId ? 'white' : 'black') : 'white';
   const myColorCode = myColor === 'white' ? 'W' : 'B';
   const oppColorCode = myColorCode === 'W' ? 'B' : 'W';
 
@@ -221,13 +221,16 @@ export default function XadrezVelhaGame({ user, roomData, onExit }) {
       // No backend, o sorteio é automático ao entrar o segundo player
     });
 
-    const unsubDrawResult = on('velha-draw-result', (data) => {
-      setDrawWinner(data);
+    const unsubDrawResult = (data) => {
+      // Ajusta para o formato esperado pelo componente: { userId: ..., userName: ... }
+      setDrawWinner({ userId: data.winnerId, userName: data.winnerName });
       setSetupPhase('DRAWING');
       setTimeout(() => setSetupPhase('CHOOSING'), 2000);
-    });
+    };
 
-    const unsubGameReady = on('velha-game-ready', (data) => {
+    const offDraw = on('velha-draw-result', unsubDrawResult);
+
+    const offReady = on('velha-game-ready', (data) => {
       setAssignedColors({ white: data.white, black: data.black });
       setBoard(data.board);
       setInventory(data.inventory);
@@ -237,6 +240,7 @@ export default function XadrezVelhaGame({ user, roomData, onExit }) {
       setGameOver(null);
       setRematchRequested(false);
       setOpponentWantsRematch(false);
+      setSetupPhase('READY');
     });
 
     const unsubDrop = on('velha-piece-dropped', (data) => {
@@ -263,31 +267,36 @@ export default function XadrezVelhaGame({ user, roomData, onExit }) {
     });
 
     return () => {
-      unsubOpponent(); unsubDrawResult(); unsubGameReady();
-      unsubDrop(); unsubMove(); unsubOver(); unsubRematchReq();
+      unsubOpponent();
+      offDraw();
+      offReady();
+      unsubDrop();
+      unsubMove();
+      unsubOver();
+      unsubRematchReq();
     };
-  }, [on, roomData]);
+  }, [on, myId]);
 
   // Sorteio Local para PVC
   useEffect(() => {
     if (isPVC && setupPhase === 'DRAWING') {
-      const winner = Math.random() > 0.5 ? { userId: 'YOU', userName: roomData.whiteName } : { userId: 'AI', userName: 'Computador' };
+      const winner = Math.random() > 0.5 ? { userId: myId, userName: roomData.whiteName } : { userId: 'AI', userName: 'Computador' };
       setTimeout(() => {
         setDrawWinner(winner);
         setTimeout(() => setSetupPhase('CHOOSING'), 2000);
       }, 1000);
     }
-  }, [isPVC, setupPhase, roomData]);
+  }, [isPVC, setupPhase, roomData, myId]);
 
   const handlePickColor = (color) => {
     if (isPVC) {
-      const iAmWinner = drawWinner.userId === 'YOU';
+      const iAmWinner = drawWinner.userId === myId;
       const pickedColor = color; // 'white' | 'black'
 
       let white, black;
       if (iAmWinner) {
-        white = pickedColor === 'white' ? { userId: currentUserId, userName: roomData.whiteName } : { userId: 'AI', userName: 'Computador' };
-        black = pickedColor === 'black' ? { userId: currentUserId, userName: roomData.whiteName } : { userId: 'AI', userName: 'Computador' };
+        white = pickedColor === 'white' ? { userId: myId, userName: roomData.whiteName } : { userId: 'AI', userName: 'Computador' };
+        black = pickedColor === 'black' ? { userId: myId, userName: roomData.whiteName } : { userId: 'AI', userName: 'Computador' };
       } else {
         // Se a IA ganhou o sorteio, ela escolhe aleatoriamente
         // Já tratado no useEffect de IA escolha
@@ -525,7 +534,7 @@ export default function XadrezVelhaGame({ user, roomData, onExit }) {
   }
 
   if (setupPhase === 'CHOOSING') {
-    const iAmWinner = isPVC ? drawWinner.userId === 'YOU' : drawWinner.userId === roomData.whiteName;
+    const iAmWinner = drawWinner.userId == myId;
     return (
       <div className="velha-container flex flex-col items-center justify-center min-h-[60vh]">
         <div className="text-center p-8 bg-white rounded-2xl shadow-xl w-full max-w-sm">

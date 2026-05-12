@@ -42,6 +42,9 @@ export default function ChessHomeScreen({ user, onBack }) {
   const [loading, setLoading] = useState(false);
   const [showRanking, setShowRanking] = useState(false);
 
+  // game session
+  const [gameSession, setGameSession] = useState(null);
+
   // Identidade do usuário para esta sessão
   const myId = user?.id || `guest_${Date.now().toString().slice(-6)}`;
   const myName = user?.fullName || 'Convidado';

@@ -192,30 +192,124 @@
   color: #666;
 }
 
-/* Modais de Fim de Jogo */
-.velha-overlay {
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.7);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 10;
-  border-radius: 8px;
-}
-
-.velha-modal {
-  background: white;
-  padding: 1.5rem;
-  border-radius: 12px;
-  text-align: center;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-  animation: slide-up 0.3s ease;
-}
-
 @keyframes slide-up {
   from { transform: translateY(20px); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
+}
+
+/* ── RESULT PANEL (OUTSIDE BOARD) ─────────────────────────────────────── */
+.velha-result-panel {
+  width: min(90vw, 360px);
+  margin-top: 1.5rem;
+  z-index: 5;
+}
+
+.velha-result-card {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 20px;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+  text-align: center;
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+}
+
+.velha-result-card.win { border-color: #769656; background: linear-gradient(to bottom, #ffffff, #f9fbf7); }
+.velha-result-card.loss { border-color: #ee4b2b; background: linear-gradient(to bottom, #ffffff, #fff9f8); }
+.velha-result-card.draw { border-color: #8b8b8b; background: linear-gradient(to bottom, #ffffff, #f8f8f8); }
+
+.result-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.result-icon {
+  font-size: 3rem;
+  line-height: 1;
+}
+
+.result-header h2 {
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: #333;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: -0.5px;
+}
+
+.result-reason {
+  color: #666;
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-bottom: 1.5rem;
+}
+
+.result-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.action-btn {
+  width: 100%;
+  padding: 1rem;
+  border-radius: 12px;
+  font-weight: 800;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+
+.action-btn.primary {
+  background: #769656;
+  color: white;
+  border: none;
+  box-shadow: 0 4px 12px rgba(118, 150, 86, 0.3);
+}
+
+.action-btn.primary:hover:not(:disabled) {
+  background: #6a874d;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(118, 150, 86, 0.4);
+}
+
+.action-btn.primary.loading {
+  background: #a5bca0;
+  cursor: not-allowed;
+}
+
+.action-btn.secondary {
+  background: white;
+  color: #666;
+  border: 2px solid #f0f0f0;
+}
+
+.action-btn.secondary:hover {
+  background: #f9f9f9;
+  border-color: #e0e0e0;
+}
+
+.opponent-feedback {
+  margin-top: 1rem;
+  padding: 0.5rem;
+  background: #e8f5e9;
+  color: #2e7d32;
+  font-size: 0.7rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  border-radius: 8px;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 0.6; }
+  50% { opacity: 1; }
+  100% { opacity: 0.6; }
 }
 
 /* ── SORTEIO E SETUP ─────────────────────────────────────────────────── */
@@ -263,20 +357,3 @@
   100% { transform: rotateY(3600deg); }
 }
 
-/* ── ESTADOS DO MODAL ─────────────────────────────────────────────────── */
-.velha-modal.win { border-top: 10px solid #769656; }
-.velha-modal.loss { border-top: 10px solid #ee4b2b; }
-.velha-modal.draw { border-top: 10px solid #8b8b8b; }
-
-.velha-modal h2 {
-  font-size: 1.75rem;
-  font-weight: 900;
-  margin-bottom: 0.5rem;
-  letter-spacing: -1px;
-}
-
-.velha-modal p {
-  color: #666;
-  font-weight: 500;
-  margin-bottom: 2rem;
-}

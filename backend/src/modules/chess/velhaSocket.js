@@ -88,6 +88,7 @@ module.exports = function velhaSocket(io) {
         turn: 'W',
         phase: 'DROP',
         moves: [],
+        boardHistory: [],
         player1: { socketId: socket.id, userId, userName },
         player2: null,
       };
@@ -171,6 +172,7 @@ module.exports = function velhaSocket(io) {
 
       room.phase = 'DROP';
       room.board = Array(9).fill(null);
+      room.boardHistory = [Array(9).fill(null).join(',')];
       room.inventory = { W: { T: 1, C: 1, B: 1 }, B: { T: 1, C: 1, B: 1 } };
       room.turn = 'W';
 
@@ -206,6 +208,7 @@ module.exports = function velhaSocket(io) {
         room.black = oldWhite;
         
         room.board = Array(9).fill(null);
+        room.boardHistory = [Array(9).fill(null).join(',')];
         room.inventory = { W: { T: 1, C: 1, B: 1 }, B: { T: 1, C: 1, B: 1 } };
         room.turn = 'W';
         room.phase = 'DROP';
@@ -240,6 +243,7 @@ module.exports = function velhaSocket(io) {
       // Executa o Drop
       room.board[idx] = myColor + pieceType;
       room.inventory[myColor][pieceType]--;
+      room.boardHistory.push(room.board.join(','));
       room.moves.push(`Drop ${myColor}${pieceType} at ${idx}`);
 
       // Verifica se a fase DROP acabou
@@ -280,6 +284,7 @@ module.exports = function velhaSocket(io) {
       // Executa o movimento
       room.board[to] = room.board[from];
       room.board[from] = null;
+      room.boardHistory.push(room.board.join(','));
       room.moves.push(`Move ${room.board[to]} ${from}->${to}`);
 
       room.turn = room.turn === 'W' ? 'B' : 'W';
@@ -335,10 +340,17 @@ module.exports = function velhaSocket(io) {
     }
 
     if (room.phase === 'MOVE' && checkDraw(room.board, room.turn)) {
-      const winnerColor = room.turn === 'W' ? 'B' : 'W';
-      const result = winnerColor === 'W' ? 'WHITE_WIN' : 'BLACK_WIN';
-      velhaNsp.to(roomCode).emit('velha-game-over', { result, reason: 'stalemate' });
-      _persistVelhaResult(room, result, 'stalemate');
+      velhaNsp.to(roomCode).emit('velha-game-over', { result: 'DRAW', reason: 'stalemate' });
+      _persistVelhaResult(room, 'DRAW', 'stalemate');
+      return;
+    }
+
+    // Verifica empate por repetição (3 vezes o mesmo estado)
+    const currentState = room.board.join(',');
+    const repetitions = room.boardHistory.filter(s => s === currentState).length;
+    if (repetitions >= 3) {
+      velhaNsp.to(roomCode).emit('velha-game-over', { result: 'DRAW', reason: 'repetition' });
+      _persistVelhaResult(room, 'DRAW', 'repetition');
     }
   }
 

@@ -10,9 +10,9 @@ const PIECES = {
 };
 
 const WIN_LINES = [
-  [0,1,2], [3,4,5], [6,7,8], // Linhas
-  [0,3,6], [1,4,7], [2,5,8], // Colunas
-  [0,4,8], [2,4,6]           // Diagonais
+  [0, 1, 2], [3, 4, 5], [6, 7, 8], // Linhas
+  [0, 3, 6], [1, 4, 7], [2, 5, 8], // Colunas
+  [0, 4, 8], [2, 4, 6]           // Diagonais
 ];
 
 function isPathClear(board, r1, c1, r2, c2) {
@@ -115,7 +115,7 @@ function minimax(board, inventory, turn, phase, depth, alpha, beta, isMaximizing
   const oppColor = myColor === 'W' ? 'B' : 'W';
   const win = checkWin(board);
   if (win) return { score: win.winner === myColor ? 1000 + depth : -1000 - depth };
-  
+
   if (phase === 'MOVE' && checkDraw(board, turn)) return { score: turn === myColor ? -1000 - depth : 1000 + depth };
   if (depth === 0) return { score: evaluateBoard(board, myColor) };
 
@@ -131,12 +131,12 @@ function minimax(board, inventory, turn, phase, depth, alpha, beta, isMaximizing
       const newBoard = [...board];
       const newInv = JSON.parse(JSON.stringify(inventory));
       let newPhase = phase;
-      
+
       if (action.type === 'drop') {
         newBoard[action.idx] = turn + action.piece;
         newInv[turn][action.piece]--;
-        const invW = Object.values(newInv.W).reduce((a,b)=>a+b,0);
-        const invB = Object.values(newInv.B).reduce((a,b)=>a+b,0);
+        const invW = Object.values(newInv.W).reduce((a, b) => a + b, 0);
+        const invB = Object.values(newInv.B).reduce((a, b) => a + b, 0);
         if (invW === 0 && invB === 0) newPhase = 'MOVE';
       } else {
         newBoard[action.to] = newBoard[action.from];
@@ -159,12 +159,12 @@ function minimax(board, inventory, turn, phase, depth, alpha, beta, isMaximizing
       const newBoard = [...board];
       const newInv = JSON.parse(JSON.stringify(inventory));
       let newPhase = phase;
-      
+
       if (action.type === 'drop') {
         newBoard[action.idx] = turn + action.piece;
         newInv[turn][action.piece]--;
-        const invW = Object.values(newInv.W).reduce((a,b)=>a+b,0);
-        const invB = Object.values(newInv.B).reduce((a,b)=>a+b,0);
+        const invW = Object.values(newInv.W).reduce((a, b) => a + b, 0);
+        const invB = Object.values(newInv.B).reduce((a, b) => a + b, 0);
         if (invW === 0 && invB === 0) newPhase = 'MOVE';
       } else {
         newBoard[action.to] = newBoard[action.from];
@@ -188,7 +188,7 @@ export default function XadrezVelhaGame({ user, roomData, onExit }) {
   const { emit, on } = useVelhaSocket();
 
   const isPVC = roomData.mode === 'PVC';
-  
+
   // Fases de Setup: 'WAITING' (PVP) | 'DRAWING' | 'CHOOSING' | 'READY'
   const [setupPhase, setSetupPhase] = useState(isPVC ? 'DRAWING' : 'WAITING');
   const [drawWinner, setDrawWinner] = useState(null); // { userId, userName }
@@ -196,9 +196,10 @@ export default function XadrezVelhaGame({ user, roomData, onExit }) {
 
   // Estado Local do Jogo
   const [board, setBoard] = useState(Array(9).fill(null));
-  const [inventory, setInventory] = useState({ W: {T:1,C:1,B:1}, B: {T:1,C:1,B:1} });
+  const [inventory, setInventory] = useState({ W: { T: 1, C: 1, B: 1 }, B: { T: 1, C: 1, B: 1 } });
   const [turn, setTurn] = useState('W');
   const [phase, setPhase] = useState('DROP'); // DROP | MOVE
+  const [boardHistory, setBoardHistory] = useState([]);
 
   const [selectedDropPiece, setSelectedDropPiece] = useState(null);
   const [selectedMoveIdx, setSelectedMoveIdx] = useState(null);
@@ -232,7 +233,7 @@ export default function XadrezVelhaGame({ user, roomData, onExit }) {
       setInventory(data.inventory);
       setTurn(data.turn);
       setPhase(data.phase);
-      setSetupPhase('READY');
+      setBoardHistory([data.board.join(',')]);
       setGameOver(null);
       setRematchRequested(false);
       setOpponentWantsRematch(false);
@@ -261,8 +262,8 @@ export default function XadrezVelhaGame({ user, roomData, onExit }) {
       setOpponentWantsRematch(true);
     });
 
-    return () => { 
-      unsubOpponent(); unsubDrawResult(); unsubGameReady(); 
+    return () => {
+      unsubOpponent(); unsubDrawResult(); unsubGameReady();
       unsubDrop(); unsubMove(); unsubOver(); unsubRematchReq();
     };
   }, [on, roomData]);
@@ -282,7 +283,7 @@ export default function XadrezVelhaGame({ user, roomData, onExit }) {
     if (isPVC) {
       const iAmWinner = drawWinner.userId === 'YOU';
       const pickedColor = color; // 'white' | 'black'
-      
+
       let white, black;
       if (iAmWinner) {
         white = pickedColor === 'white' ? { userId: currentUserId, userName: roomData.whiteName } : { userId: 'AI', userName: 'Computador' };
@@ -291,7 +292,7 @@ export default function XadrezVelhaGame({ user, roomData, onExit }) {
         // Se a IA ganhou o sorteio, ela escolhe aleatoriamente
         // Já tratado no useEffect de IA escolha
       }
-      
+
       setAssignedColors({ white, black });
       setSetupPhase('READY');
     } else {
@@ -326,14 +327,14 @@ export default function XadrezVelhaGame({ user, roomData, onExit }) {
       const timer = setTimeout(() => {
         const depths = { 1: 0, 2: 2, 3: 3, 4: 5, 5: 7 };
         const depth = depths[roomData.aiLevel || 3];
-        
+
         let actionToPlay;
         if (depth === 0) {
-           const actions = getPossibleActions(board, inventory, turn, phase);
-           actionToPlay = actions[Math.floor(Math.random() * actions.length)];
+          const actions = getPossibleActions(board, inventory, turn, phase);
+          actionToPlay = actions[Math.floor(Math.random() * actions.length)];
         } else {
-           const aiResult = minimax(board, inventory, turn, phase, depth, -Infinity, Infinity, true, oppColorCode);
-           actionToPlay = aiResult.action;
+          const aiResult = minimax(board, inventory, turn, phase, depth, -Infinity, Infinity, true, oppColorCode);
+          actionToPlay = aiResult.action;
         }
 
         if (actionToPlay) {
@@ -353,10 +354,10 @@ export default function XadrezVelhaGame({ user, roomData, onExit }) {
     const newBoard = [...board];
     newBoard[idx] = colorCode + pieceType;
     const newInv = { ...inventory, [colorCode]: { ...inventory[colorCode], [pieceType]: inventory[colorCode][pieceType] - 1 } };
-    
+
     let newPhase = phase;
-    const invW = Object.values(newInv.W).reduce((a,b)=>a+b,0);
-    const invB = Object.values(newInv.B).reduce((a,b)=>a+b,0);
+    const invW = Object.values(newInv.W).reduce((a, b) => a + b, 0);
+    const invB = Object.values(newInv.B).reduce((a, b) => a + b, 0);
     if (invW === 0 && invB === 0) newPhase = 'MOVE';
 
     setBoard(newBoard);
@@ -365,6 +366,9 @@ export default function XadrezVelhaGame({ user, roomData, onExit }) {
     setTurn(colorCode === 'W' ? 'B' : 'W');
     setSelectedDropPiece(null);
 
+    const newHistory = [...boardHistory, newBoard.join(',')];
+    setBoardHistory(newHistory);
+
     const win = checkWin(newBoard);
     if (win) {
       setGameOver({ result: win.winner === 'W' ? 'WHITE_WIN' : 'BLACK_WIN', reason: 'checkmate', winLine: win.line });
@@ -372,9 +376,14 @@ export default function XadrezVelhaGame({ user, roomData, onExit }) {
     }
 
     if (newPhase === 'MOVE' && checkDraw(newBoard, colorCode === 'W' ? 'B' : 'W')) {
-      const winner = colorCode === 'W' ? 'WHITE_WIN' : 'BLACK_WIN';
-      setGameOver({ result: winner, reason: 'stalemate' });
+      setGameOver({ result: 'DRAW', reason: 'stalemate' });
       return;
+    }
+
+    // Repetição 3x
+    const repetitions = newHistory.filter(s => s === newBoard.join(',')).length;
+    if (repetitions >= 3) {
+      setGameOver({ result: 'DRAW', reason: 'repetition' });
     }
   };
 
@@ -382,11 +391,14 @@ export default function XadrezVelhaGame({ user, roomData, onExit }) {
     const newBoard = [...board];
     newBoard[to] = newBoard[from];
     newBoard[from] = null;
-    
+
     setBoard(newBoard);
     setTurn(colorCode === 'W' ? 'B' : 'W');
     setSelectedMoveIdx(null);
     setValidMoves([]);
+
+    const newHistory = [...boardHistory, newBoard.join(',')];
+    setBoardHistory(newHistory);
 
     const win = checkWin(newBoard);
     if (win) {
@@ -394,9 +406,14 @@ export default function XadrezVelhaGame({ user, roomData, onExit }) {
       return;
     }
     if (checkDraw(newBoard, colorCode === 'W' ? 'B' : 'W')) {
-      const winner = colorCode === 'W' ? 'WHITE_WIN' : 'BLACK_WIN';
-      setGameOver({ result: winner, reason: 'stalemate' });
+      setGameOver({ result: 'DRAW', reason: 'stalemate' });
       return;
+    }
+
+    // Repetição 3x
+    const repetitions = newHistory.filter(s => s === newBoard.join(',')).length;
+    if (repetitions >= 3) {
+      setGameOver({ result: 'DRAW', reason: 'repetition' });
     }
   };
 
@@ -406,7 +423,7 @@ export default function XadrezVelhaGame({ user, roomData, onExit }) {
 
     if (phase === 'DROP') {
       if (board[idx] || !selectedDropPiece) return;
-      
+
       if (isPVC) {
         handleLocalDrop(idx, selectedDropPiece, myColorCode);
       } else {
@@ -414,7 +431,7 @@ export default function XadrezVelhaGame({ user, roomData, onExit }) {
       }
     } else if (phase === 'MOVE') {
       const piece = board[idx];
-      
+
       if (piece && piece[0] === myColorCode) {
         setSelectedMoveIdx(idx);
         setValidMoves(getValidMoves(board, idx));
@@ -437,7 +454,8 @@ export default function XadrezVelhaGame({ user, roomData, onExit }) {
       const oldBlack = assignedColors.black;
       setAssignedColors({ white: oldBlack, black: oldWhite });
       setBoard(Array(9).fill(null));
-      setInventory({ W: {T:1,C:1,B:1}, B: {T:1,C:1,B:1} });
+      setBoardHistory([Array(9).fill(null).join(',')]);
+      setInventory({ W: { T: 1, C: 1, B: 1 }, B: { T: 1, C: 1, B: 1 } });
       setTurn('W');
       setPhase('DROP');
       setGameOver(null);
@@ -464,18 +482,18 @@ export default function XadrezVelhaGame({ user, roomData, onExit }) {
       <div className="velha-container flex flex-col items-center justify-center min-h-[60vh]">
         <div className="text-center p-8 bg-white rounded-2xl shadow-xl w-full max-w-sm">
           <div className="w-16 h-16 border-4 border-t-[#769656] border-gray-200 rounded-full animate-spin mx-auto mb-6"></div>
-          
+
           <h2 className="text-2xl font-black mb-2 uppercase text-gray-800">Aguardando Oponente</h2>
           <p className="text-gray-500 mb-8 font-medium">Compartilhe o código abaixo com seu adversário:</p>
-          
+
           <div className="bg-gray-50 p-6 rounded-2xl border-2 border-dashed border-gray-200 mb-8">
             <span className="text-4xl font-black tracking-[0.2em] text-[#769656]">{roomData.roomCode}</span>
           </div>
 
           <p className="text-xs text-gray-400 mb-6 italic">O sorteio começará automaticamente assim que alguém entrar.</p>
-          
-          <button 
-            onClick={onExit} 
+
+          <button
+            onClick={onExit}
             className="w-full py-3 text-sm text-red-500 font-bold hover:bg-red-50 rounded-xl transition-colors border border-transparent hover:border-red-100"
           >
             Cancelar e Sair
@@ -516,7 +534,7 @@ export default function XadrezVelhaGame({ user, roomData, onExit }) {
               <h2 className="text-2xl font-black mb-2 uppercase text-gray-800">Você Venceu!</h2>
               <p className="text-gray-500 mb-8 font-medium">Escolha sua cor para começar:</p>
               <div className="flex gap-4">
-                <button 
+                <button
                   onClick={() => handlePickColor('white')}
                   className="flex-1 p-6 rounded-2xl border-2 border-gray-200 hover:border-[#769656] transition-all group"
                 >
@@ -524,7 +542,7 @@ export default function XadrezVelhaGame({ user, roomData, onExit }) {
                   <strong className="block text-sm uppercase">Brancas</strong>
                   <span className="text-[10px] text-gray-400">Começa o Jogo</span>
                 </button>
-                <button 
+                <button
                   onClick={() => handlePickColor('black')}
                   className="flex-1 p-6 rounded-2xl border-2 border-gray-200 hover:border-[#769656] transition-all group"
                 >
@@ -538,8 +556,8 @@ export default function XadrezVelhaGame({ user, roomData, onExit }) {
             <>
               <h2 className="text-2xl font-black mb-2 uppercase text-gray-800">{drawWinner.userName} Venceu</h2>
               <p className="text-gray-500 mb-8 font-medium">
-                {aiChoiceFeedback 
-                  ? `O Computador escolheu as ${aiChoiceFeedback === 'white' ? 'BRANCAS' : 'PRETAS'}!` 
+                {aiChoiceFeedback
+                  ? `O Computador escolheu as ${aiChoiceFeedback === 'white' ? 'BRANCAS' : 'PRETAS'}!`
                   : 'Aguardando escolha da cor...'}
               </p>
               {aiChoiceFeedback ? (
@@ -559,9 +577,9 @@ export default function XadrezVelhaGame({ user, roomData, onExit }) {
   const renderCell = (idx) => {
     const piece = board[idx];
     const isLight = (Math.floor(idx / 3) + (idx % 3)) % 2 === 0;
-    
+
     let cellClass = `velha-cell ${isLight ? 'velha-cell-light' : 'velha-cell-dark'}`;
-    
+
     if (selectedMoveIdx === idx) cellClass += ' selected';
     if (validMoves.includes(idx)) cellClass += ' valid-move';
     if (gameOver?.winLine?.includes(idx)) cellClass += ' win-cell';
@@ -581,20 +599,20 @@ export default function XadrezVelhaGame({ user, roomData, onExit }) {
     const inv = inventory[color];
     const isMyInv = color === myColorCode;
     const isTurn = turn === color;
-    
+
     return (
       <div className={`velha-inventory ${isMyInv ? 'bottom' : 'top'}`}>
         <div className="flex items-center gap-2">
           <span className="font-bold">{isMyInv ? 'Você' : (isPVC ? 'Computador' : 'Oponente')}</span>
           {isTurn && !gameOver && <span className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></span>}
         </div>
-        
+
         <div className="velha-inventory-group">
           {['T', 'B', 'C'].map(pType => {
             const count = inv[pType];
             const isSelectable = phase === 'DROP' && isMyInv && isTurn && count > 0;
             const isSelected = selectedDropPiece === pType;
-            
+
             return (
               <button
                 key={pType}
@@ -615,11 +633,11 @@ export default function XadrezVelhaGame({ user, roomData, onExit }) {
   return (
     <div className="velha-container pt-4 pb-20 relative">
       <div className="absolute top-4 left-4 z-10">
-        <button 
-          className="chess-lobby-back group flex items-center gap-2" 
+        <button
+          className="chess-lobby-back group flex items-center gap-2"
           onClick={onExit}
         >
-          <span className="transition-transform group-hover:-translate-x-1">←</span> 
+          <span className="transition-transform group-hover:-translate-x-1">←</span>
           Voltar
         </button>
       </div>
@@ -634,60 +652,55 @@ export default function XadrezVelhaGame({ user, roomData, onExit }) {
       </div>
 
       {renderInventory(oppColorCode)}
-      
+
       <div className="velha-board my-4">
-        {[0,1,2,3,4,5,6,7,8].map(idx => renderCell(idx))}
+        {[0, 1, 2, 3, 4, 5, 6, 7, 8].map(idx => renderCell(idx))}
       </div>
 
       {renderInventory(myColorCode)}
 
-      <div className="mt-8 flex gap-4">
-        <button 
-          onClick={handleResign}
-          className="px-6 py-3 bg-red-100 text-red-700 font-bold rounded-xl shadow hover:bg-red-200 transition"
-        >
-          Abandonar
-        </button>
-      </div>
-
       {gameOver && (
-        <div className="velha-overlay">
-          <div className={`velha-modal ${
-            gameOver.result === 'DRAW' ? 'draw' : 
-            (gameOver.result === (myColorCode === 'W' ? 'WHITE_WIN' : 'BLACK_WIN') ? 'win' : 'loss')
-          }`}>
-            <h2>
-              {gameOver.result === 'DRAW' ? 'Empate!' : 
-               (gameOver.result === (myColorCode === 'W' ? 'WHITE_WIN' : 'BLACK_WIN') ? 'Você Venceu! 🎉' : 'Você Perdeu 😢')}
-            </h2>
-            <p>
+        <div className="velha-result-panel animate-in fade-in slide-in-from-bottom duration-500">
+          <div className={`velha-result-card ${gameOver.result === 'DRAW' ? 'draw' :
+              (gameOver.result === (myColorCode === 'W' ? 'WHITE_WIN' : 'BLACK_WIN') ? 'win' : 'loss')
+            }`}>
+            <div className="result-header">
+              <span className="result-icon">
+                {gameOver.result === 'DRAW' ? '🤝' :
+                  (gameOver.result === (myColorCode === 'W' ? 'WHITE_WIN' : 'BLACK_WIN') ? '🏆' : '💀')}
+              </span>
+              <h2>
+                {gameOver.result === 'DRAW' ? 'Empate!' :
+                  (gameOver.result === (myColorCode === 'W' ? 'WHITE_WIN' : 'BLACK_WIN') ? 'Você Venceu!' : 'Você Perdeu')}
+              </h2>
+            </div>
+
+            <p className="result-reason">
               {gameOver.reason === 'checkmate' ? 'Linha completa!' :
-               gameOver.reason === 'stalemate' ? 'Sem movimentos possíveis.' :
-               gameOver.reason === 'resignation' ? 'Desistência.' : 'Oponente desconectou.'}
+                gameOver.reason === 'stalemate' ? 'Sem movimentos possíveis.' :
+                  gameOver.reason === 'repetition' ? 'Repetição de movimentos.' :
+                    gameOver.reason === 'resignation' ? 'Desistência.' : 'Oponente desconectou.'}
             </p>
-            
-            <div className="flex flex-col gap-3">
-              <button 
+
+            <div className="result-actions">
+              <button
                 onClick={handleRematch}
                 disabled={rematchRequested}
-                className={`w-full py-4 rounded-xl font-black text-sm uppercase tracking-wider shadow-lg transition-all active:scale-95 ${
-                  rematchRequested 
-                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
-                  : 'bg-[#769656] text-white hover:bg-[#6a874d]'
-                }`}
+                className={`action-btn primary ${rematchRequested ? 'loading' : ''}`}
               >
-                {rematchRequested ? '⏳ Aguardando...' : (opponentWantsRematch ? '🤝 Aceitar Revanche' : '🔄 Jogar Novamente')}
+                {rematchRequested ? 'Aguardando...' : (opponentWantsRematch ? 'Aceitar Revanche' : 'Jogar Novamente')}
               </button>
 
-              <button 
+              <button
                 onClick={onExit}
-                className="w-full py-4 bg-white border-2 border-gray-100 text-gray-500 font-bold rounded-xl hover:bg-gray-50 transition"
+                className="action-btn secondary"
               >
-                Sair do Jogo
+                Sair
               </button>
             </div>
+
             {opponentWantsRematch && !rematchRequested && (
-              <div className="mt-4 p-2 bg-green-50 text-green-700 text-[10px] font-black uppercase rounded-lg animate-pulse">
+              <div className="opponent-feedback">
                 Oponente quer jogar de novo!
               </div>
             )}

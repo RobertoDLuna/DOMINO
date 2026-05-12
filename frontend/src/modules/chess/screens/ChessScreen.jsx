@@ -419,6 +419,7 @@ export default function ChessScreen({
             onMove={handleMove}
             gameOver={!!gameOver}
             disabled={status !== 'playing'}
+            lastMove={moves[moves.length - 1]}
           />
         </div>
 

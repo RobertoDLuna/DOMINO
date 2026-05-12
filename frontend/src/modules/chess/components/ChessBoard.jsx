@@ -42,6 +42,7 @@ export default function ChessBoard({
   onMove,
   gameOver,
   disabled,
+  lastMove,
 }) {
   const theme = BOARD_THEMES[boardTheme] || BOARD_THEMES.wood;
 
@@ -59,7 +60,16 @@ export default function ChessBoard({
     setLocalFen(fen);
     setSelectedSquare(null);
     setOptionSquares({});
-  }, [fen]);
+    
+    if (lastMove) {
+      setLastMoveSquares({
+        [lastMove.from]: { background: theme.lastMove },
+        [lastMove.to]: { background: theme.lastMove },
+      });
+    } else {
+      setLastMoveSquares({});
+    }
+  }, [fen, lastMove, theme.lastMove]);
 
   // Compute legal moves squares for the selected piece
   const getMoveOptions = useCallback((square) => {

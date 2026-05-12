@@ -23,7 +23,7 @@ function describeMove(move) {
   const piece = PIECE_INITIALS[move.piece] || '';
   const to = move.to.toLowerCase();
   const capture = move.captured ? 'x' : '';
-  const check = move.san.includes('#') ? '#' : (move.san.includes('+') ? '+' : '');
+  const check = move.san.includes('#') ? '++' : (move.san.includes('+') ? '+' : '');
   const promotion = move.promotion ? `=${PIECE_INITIALS[move.promotion] || move.promotion.toUpperCase()}` : '';
 
   return `${piece}${capture}${to}${promotion}${check}`;
@@ -157,7 +157,7 @@ export default function ChessSidebar({
               <div key={i} className={`chess-log-item ${isWhite ? 'chess-log-item--white' : 'chess-log-item--black'}`}>
                 <div className="chess-log-header">
                   <span>{turnNum}. {isWhite ? 'Brancas' : 'Negras'}</span>
-                  <span className="chess-log-san">{typeof move === 'string' ? move : move.san}</span>
+                  <span className="chess-log-san">{typeof move === 'string' ? move : describeMove(move)}</span>
                 </div>
                 <div className="chess-log-text">
                   {describeMove(move)}

@@ -17,6 +17,13 @@ const AI_LEVELS = [
   { value: 10, label: 'Mestre', description: 'Quase imbatível' },
 ];
 
+const TIME_OPTIONS = [
+  { value: 300, label: '5 min' },
+  { value: 600, label: '10 min' },
+  { value: 900, label: '15 min' },
+  { value: null, label: 'Sem tempo' },
+];
+
 import ChessRankingBoard from '../components/ChessRankingBoard';
 
 export default function ChessHomeScreen({ user, onBack }) {
@@ -29,6 +36,7 @@ export default function ChessHomeScreen({ user, onBack }) {
   const [mode, setMode] = useState(null); // null | 'PVP' | 'PVC'
   const [subMode, setSubMode] = useState(null); // 'create' | 'join'
   const [aiLevel, setAiLevel] = useState(5);
+  const [timeLimit, setTimeLimit] = useState(600); // 10 min padrão
   const [joinCode, setJoinCode] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -39,7 +47,7 @@ export default function ChessHomeScreen({ user, onBack }) {
 
   // ── Socket event listeners ──────────────────────────────────────────────
   useEffect(() => {
-    const unsubCreated = on('chess-room-created', ({ roomCode, color, fen }) => {
+    const unsubCreated = on('chess-room-created', ({ roomCode, color, fen, timeLimit: serverTimeLimit }) => {
       setLoading(false);
       setGameSession({
         roomCode,
@@ -50,6 +58,7 @@ export default function ChessHomeScreen({ user, onBack }) {
         blackName: null,
         initialFen: fen,
         status: 'waiting',
+        timeLimit: serverTimeLimit,
       });
     });
 
@@ -64,6 +73,7 @@ export default function ChessHomeScreen({ user, onBack }) {
         blackName: data.blackName,
         initialFen: data.fen,
         status: 'playing',
+        timeLimit: data.timeLimit,
       });
     });
 
@@ -97,6 +107,7 @@ export default function ChessHomeScreen({ user, onBack }) {
       userId: user?.id || `guest_${Date.now()}`,
       userName: user?.fullName || 'Convidado',
       mode: 'PVP',
+      timeLimit,
     });
   }
 
@@ -123,6 +134,7 @@ export default function ChessHomeScreen({ user, onBack }) {
       blackName: `IA Nível ${aiLevel}`,
       initialFen: null,
       status: 'playing',
+      timeLimit,
     });
   }
 
@@ -218,6 +230,7 @@ export default function ChessHomeScreen({ user, onBack }) {
         whiteName={gameSession.whiteName}
         blackName={gameSession.blackName}
         initialFen={gameSession.initialFen}
+        timeLimit={gameSession.timeLimit}
         boardTheme="wood"
         onBack={handleBack}
       />
@@ -328,9 +341,24 @@ export default function ChessHomeScreen({ user, onBack }) {
             <h2 className="chess-section-title">Criar Nova Sala</h2>
             <p className="chess-action-desc">
               Uma sala será criada e será realizado um <strong>sorteio</strong> para definir quem escolhe as peças.
-              Compartilhe o código com seu adversário.
             </p>
-            {error && <p className="chess-error">{error}</p>}
+
+            <div className="chess-time-selector mt-4">
+              <span className="text-[11px] font-black uppercase tracking-widest text-[#64748b] mb-3 block">Controle de Tempo</span>
+              <div className="flex flex-wrap gap-2">
+                {TIME_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.label}
+                    className={`chess-time-btn ${timeLimit === opt.value ? 'chess-time-btn--active' : ''}`}
+                    onClick={() => setTimeLimit(opt.value)}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {error && <p className="chess-error mt-4">{error}</p>}
             <button
               className="chess-primary-btn"
               onClick={handleCreateRoom}
@@ -385,6 +413,21 @@ export default function ChessHomeScreen({ user, onBack }) {
                   <span>{lvl.description}</span>
                 </button>
               ))}
+            </div>
+
+            <div className="chess-time-selector mt-6">
+              <span className="text-[11px] font-black uppercase tracking-widest text-[#64748b] mb-3 block">Controle de Tempo</span>
+              <div className="flex flex-wrap gap-2">
+                {TIME_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.label}
+                    className={`chess-time-btn ${timeLimit === opt.value ? 'chess-time-btn--active' : ''}`}
+                    onClick={() => setTimeLimit(opt.value)}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
             </div>
             <button
               className="chess-primary-btn"

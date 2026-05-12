@@ -46,6 +46,34 @@ const REASON_LABELS = {
   disconnection: 'por Desconexão',
 };
 
+function ChessTimer({ seconds, active }) {
+  if (seconds === null || seconds === undefined || Number.isNaN(seconds)) return null;
+  
+  const isLow = seconds < 30;
+  
+  let timeStr = "";
+  try {
+    if (seconds >= 60) {
+      const mins = Math.floor(seconds / 60);
+      const secs = Math.floor(seconds % 60);
+      timeStr = `${mins}:${secs.toString().padStart(2, '0')}`;
+    } else if (seconds >= 10) {
+      timeStr = `0:${Math.floor(seconds).toString().padStart(2, '0')}`;
+    } else {
+      // Mostra décimos de segundo abaixo de 10s
+      timeStr = `0:0${seconds.toFixed(1)}`;
+    }
+  } catch (e) {
+    return null;
+  }
+
+  return (
+    <div className={`chess-timer ${active ? 'active' : ''} ${isLow ? 'low' : ''}`}>
+      {timeStr}
+    </div>
+  );
+}
+
 export default function ChessSidebar({
   myColor,
   whiteName,
@@ -67,6 +95,8 @@ export default function ChessSidebar({
   opponentWantsRematch,
   onBack,
   roomCode,
+  whiteTime,
+  blackTime,
 }) {
   // Removemos o pairedMoves, pois faremos uma lista vertical descritiva
 
@@ -74,17 +104,25 @@ export default function ChessSidebar({
     <aside className="chess-sidebar">
       {/* Player names */}
       <div className="chess-players">
-        <PlayerBadge
-          name={blackName || (mode === 'PVC' ? `IA (Nível ${aiLevel})` : 'Aguardando...')}
-          color="black"
-          active={!isMyTurn && status === 'playing'}
-        />
+        <div className="chess-timer-container">
+          <PlayerBadge
+            name={blackName || (mode === 'PVC' ? `IA (Nível ${aiLevel})` : 'Aguardando...')}
+            color="black"
+            active={!isMyTurn && status === 'playing'}
+          />
+          {status === 'playing' && <ChessTimer seconds={blackTime} active={!isMyTurn} />}
+        </div>
+
         <div className="chess-vs">VS</div>
-        <PlayerBadge
-          name={whiteName || 'Você'}
-          color="white"
-          active={isMyTurn && status === 'playing'}
-        />
+
+        <div className="chess-timer-container">
+          <PlayerBadge
+            name={whiteName || 'Você'}
+            color="white"
+            active={isMyTurn && status === 'playing'}
+          />
+          {status === 'playing' && <ChessTimer seconds={whiteTime} active={isMyTurn} />}
+        </div>
       </div>
 
       {/* Status banner */}

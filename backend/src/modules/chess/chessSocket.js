@@ -42,7 +42,7 @@ module.exports = function chessSocket(io) {
     console.log(`[Chess] Player connected: ${socket.id}`);
 
     // ── CREATE ROOM ──────────────────────────────────────────────────────────
-    socket.on('create-chess-room', ({ userId, userName, mode = 'PVP', aiLevel = 5 }) => {
+    socket.on('create-chess-room', ({ userId, userName, mode = 'PVP', aiLevel = 5, timeLimit = 600 }) => {
       const roomCode = generateRoomCode();
       const chess = new Chess();
 
@@ -55,6 +55,7 @@ module.exports = function chessSocket(io) {
         player2: null,
         white: null,
         black: null,
+        timeLimit: mode === 'PVP' ? timeLimit : null,
         drawOfferedBy: null,
         rematchRequests: new Set(),
       };
@@ -65,6 +66,7 @@ module.exports = function chessSocket(io) {
       socket.emit('chess-room-created', {
         roomCode,
         fen: chess.fen(),
+        timeLimit: room.timeLimit,
       });
 
       console.log(`[Chess] Room created: ${roomCode} by ${userName} (mode: ${mode})`);
@@ -103,6 +105,7 @@ module.exports = function chessSocket(io) {
         blackName: userName,
         fen: room.chess.fen(),
         color: 'black',
+        timeLimit: room.timeLimit,
       });
 
       // 3. SORTEIO AUTOMÁTICO (com delay para garantir mount no client)

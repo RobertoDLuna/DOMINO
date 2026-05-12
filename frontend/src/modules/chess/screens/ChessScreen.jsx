@@ -29,6 +29,7 @@ export default function ChessScreen({
   roomCode,
   mode,          // 'PVP' | 'PVC'
   aiLevel,       // 1-10
+  timeLimit,     // Em segundos
   boardTheme,
   onBack,
 }) {
@@ -46,6 +47,10 @@ export default function ChessScreen({
   const [currentTheme, setCurrentTheme] = useState(boardTheme || 'wood');
   const [rematchRequested, setRematchRequested] = useState(false);
   const [opponentWantsRematch, setOpponentWantsRematch] = useState(false);
+  
+  // Timers (em segundos)
+  const [whiteTime, setWhiteTime] = useState(timeLimit === undefined ? 600 : timeLimit); 
+  const [blackTime, setBlackTime] = useState(timeLimit === undefined ? 600 : timeLimit);
 
   const chessRef = useRef(new Chess());
   const stockfishRef = useRef(null);
@@ -111,6 +116,22 @@ export default function ChessScreen({
     setMoves(chessRef.current.history({ verbose: true }));
     _checkGameOver();
   }
+
+  // ── Timer Logic (Visual Mock) ──────────────────────────────────────────
+  useEffect(() => {
+    if (status !== 'playing' || gameOver || timeLimit === null) return;
+
+    const interval = setInterval(() => {
+      const turn = chessRef.current.turn();
+      if (turn === 'w') {
+        setWhiteTime(prev => Math.max(0, prev - 0.1));
+      } else {
+        setBlackTime(prev => Math.max(0, prev - 0.1));
+      }
+    }, 100);
+
+    return () => clearInterval(interval);
+  }, [status, gameOver]);
 
   // ── Socket event listeners ─────────────────────────────────────────────
   useEffect(() => {
@@ -446,6 +467,8 @@ export default function ChessScreen({
             opponentWantsRematch={opponentWantsRematch}
             onBack={onBack}
             roomCode={roomCode}
+            whiteTime={whiteTime}
+            blackTime={blackTime}
           />
         </div>
       </div>

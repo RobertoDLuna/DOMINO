@@ -10,7 +10,7 @@ const PIECE_NAMES = {
   n: 'Cavalo',
   b: 'Bispo',
   r: 'Torre',
-  q: 'Rainha',
+  q: 'Dama',
   k: 'Rei'
 };
 

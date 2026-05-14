@@ -56,6 +56,9 @@ module.exports = function chessSocket(io) {
         white: null,
         black: null,
         timeLimit: mode === 'PVP' ? timeLimit : null,
+        whiteTimeRemaining: mode === 'PVP' && timeLimit ? timeLimit * 1000 : null,
+        blackTimeRemaining: mode === 'PVP' && timeLimit ? timeLimit * 1000 : null,
+        lastMoveTimestamp: null,
         drawOfferedBy: null,
         rematchRequests: new Set(),
       };
@@ -142,6 +145,11 @@ module.exports = function chessSocket(io) {
         fen: room.chess.fen(),
         turn: 'w',
       });
+      room.lastMoveTimestamp = Date.now();
+      if (room.timeLimit) {
+        room.whiteTimeRemaining = room.timeLimit * 1000;
+        room.blackTimeRemaining = room.timeLimit * 1000;
+      }
     });
 
     // ── REMATCH ───────────────────────────────────────────────────────────────
@@ -169,6 +177,11 @@ module.exports = function chessSocket(io) {
           fen: room.chess.fen(),
           turn: 'w',
         });
+        room.lastMoveTimestamp = Date.now();
+        if (room.timeLimit) {
+          room.whiteTimeRemaining = room.timeLimit * 1000;
+          room.blackTimeRemaining = room.timeLimit * 1000;
+        }
       }
     });
 
@@ -201,8 +214,30 @@ module.exports = function chessSocket(io) {
         return;
       }
 
-      // Validate turn
+      // Check for timeout BEFORE processing the move (Lazy Timestamp Evaluation)
       const turn = room.chess.turn(); // 'w' or 'b'
+      if (room.timeLimit && room.lastMoveTimestamp) {
+        const elapsed = Date.now() - room.lastMoveTimestamp;
+        if (turn === 'w') {
+          if (room.whiteTimeRemaining - elapsed <= 0) {
+             room.whiteTimeRemaining = 0;
+             const result = 'BLACK_WIN';
+             chessNsp.to(roomCode).emit('chess-game-over', { result, reason: 'timeout' });
+             _persistGameResult(room, result, 'timeout');
+             return;
+          }
+        } else {
+          if (room.blackTimeRemaining - elapsed <= 0) {
+             room.blackTimeRemaining = 0;
+             const result = 'WHITE_WIN';
+             chessNsp.to(roomCode).emit('chess-game-over', { result, reason: 'timeout' });
+             _persistGameResult(room, result, 'timeout');
+             return;
+          }
+        }
+      }
+
+      // Validate turn
       if ((turn === 'w' && !isWhite) || (turn === 'b' && !isBlack)) {
         socket.emit('chess-error', { message: 'Não é sua vez.' });
         return;
@@ -223,6 +258,17 @@ module.exports = function chessSocket(io) {
 
       // Reset draw offer on any move
       room.drawOfferedBy = null;
+
+      // Update timestamps
+      if (room.timeLimit && room.lastMoveTimestamp) {
+         const elapsed = Date.now() - room.lastMoveTimestamp;
+         if (turn === 'w') {
+            room.whiteTimeRemaining -= elapsed;
+         } else {
+            room.blackTimeRemaining -= elapsed;
+         }
+         room.lastMoveTimestamp = Date.now();
+      }
 
       const payload = {
         fen: room.chess.fen(),
@@ -254,6 +300,29 @@ module.exports = function chessSocket(io) {
 
         chessNsp.to(roomCode).emit('chess-game-over', { result, reason });
         _persistGameResult(room, result, reason);
+      }
+    });
+
+    // ── CLAIM TIMEOUT ─────────────────────────────────────────────────────────
+    socket.on('chess-claim-timeout', ({ roomCode }) => {
+      const room = rooms.get(roomCode);
+      if (!room || !room.timeLimit || !room.lastMoveTimestamp || room.chess.isGameOver()) return;
+
+      const elapsed = Date.now() - room.lastMoveTimestamp;
+      const turn = room.chess.turn();
+
+      if (turn === 'w') {
+        if (room.whiteTimeRemaining - elapsed <= 0) {
+          const result = 'BLACK_WIN';
+          chessNsp.to(roomCode).emit('chess-game-over', { result, reason: 'timeout' });
+          _persistGameResult(room, result, 'timeout');
+        }
+      } else {
+        if (room.blackTimeRemaining - elapsed <= 0) {
+          const result = 'WHITE_WIN';
+          chessNsp.to(roomCode).emit('chess-game-over', { result, reason: 'timeout' });
+          _persistGameResult(room, result, 'timeout');
+        }
       }
     });
 

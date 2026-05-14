@@ -7,6 +7,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Chess } from 'chess.js';
 import ChessBoard, { BOARD_THEMES } from '../components/ChessBoard';
 import ChessSidebar from '../components/ChessSidebar';
+import CapturedPieces from '../components/CapturedPieces';
 import { useChessSocket } from '../../../hooks/useChessSocket';
 
 // ── Stockfish worker ──────────────────────────────────────────────────────
@@ -124,15 +125,38 @@ export default function ChessScreen({
 
     const interval = setInterval(() => {
       const turn = chessRef.current.turn();
+      
       if (turn === 'w') {
-        setWhiteTime(prev => Math.max(0, prev - 0.1));
+        setWhiteTime(prev => {
+          const next = Math.max(0, prev - 0.1);
+          if (next === 0) handleTimeout('white');
+          return next;
+        });
       } else {
-        setBlackTime(prev => Math.max(0, prev - 0.1));
+        setBlackTime(prev => {
+          const next = Math.max(0, prev - 0.1);
+          if (next === 0) handleTimeout('black');
+          return next;
+        });
       }
     }, 100);
 
     return () => clearInterval(interval);
-  }, [status, gameOver]);
+  }, [status, gameOver, timeLimit]);
+
+  const handleTimeout = useCallback((lostColor) => {
+    if (gameOver) return;
+    
+    if (mode === 'PVP') {
+      // Option C: Validação Tardia (Lazy Timestamp Evaluation)
+      // Delegamos ao backend a autoridade de confirmar o fim do jogo
+      emit('chess-claim-timeout', { roomCode });
+    } else {
+      // Modo local (PVC), nós mesmos encerramos
+      const result = lostColor === 'white' ? 'BLACK_WIN' : 'WHITE_WIN';
+      setGameOver({ result, reason: 'timeout' });
+    }
+  }, [gameOver, mode, roomCode, emit]);
 
   // ── Socket event listeners ─────────────────────────────────────────────
   useEffect(() => {
@@ -431,6 +455,11 @@ export default function ChessScreen({
       </div>
 
       <div className="chess-layout">
+        {/* Captured pieces area */}
+        <div className="chess-captured-container">
+          <CapturedPieces moves={moves} myColor={myColor} />
+        </div>
+
         {/* Board area */}
         <div className="chess-board-area">
           <ChessBoard

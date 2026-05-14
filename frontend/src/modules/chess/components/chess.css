@@ -1,9 +1,9 @@
 /* ============================================================
-   chess.css — Estilos EduGames (Padrão Dominó / Plataforma)
+   chess.css â€” Estilos EduGames (PadrÃ£o DominÃ³ / Plataforma)
    Mobile-first | Educativo | Alto Contraste
    ============================================================ */
 
-/* ── Chess Lobby ─────────────────────────────────────────── */
+/* â”€â”€ Chess Lobby â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .chess-lobby {
   position: relative;
   min-height: 100vh;
@@ -387,7 +387,7 @@
   box-shadow: 0 0 0 1px var(--color-primary);
 }
 
-/* ── Chess Screen (in-game) ───────────────────────────────── */
+/* â”€â”€ Chess Screen (in-game) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 /* Layout Principal: Sem Scroll Global */
 .chess-screen {
   position: relative;
@@ -399,7 +399,7 @@
   flex-direction: column;
   padding: 24px;
   overflow: hidden;
-  /* Proíbe scroll na página toda */
+  /* ProÃ­be scroll na pÃ¡gina toda */
 }
 
 /* Theme switcher fixo no topo */
@@ -464,7 +464,7 @@
 
 .chess-board-wrapper {
   position: relative;
-  /* Garante que o tabuleiro nunca ultrapasse a largura ou a altura disponível */
+  /* Garante que o tabuleiro nunca ultrapasse a largura ou a altura disponÃ­vel */
   width: min(85vw, 75vh);
   aspect-ratio: 1 / 1;
   border-radius: 12px;
@@ -475,7 +475,7 @@
   transition: all 0.3s ease;
 }
 
-/* Temas da borda e notações com efeito 3D */
+/* Temas da borda e notaÃ§Ãµes com efeito 3D */
 .theme-wood {
   background: linear-gradient(135deg, #4e342e 0%, #3e2723 100%);
   border-top: 2px solid rgba(255, 255, 255, 0.1);
@@ -503,7 +503,7 @@
   flex: 1;
 }
 
-/* Notação vertical (1 a 8) */
+/* NotaÃ§Ã£o vertical (1 a 8) */
 .chess-notation-y {
   display: flex;
   flex-direction: column;
@@ -522,7 +522,7 @@
   flex: 1;
 }
 
-/* Notação horizontal (A a H) */
+/* NotaÃ§Ã£o horizontal (A a H) */
 .chess-notation-x {
   display: flex;
   flex-direction: row;
@@ -557,7 +557,7 @@
   /* Brilho na borda interna */
 }
 
-/* ── Modos de Vista (2D vs 3D) ─────────────────────────── */
+/* â”€â”€ Modos de Vista (2D vs 3D) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .view-3d {
   perspective: 1500px;
   overflow: visible !important;
@@ -580,7 +580,7 @@
   max-width: 900px;
 }
 
-/* LIMPEZA RADICAL - REMOVE A "BORDA FEIA" EM QUALQUER CIRCUNSTÂNCIA */
+/* LIMPEZA RADICAL - REMOVE A "BORDA FEIA" EM QUALQUER CIRCUNSTÃ‚NCIA */
 .view-3d div,
 .view-3d .chess-board-inner,
 .view-3d #chess-main-board,
@@ -591,17 +591,17 @@
   background-image: none !important;
 }
 
-/* Achatamento do grid lógico para casar com a perspectiva da imagem */
+/* Achatamento do grid lÃ³gico para casar com a perspectiva da imagem */
 .view-3d .chess-board-inner {
   padding: 16% 25% 23% 17% !important;
-  /* Padding assimétrico para centralizar na madeira */
+  /* Padding assimÃ©trico para centralizar na madeira */
   box-sizing: border-box;
   background: transparent !important;
   transform-style: preserve-3d;
   overflow: visible !important;
 }
 
-/* REMOÇÃO RADICAL DE NOTAÇÕES E RECURSOS VISUAIS EXTRAS */
+/* REMOÃ‡ÃƒO RADICAL DE NOTAÃ‡Ã•ES E RECURSOS VISUAIS EXTRAS */
 .view-3d [data-board-notation],
 .view-3d .board-notation,
 .view-3d text,
@@ -615,7 +615,7 @@
   overflow: visible !important;
 }
 
-/* Peças com Volume 3D Real (Imagens Customizadas) */
+/* PeÃ§as com Volume 3D Real (Imagens Customizadas) */
 .view-3d [data-piece] {
   transform-origin: center bottom;
 
@@ -623,34 +623,34 @@
   justify-content: center;
   align-items: center;
 
-  /* Permite que a peça suba além do limite da casa se necessário (devido ao scale) */
+  /* Permite que a peÃ§a suba alÃ©m do limite da casa se necessÃ¡rio (devido ao scale) */
   overflow: visible !important;
 
   transition: all 0.3s ease;
 }
 
-/* Ajuste das imagens internas das peças */
+/* Ajuste das imagens internas das peÃ§as */
 .view-3d [data-piece] img {
   pointer-events: none;
   user-select: none;
-  /* A sombra e o scale são controlados via props no ChessBoard.jsx */
+  /* A sombra e o scale sÃ£o controlados via props no ChessBoard.jsx */
 }
 
-/* Ajuste das notações para não ficarem achatadas */
+/* Ajuste das notaÃ§Ãµes para nÃ£o ficarem achatadas */
 .view-3d .chess-notation-x,
 .view-3d .chess-notation-y {
   transform: translateZ(5px);
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
 }
 
-/* ── Peças e Efeitos ────────────────────────────────────── */
+/* â”€â”€ PeÃ§as e Efeitos â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 [data-piece] {
   filter:
     drop-shadow(0 2px 2px rgba(0, 0, 0, 0.6)) drop-shadow(0 5px 10px rgba(0, 0, 0, 0.3)) !important;
   transition: all 0.3s ease;
 }
 
-/* Efeito ao arrastar (levantar a peça) */
+/* Efeito ao arrastar (levantar a peÃ§a) */
 [data-piece][style*="cursor: grabbing"],
 [data-piece]:active {
   transform: scale(1.1) translateY(-25px) translateZ(50px) !important;
@@ -659,7 +659,7 @@
   z-index: 999;
 }
 
-/* Divisória no switcher */
+/* DivisÃ³ria no switcher */
 .chess-theme-divider {
   width: 2px;
   height: 24px;
@@ -668,7 +668,7 @@
   align-self: center;
 }
 
-/* ── Sidebar ─────────────────────────────────────────────── */
+/* â”€â”€ Sidebar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .chess-sidebar {
   background: white;
   border: 2px solid #e2e8f0;
@@ -682,7 +682,7 @@
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.04);
 }
 
-/* ── Chess Timers ────────────────────────────────────────── */
+/* â”€â”€ Chess Timers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .chess-timer-container {
   display: flex;
   flex-direction: column;
@@ -951,16 +951,16 @@
   gap: 8px;
 }
 
-/* Move history */
 .chess-history {
   background: #f8fafc;
   border: 2px solid #e2e8f0;
   border-radius: 16px;
   padding: 16px;
-  flex: 1;
+  flex: 1 1 auto; /* Permite encolher se necessário */
   display: flex;
   flex-direction: column;
-  min-height: 120px;
+  min-height: 80px; /* Reduzido para permitir o encolhimento */
+  max-height: 25vh; /* Limita a altura máxima baseada na tela para garantir botões visíveis */
   overflow: hidden;
   margin: 12px 0;
 }
@@ -1145,7 +1145,7 @@
   transform: scale(0.97);
 }
 
-/* ── Promotion modal ─────────────────────────────────────── */
+/* â”€â”€ Promotion modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .chess-promotion-overlay {
   position: absolute;
   inset: 0;
@@ -1220,7 +1220,7 @@
   font-weight: 800;
 }
 
-/* ── Responsive: Desktop ─────────────────────────────────── */
+/* â”€â”€ Responsive: Desktop â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 @media (min-width: 768px) {
   .chess-screen {
     padding: 32px 48px;
@@ -1260,7 +1260,7 @@
     align-self: stretch;
     /* Estica para ter a altura do tabuleiro */
     position: relative;
-    /* Serve de âncora para a sidebar absoluta */
+    /* Serve de Ã¢ncora para a sidebar absoluta */
     min-width: 0;
   }
 
@@ -1301,14 +1301,6 @@
 }
 
 @media (min-width: 1280px) {
-  .chess-board-area {
-    flex: 0 0 80%;
-  }
-
-  .chess-sidebar {
-    flex: 0 0 20%;
-  }
-
   .chess-board-wrapper {
     max-width: 900px;
   }
@@ -1319,3 +1311,138 @@
     padding: 32px;
   }
 }
+
+/* -- Captured Pieces (Lateral Esquerda) ------------------ */
+.chess-captured-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+.chess-captured-area {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  background: transparent; /* Removido o fundo branco */
+  padding: 8px 0;
+  width: 100%;
+  min-height: 50px;
+}
+
+.chess-captured-spacer {
+  flex: 1;
+}
+
+.chess-captured-section {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.chess-captured-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.chess-captured-file {
+  display: flex;
+  flex-wrap: wrap;
+  gap: -4px;
+}
+
+.chess-captured-img {
+  width: 24px;
+  height: auto;
+  filter: drop-shadow(0 2px 2px rgba(0,0,0,0.3));
+  margin-right: -10px; /* Peças sobrepostas na horizontal */
+  opacity: 0.95;
+  transition: all 0.2s;
+}
+
+.chess-captured-img:hover {
+  opacity: 1;
+  transform: translateY(-2px);
+  z-index: 2;
+}
+
+/* Animações */
+@keyframes pop-in {
+  0% { transform: scale(0); opacity: 0; }
+  70% { transform: scale(1.2); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.animate-pop-in {
+  animation: pop-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+}
+
+/* Desktop Responsivo */
+@media (min-width: 768px) {
+  .chess-captured-container {
+    flex: 0 0 80px; /* Ligeiramente mais largo para comportar 2 fileiras */
+    align-self: stretch;
+    position: relative;
+    margin-bottom: 0;
+  }
+
+  .chess-captured-area {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    flex-direction: column;
+    padding: 16px 0;
+  }
+
+  .chess-captured-group {
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  .chess-captured-file {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+  }
+
+  .chess-captured-img {
+    width: 32px;
+    margin-right: 0;
+    margin-bottom: 0;
+  }
+}
+
+@media (min-width: 1280px) {
+  .chess-board-area {
+    flex: 1; /* Tabuleiro ocupa o meio */
+  }
+
+  .chess-sidebar {
+    /* Mantém a largura ideal da sidebar direita */
+    flex: 0 0 320px;
+    width: 320px;
+    position: relative;
+  }
+
+  .chess-sidebar-container {
+    flex: 0 0 320px;
+  }
+
+  .chess-captured-container {
+    flex: 0 0 90px; /* Esquerda pequena mas suficiente para 2 colunas */
+  }
+
+  .chess-captured-img {
+    width: 38px;
+    margin-bottom: 0;
+  }
+}
+
+

@@ -183,6 +183,32 @@ function minimax(board, inventory, turn, phase, depth, alpha, beta, isMaximizing
   }
 }
 
+function SidebarVictoryAnimation({ type }) {
+  const particles = Array.from({ length: 20 });
+  const symbols = type === 'win' ? ['🏆', '⭐', '✨', '👑'] : 
+                 type === 'loss' ? ['💀', '❌', '📉', '♟️'] : 
+                 ['🤝', '⚖️', '🏳️', '✨'];
+
+  return (
+    <div className={`sidebar-win-animation sidebar-animation-${type}`}>
+      {particles.map((_, i) => (
+        <div 
+          key={i} 
+          className="sidebar-particle" 
+          style={{
+            left: `${Math.random() * 100}%`,
+            animationDelay: `${Math.random() * 2}s`,
+            animationDuration: `${2 + Math.random() * 2}s`,
+            fontSize: `${12 + Math.random() * 20}px`
+          }}
+        >
+          {symbols[Math.floor(Math.random() * symbols.length)]}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 // ── COMPONENTE PRINCIPAL ─────────────────────────────────────────────────
 export default function XadrezVelhaGame({ user, roomData, onExit }) {
   const { emit, on } = useVelhaSocket();
@@ -673,6 +699,10 @@ export default function XadrezVelhaGame({ user, roomData, onExit }) {
           <div className={`velha-result-card ${gameOver.result === 'DRAW' ? 'draw' :
               (gameOver.result === (myColorCode === 'W' ? 'WHITE_WIN' : 'BLACK_WIN') ? 'win' : 'loss')
             }`}>
+            <SidebarVictoryAnimation type={
+              gameOver.result === 'DRAW' ? 'draw' : 
+              (gameOver.result === (myColorCode === 'W' ? 'WHITE_WIN' : 'BLACK_WIN') ? 'win' : 'loss')
+            } />
             <div className="result-header">
               <span className="result-icon">
                 {gameOver.result === 'DRAW' ? '🤝' :

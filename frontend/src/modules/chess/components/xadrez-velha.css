@@ -212,6 +212,35 @@
   text-align: center;
   border: 2px solid transparent;
   transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Animações de Partículas */
+.sidebar-win-animation {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.sidebar-particle {
+  position: absolute;
+  top: -40px;
+  user-select: none;
+  animation: particle-fall linear forwards;
+}
+
+@keyframes particle-fall {
+  0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { transform: translateY(400px) rotate(720deg); opacity: 0; }
+}
+
+.result-header, .result-reason, .result-actions {
+  position: relative;
+  z-index: 10;
 }
 
 .velha-result-card.win { border-color: #769656; background: linear-gradient(to bottom, #ffffff, #f9fbf7); }

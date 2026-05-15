@@ -44,7 +44,35 @@ const REASON_LABELS = {
   threefold_repetition: 'por Repetição (3x)',
   fifty_move_rule: 'pela Regra dos 50 Lances',
   disconnection: 'por Desconexão',
+  timeout: 'por Tempo Esgotado',
 };
+
+function SidebarVictoryAnimation({ type }) {
+  // type: 'win' | 'loss' | 'draw'
+  const particles = Array.from({ length: 20 });
+  const symbols = type === 'win' ? ['🏆', '⭐', '✨', '👑'] : 
+                 type === 'loss' ? ['💀', '❌', '📉', '♟️'] : 
+                 ['🤝', '⚖️', '🏳️', '✨'];
+
+  return (
+    <div className={`sidebar-win-animation sidebar-animation-${type}`}>
+      {particles.map((_, i) => (
+        <div 
+          key={i} 
+          className="sidebar-particle" 
+          style={{
+            left: `${Math.random() * 100}%`,
+            animationDelay: `${Math.random() * 2}s`,
+            animationDuration: `${2 + Math.random() * 2}s`,
+            fontSize: `${12 + Math.random() * 20}px`
+          }}
+        >
+          {symbols[Math.floor(Math.random() * symbols.length)]}
+        </div>
+      ))}
+    </div>
+  );
+}
 
 function ChessTimer({ seconds, active }) {
   if (seconds === null || seconds === undefined || Number.isNaN(seconds)) return null;
@@ -101,7 +129,14 @@ export default function ChessSidebar({
   // Removemos o pairedMoves, pois faremos uma lista vertical descritiva
 
   return (
-    <aside className="chess-sidebar">
+    <aside className="chess-sidebar overflow-hidden relative">
+      {gameOver && (
+        <SidebarVictoryAnimation type={
+          gameOver.result === 'DRAW' ? 'draw' : 
+          ((gameOver.result === 'WHITE_WIN' && myColor === 'white') || (gameOver.result === 'BLACK_WIN' && myColor === 'black')) ? 'win' : 'loss'
+        } />
+      )}
+
       {/* Player names */}
       <div className="chess-players">
         <div className="chess-timer-container">
@@ -142,11 +177,19 @@ export default function ChessSidebar({
       
       {/* Game over banner */}
       {gameOver && (
-        <div className="chess-gameover-banner">
-          <div className="chess-gameover-result">{RESULT_LABELS[gameOver.result] || 'Fim de jogo'}</div>
+        <div className={`chess-gameover-banner chess-gameover-${
+          gameOver.result === 'DRAW' ? 'draw' : 
+          ((gameOver.result === 'WHITE_WIN' && myColor === 'white') || (gameOver.result === 'BLACK_WIN' && myColor === 'black')) ? 'win' : 'loss'
+        }`}>
+          <div className="chess-gameover-result">
+            {gameOver.result === 'DRAW' ? '🤝 Empate!' : 
+              ((gameOver.result === 'WHITE_WIN' && myColor === 'white') || (gameOver.result === 'BLACK_WIN' && myColor === 'black')) 
+              ? '🏆 Você Venceu!' 
+              : '💀 Você Perdeu'}
+          </div>
           <div className="chess-gameover-reason">{REASON_LABELS[gameOver.reason] || ''}</div>
           
-          <div className="mt-4 flex flex-col gap-2 w-full">
+          <div className="mt-4 flex flex-col gap-2 w-full relative z-10">
             <button 
               className={`chess-btn ${rematchRequested ? 'chess-btn-disabled' : 'chess-btn-rematch'}`}
               onClick={onRematch}

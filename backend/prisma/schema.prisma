@@ -264,3 +264,64 @@ model VelhaRanking {
 
   @@map("velha_ranking")
 }
+
+// ─── BATALHA DOS PEÕES ────────────────────────────────────────────────────
+
+enum PeaoGameStatus {
+  WAITING    // aguardando 2º jogador
+  PLAYING    // partida em andamento
+  FINISHED   // partida encerrada
+  ABANDONED  // jogador abandonou
+}
+
+enum PeaoResult {
+  WHITE_WIN
+  BLACK_WIN
+  DRAW
+}
+
+enum PeaoGameMode {
+  PVP        // player vs player
+  PVC        // player vs computador
+}
+
+model PeaoGame {
+  id          String         @id @default(uuid())
+  roomCode    String         @unique @map("room_code") @db.VarChar(20)
+  mode        PeaoGameMode   @default(PVP)
+  status      PeaoGameStatus @default(WAITING)
+  result      PeaoResult?
+
+  // Histórico de jogadas (ex: "48->40")
+  moves       String[]       @default([])
+
+  whiteId     String?        @map("white_id")
+  whiteName   String?        @map("white_name") @db.VarChar(255)
+  blackId     String?        @map("black_id")
+  blackName   String?        @map("black_name") @db.VarChar(255)
+  aiLevel     Int?           @default(3) @map("ai_level")
+
+  createdAt   DateTime       @default(now()) @map("created_at")
+  updatedAt   DateTime       @updatedAt @map("updated_at")
+  finishedAt  DateTime?      @map("finished_at")
+
+  @@map("peao_games")
+}
+
+model PeaoRanking {
+  id         String   @id @default(uuid())
+  userId     String   @unique @map("user_id")
+  userName   String   @map("user_name") @db.VarChar(255)
+  schoolId   Int?     @map("school_id")
+  schoolName String?  @map("school_name") @db.VarChar(255)
+
+  wins       Int      @default(0)
+  losses     Int      @default(0)
+  draws      Int      @default(0)
+  points     Int      @default(0)   // wins*3 + draws*1
+
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@map("peao_ranking")
+}

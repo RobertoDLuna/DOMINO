@@ -6,6 +6,7 @@
 import React, { useState, useEffect } from 'react';
 import ChessScreen from './ChessScreen';
 import XadrezVelhaScreen from './XadrezVelhaScreen';
+import PeaoScreen from './PeaoScreen';
 import { useChessSocket } from '../../../hooks/useChessSocket';
 import '../components/chess.css';
 
@@ -30,7 +31,7 @@ export default function ChessHomeScreen({ user, onBack }) {
   const { emit, on, connected } = useChessSocket();
 
   // game type state
-  const [gameType, setGameType] = useState(null); // null | 'classic' | 'velha'
+  const [gameType, setGameType] = useState(null); // null | 'classic' | 'velha' | 'peao'
 
   // lobby state
   const [mode, setMode] = useState(null); // null | 'PVP' | 'PVC'
@@ -156,6 +157,11 @@ export default function ChessHomeScreen({ user, onBack }) {
     setError('');
   }
 
+  // ── Render: Batalha dos Peões ────────────────────────────────────────────
+  if (gameType === 'peao') {
+    return <PeaoScreen user={user} onBack={() => setGameType(null)} />;
+  }
+
   // ── Render: Mode Selector ────────────────────────────────────────────────
   if (!gameType) {
     return (
@@ -201,14 +207,24 @@ export default function ChessHomeScreen({ user, onBack }) {
                   <span className="chess-mode-badge">Competitivo</span>
                </button>
                <button 
-                 className="chess-mode-card chess-mode-card--pvc" 
-                 onClick={() => setGameType('velha')}
-               >
-                  <span className="chess-mode-emoji text-[#769656]">⚔️</span>
-                  <strong>Xadrez da Velha</strong>
-                  <p>Mistura de Velha com Xadrez</p>
-                  <span className="chess-mode-badge chess-mode-badge--gray">Modo Casual</span>
-               </button>
+                  className="chess-mode-card chess-mode-card--pvc" 
+                  onClick={() => setGameType('velha')}
+                >
+                   <span className="chess-mode-emoji text-[#769656]">⚔️</span>
+                   <strong>Xadrez da Velha</strong>
+                   <p>Mistura de Velha com Xadrez</p>
+                   <span className="chess-mode-badge chess-mode-badge--gray">Modo Casual</span>
+                </button>
+                <button 
+                  className="chess-mode-card" 
+                  onClick={() => setGameType('peao')}
+                  style={{ borderColor: 'rgba(0,150,96,0.3)', background: 'rgba(0,150,96,0.04)' }}
+                >
+                   <span className="chess-mode-emoji">♙</span>
+                   <strong>Batalha dos Peões</strong>
+                   <p>Leve seus peões à linha inimiga</p>
+                   <span className="chess-mode-badge">Novo!</span>
+                </button>
              </div>
            </section>
            

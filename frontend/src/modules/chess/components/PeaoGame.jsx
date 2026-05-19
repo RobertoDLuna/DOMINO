@@ -101,15 +101,22 @@ function minimax(board, hasMoved, depth, isMax, alpha, beta) {
   return best;
 }
 
-function getBestAIMove(board, hasMoved, depth = 3) {
-  let bestScore = Infinity, bestFrom = -1, bestTo = -1;
+function getBestAIMove(board, hasMoved, aiColor, depth = 3) {
+  const isAiWhite = aiColor === 'w';
+  let bestScore = isAiWhite ? -Infinity : Infinity;
+  let bestFrom = -1, bestTo = -1;
   for (let i = 0; i < 64; i++) {
-    if (board[i] !== 'b') continue;
+    if (board[i] !== aiColor) continue;
     for (const to of getValidMoves(board, i, hasMoved)) {
       const nb = [...board]; const nm = [...hasMoved];
-      nb[to] = 'b'; nb[i] = null; nm[i] = true;
-      const score = minimax(nb, nm, depth - 1, true, -Infinity, Infinity);
-      if (score < bestScore) { bestScore = score; bestFrom = i; bestTo = to; }
+      nb[to] = aiColor; nb[i] = null; nm[i] = true;
+      const nextIsMax = !isAiWhite;
+      const score = minimax(nb, nm, depth - 1, nextIsMax, -Infinity, Infinity);
+      if (isAiWhite) {
+        if (score > bestScore) { bestScore = score; bestFrom = i; bestTo = to; }
+      } else {
+        if (score < bestScore) { bestScore = score; bestFrom = i; bestTo = to; }
+      }
     }
   }
   return { from: bestFrom, to: bestTo };
@@ -119,8 +126,10 @@ function getBestAIMove(board, hasMoved, depth = 3) {
 export default function PeaoGame({ user, roomData, onExit }) {
   const { emit, on } = usePeaoSocket();
   const isPVC = roomData.mode === 'PVC';
-  const myColor = roomData.color; // 'white' | 'black'
+  const [myColor, setMyColor] = useState(roomData.color); // 'white' | 'black'
   const myPiece = myColor === 'white' ? 'w' : 'b';
+  const aiPiece = myPiece === 'w' ? 'b' : 'w';
+  const humanPiece = myPiece;
 
   // ── State ─────────────────────────────────────────────────────────────────
   const [board,     setBoard]     = useState(createInitialBoard);
@@ -131,8 +140,8 @@ export default function PeaoGame({ user, roomData, onExit }) {
   const [lastMove,  setLastMove]  = useState(null);
   const [moves,     setMoves]     = useState([]);
   const [gameOver,  setGameOver]  = useState(null);  // { result, reason }
-  const [whiteName, setWhiteName] = useState(myColor === 'white' ? (user?.fullName || 'Você') : (roomData.opponentName || '...'));
-  const [blackName, setBlackName] = useState(myColor === 'black' ? (user?.fullName || 'Você') : (roomData.opponentName || '...'));
+  const [whiteName, setWhiteName] = useState(roomData.color === 'white' ? (user?.fullName || 'Você') : (roomData.opponentName || '...'));
+  const [blackName, setBlackName] = useState(roomData.color === 'black' ? (user?.fullName || 'Você') : (roomData.opponentName || '...'));
   const [rematchRequested, setRematchRequested] = useState(false);
   const [opponentWantsRematch, setOpponentWantsRematch] = useState(false);
   const [drawOffered, setDrawOffered] = useState(false);
@@ -254,23 +263,9 @@ export default function PeaoGame({ user, roomData, onExit }) {
         // Verifica vitória do humano
         const win = checkWinLocal(newBoard);
         if (win) { setGameOver({ result: win, reason: 'breakthrough' }); return; }
-        if (!hasAnyMove(newBoard, newMoved, 'b')) { setGameOver({ result: 'WHITE_WIN', reason: 'stalemate' }); return; }
-
-        // IA responde
-        setTimeout(() => {
-          const aiMove = getBestAIMove(newBoard, newMoved, Math.min(roomData.aiLevel || 3, 4));
-          if (aiMove.from === -1) return;
-          const ab = [...newBoard]; const am = [...newMoved];
-          ab[aiMove.to] = 'b'; ab[aiMove.from] = null; am[aiMove.to] = true;
-          setBoard(ab); setHasMoved(am);
-          setLastMove(aiMove);
-          setMoves(prev => [...prev, aiMove]);
-          setTurn('w');
-
-          const aiWin = checkWinLocal(ab);
-          if (aiWin) { setGameOver({ result: aiWin, reason: 'breakthrough' }); return; }
-          if (!hasAnyMove(ab, am, 'w')) { setGameOver({ result: 'BLACK_WIN', reason: 'stalemate' }); }
-        }, 400);
+        if (!hasAnyMove(newBoard, newMoved, aiPiece)) {
+          setGameOver({ result: myPiece === 'w' ? 'WHITE_WIN' : 'BLACK_WIN', reason: 'stalemate' });
+        }
       } else {
         emit('peao-move', { roomCode: roomData.roomCode, from, to });
       }
@@ -286,7 +281,35 @@ export default function PeaoGame({ user, roomData, onExit }) {
       setSelected(null);
       setValidMov([]);
     }
-  }, [gameOver, turn, myPiece, selected, validMov, isPVC, emit, roomData]);
+  }, [gameOver, turn, myPiece, selected, validMov, isPVC, emit, roomData, aiPiece]);
+
+  // ── IA responde (PVC) ──────────────────────────────────────────────────────
+  useEffect(() => {
+    if (!isPVC || turn !== aiPiece || gameOver) return;
+
+    const timer = setTimeout(() => {
+      const aiMove = getBestAIMove(board, hasMoved, aiPiece, Math.min(roomData.aiLevel || 3, 4));
+      if (aiMove.from === -1) return;
+
+      const ab = [...board]; const am = [...hasMoved];
+      ab[aiMove.to] = aiPiece; ab[aiMove.from] = null; am[aiMove.to] = true;
+      
+      setBoard(ab); setHasMoved(am);
+      setLastMove(aiMove);
+      setMoves(prev => [...prev, aiMove]);
+      
+      const nextTurn = aiPiece === 'w' ? 'b' : 'w';
+      setTurn(nextTurn);
+
+      const aiWin = checkWinLocal(ab);
+      if (aiWin) { setGameOver({ result: aiWin, reason: 'breakthrough' }); return; }
+      if (!hasAnyMove(ab, am, humanPiece)) {
+        setGameOver({ result: aiPiece === 'w' ? 'WHITE_WIN' : 'BLACK_WIN', reason: 'stalemate' });
+      }
+    }, 600);
+
+    return () => clearTimeout(timer);
+  }, [isPVC, turn, board, hasMoved, aiPiece, gameOver, roomData.aiLevel, humanPiece]);
 
   // ── Renomear jogadores quando gameReady chega antes de state ─────────────
   useEffect(() => {
@@ -321,12 +344,16 @@ export default function PeaoGame({ user, roomData, onExit }) {
   // ── Rematch ──────────────────────────────────────────────────────────────
   const handleRematch = () => {
     if (isPVC) {
+      const nextColor = myColor === 'white' ? 'black' : 'white';
+      setMyColor(nextColor);
       setBoard(createInitialBoard());
       setHasMoved(createHasMoved());
       setTurn('w'); setSelected(null); setValidMov([]); setLastMove(null); setGameOver(null);
       setMoves([]);
       setWhiteTime(initialTime);
       setBlackTime(initialTime);
+      setWhiteName(nextColor === 'white' ? (user?.fullName || 'Você') : 'Computador');
+      setBlackName(nextColor === 'black' ? (user?.fullName || 'Você') : 'Computador');
     } else {
       emit('peao-request-rematch', { roomCode: roomData.roomCode });
       setRematchRequested(true);

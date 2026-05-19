@@ -3,6 +3,7 @@ import PeaoGame from '../components/PeaoGame';
 import PeaoRankingBoard from '../components/PeaoRankingBoard';
 import { usePeaoSocket } from '../../../hooks/usePeaoSocket';
 import '../components/peao.css';
+import '../components/xadrez-velha.css';
 
 const AI_LEVELS = [
   { value: 1, label: 'Iniciante',    description: 'Movimentos básicos' },
@@ -28,14 +29,25 @@ export default function PeaoScreen({ user, onBack }) {
   const myId   = user?.id || `guest_${Date.now().toString().slice(-6)}`;
   const myName = user?.fullName || 'Convidado';
 
+  const [aiChoiceFeedback, setAiChoiceFeedback] = useState(null);
+
   useEffect(() => {
     const unsubs = [
       on('peao-room-created', ({ roomCode, color, timeLimit: serverTime }) => {
         setLoading(false);
         if (mode === 'PVC') {
-          setGameSession({ roomCode, color: 'white', mode: 'PVC', aiLevel, myId, timeLimit: serverTime || timeLimit });
+          setGameSession({ 
+            roomCode, 
+            color: 'white', 
+            mode: 'PVC', 
+            aiLevel, 
+            myId, 
+            timeLimit: serverTime || timeLimit,
+            phase: 'DRAWING'
+          });
+        } else {
+          setGameSession(prev => prev ? { ...prev, roomCode, timeLimit: serverTime || prev.timeLimit } : null);
         }
-        // PVP: aguarda adversário
       }),
 
       on('peao-opponent-joined', ({ opponentName }) => {
@@ -43,31 +55,42 @@ export default function PeaoScreen({ user, onBack }) {
       }),
 
       on('peao-draw-result', ({ winnerId, winnerName }) => {
-        // Após sorteio, mostrar escolha de cor se for o vencedor
-        setGameSession(prev => prev ? { ...prev, drawWinnerId: winnerId, drawWinnerName: winnerName, phase: 'DRAW' } : null);
+        setGameSession(prev => prev ? { ...prev, drawWinnerId: winnerId, drawWinnerName: winnerName, phase: 'DRAWING' } : null);
       }),
 
-      on('peao-game-ready', ({ board, turn, white, black, whiteName, blackName, timeLimit: serverTime }) => {
-        setGameSession(prev => {
-          if (!prev) return null;
-          let assignedColor = prev.color;
-          if (white && black) {
-            assignedColor = white.userId === myId ? 'white' : 'black';
-          }
-          return {
-            ...prev,
-            phase: 'PLAYING',
-            color: assignedColor,
-            whiteName,
-            blackName,
-            timeLimit: serverTime || prev.timeLimit
-          };
-        });
+      on('peao-game-ready', ({ board, turn, white, black, whiteName, blackName, timeLimit: serverTime, aiChoice }) => {
+        const updateSession = () => {
+          setGameSession(prev => {
+            if (!prev) return null;
+            let assignedColor = prev.color;
+            if (white && black) {
+              assignedColor = white.userId === myId ? 'white' : 'black';
+            }
+            return {
+              ...prev,
+              phase: 'PLAYING',
+              color: assignedColor,
+              whiteName,
+              blackName,
+              timeLimit: serverTime || prev.timeLimit
+            };
+          });
+        };
+
+        if (aiChoice) {
+          setAiChoiceFeedback(aiChoice);
+          setTimeout(() => {
+            updateSession();
+            setAiChoiceFeedback(null);
+          }, 1500);
+        } else {
+          updateSession();
+        }
       }),
 
       on('peao-room-joined', ({ roomCode, timeLimit: serverTime }) => {
         setLoading(false);
-        setGameSession({ roomCode, color: 'black', mode: 'PVP', myId, timeLimit: serverTime });
+        setGameSession({ roomCode, color: 'black', mode: 'PVP', myId, timeLimit: serverTime, phase: 'WAITING' });
       }),
 
       on('peao-error', ({ message }) => {
@@ -78,6 +101,16 @@ export default function PeaoScreen({ user, onBack }) {
 
     return () => unsubs.forEach(fn => fn());
   }, [on, mode, aiLevel, myId, timeLimit]);
+
+  // Transição de DRAWING para CHOOSING no PVP e PVC
+  useEffect(() => {
+    if (gameSession?.phase === 'DRAWING') {
+      const timer = setTimeout(() => {
+        setGameSession(prev => prev?.phase === 'DRAWING' ? { ...prev, phase: 'CHOOSING' } : prev);
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [gameSession?.phase]);
 
   function handleCreatePVP() {
     setLoading(true); setError('');
@@ -108,7 +141,7 @@ export default function PeaoScreen({ user, onBack }) {
   }
 
   // ── Em jogo ─────────────────────────────────────────────────────────────────
-  if (gameSession?.phase === 'PLAYING' || gameSession?.mode === 'PVC') {
+  if (gameSession?.phase === 'PLAYING') {
     const color = gameSession.color;
     return (
       <PeaoGame
@@ -128,28 +161,88 @@ export default function PeaoScreen({ user, onBack }) {
     );
   }
 
-  // ── Sorteio — escolha de cor ──────────────────────────────────────────────
-  if (gameSession?.phase === 'DRAW') {
-    const isWinner = gameSession.drawWinnerId === myId;
+  // ── Sorteio (Fase DRAWING) ──────────────────────────────────────────────────
+  if (gameSession?.phase === 'DRAWING') {
+    const winnerName = gameSession.drawWinnerName;
     return (
-      <div className="peao-lobby">
+      <div className="peao-lobby animate-fade-in">
         <div className="peao-lobby-bg"><div className="peao-lobby-grid" /></div>
         <div className="peao-lobby-content" style={{ alignItems: 'center', justifyContent: 'center', minHeight: '100dvh' }}>
-          <div style={{ textAlign: 'center', color: 'var(--color-accent)' }}>
-            <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>🎲</div>
-            {isWinner ? (
+          <div className="peao-action-panel" style={{ textAlign: 'center', padding: '2rem', width: '100%', maxWidth: '380px' }}>
+            <h2 className="peao-section-title" style={{ fontSize: '1.5rem', marginBottom: '2rem', textTransform: 'uppercase', color: 'var(--color-accent)' }}>
+              Realizando Sorteio...
+            </h2>
+            <div className="velha-draw-coin-wrapper" style={{ marginBottom: '2rem' }}>
+              <div className="velha-draw-coin">
+                <div className="coin-face front">?</div>
+                <div className="coin-face back">⚔️</div>
+              </div>
+            </div>
+            {winnerName && (
+              <div className="animate-bounce" style={{ fontWeight: 900, color: 'var(--color-primary)', fontSize: '1.25rem', marginTop: '1rem' }}>
+                Vencedor: {winnerName}!
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Escolha de Cor (Fase CHOOSING) ──────────────────────────────────────────
+  if (gameSession?.phase === 'CHOOSING') {
+    const iAmWinner = gameSession.drawWinnerId === myId;
+    return (
+      <div className="peao-lobby animate-fade-in">
+        <div className="peao-lobby-bg"><div className="peao-lobby-grid" /></div>
+        <div className="peao-lobby-content" style={{ alignItems: 'center', justifyContent: 'center', minHeight: '100dvh' }}>
+          <div className="peao-action-panel" style={{ textAlign: 'center', padding: '2.5rem 2rem', width: '100%', maxWidth: '380px' }}>
+            {iAmWinner ? (
               <>
-                <h2 style={{ fontWeight: 900, fontSize: '1.4rem', marginBottom: '0.5rem' }}>Você ganhou o sorteio!</h2>
-                <p style={{ color: '#64748b', marginBottom: '1.5rem', fontSize: '0.9rem', fontWeight: 500 }}>Escolha sua cor:</p>
-                <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
-                  <button onClick={() => handlePickColor('white')} className="peao-btn peao-btn--primary" style={{ maxWidth: 140 }}>⬜ Brancas</button>
-                  <button onClick={() => handlePickColor('black')} className="peao-btn peao-btn--secondary" style={{ maxWidth: 140 }}>⬛ Pretas</button>
+                <h2 className="peao-section-title" style={{ fontSize: '1.5rem', marginBottom: '0.5rem', textTransform: 'uppercase', color: 'var(--color-accent)' }}>
+                  Você Venceu!
+                </h2>
+                <p style={{ color: '#64748b', marginBottom: '2rem', fontSize: '0.9rem', fontWeight: 500 }}>
+                  Escolha sua cor para começar:
+                </p>
+                <div style={{ display: 'flex', gap: '1rem' }}>
+                  <button 
+                    onClick={() => handlePickColor('white')}
+                    className="peao-btn peao-btn--primary"
+                    style={{ flex: 1, padding: '1.5rem 1rem', height: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', borderRadius: '16px', border: '2px solid #e2e8f0' }}
+                  >
+                    <span style={{ fontSize: '2.5rem', display: 'block', transform: 'scale(1)', transition: 'transform 0.2s' }}>⚪</span>
+                    <strong style={{ fontSize: '0.85rem', textTransform: 'uppercase', display: 'block', color: 'var(--color-text)' }}>Brancas</strong>
+                    <span style={{ fontSize: '10px', color: '#64748b' }}>Começa o Jogo</span>
+                  </button>
+                  <button 
+                    onClick={() => handlePickColor('black')}
+                    className="peao-btn peao-btn--secondary"
+                    style={{ flex: 1, padding: '1.5rem 1rem', height: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', borderRadius: '16px', border: '2px solid #e2e8f0', background: '#f8fafc' }}
+                  >
+                    <span style={{ fontSize: '2.5rem', display: 'block', transform: 'scale(1)', transition: 'transform 0.2s' }}>⚫</span>
+                    <strong style={{ fontSize: '0.85rem', textTransform: 'uppercase', display: 'block', color: 'var(--color-text)' }}>Pretas</strong>
+                    <span style={{ fontSize: '10px', color: '#64748b' }}>Joga depois</span>
+                  </button>
                 </div>
               </>
             ) : (
               <>
-                <h2 style={{ fontWeight: 900, fontSize: '1.4rem', marginBottom: '0.5rem' }}>{gameSession.drawWinnerName} ganhou o sorteio</h2>
-                <p style={{ color: '#64748b', fontSize: '0.9rem', fontWeight: 500 }}>Aguardando escolha de cor...</p>
+                <h2 className="peao-section-title" style={{ fontSize: '1.5rem', marginBottom: '0.5rem', textTransform: 'uppercase', color: 'var(--color-accent)' }}>
+                  {gameSession.drawWinnerName} Venceu
+                </h2>
+                <p style={{ color: '#64748b', marginBottom: '2rem', fontSize: '0.9rem', fontWeight: 500 }}>
+                  {aiChoiceFeedback 
+                    ? `O Computador escolheu as ${aiChoiceFeedback === 'white' ? 'BRANCAS' : 'PRETAS'}!` 
+                    : 'Aguardando escolha da cor...'}
+                </p>
+                {aiChoiceFeedback ? (
+                  <div className="animate-bounce" style={{ fontSize: '4rem', marginBottom: '1rem' }}>
+                    {aiChoiceFeedback === 'white' ? '⚪' : '⚫'}
+                  </div>
+                ) : (
+                  <div className="peao-conn-dot peao-conn-dot--ok" style={{ width: '48px', height: '48px', borderWidth: '4px', borderTopColor: 'var(--color-primary)', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto', background: 'transparent' }}></div>
+                )}
               </>
             )}
           </div>

@@ -197,20 +197,55 @@ module.exports = function peaoSocket(io) {
       socket.join(roomCode);
 
       if (mode === 'PVC') {
-        // No PVC, player1 é sempre branco
-        room.white = room.player1;
-        room.player2 = { socketId: 'AI', userId: 'ai', userName: 'Computador' };
-        room.black = room.player2;
-        room.phase = 'PLAYING';
+        room.player2 = { socketId: 'AI', userId: 'AI', userName: 'Computador' };
+        room.phase = 'DRAW';
 
         socket.emit('peao-room-created', { roomCode, color: 'white', timeLimit });
-        socket.emit('peao-game-ready', {
-          board: room.board,
-          turn: room.turn,
-          whiteName: userName,
-          blackName: 'Computador',
-          timeLimit,
-        });
+
+        // Sorteio automático no PVC
+        setTimeout(() => {
+          if (!rooms.has(roomCode)) return;
+          const winnerId = Math.random() > 0.5 ? room.player1.userId : 'AI';
+          room.drawWinnerId = winnerId;
+
+          peaoNsp.to(roomCode).emit('peao-draw-result', {
+            winnerId,
+            winnerName: winnerId === room.player1.userId ? room.player1.userName : 'Computador',
+          });
+
+          // Se a IA ganhar o sorteio, escolhe a cor após 3.5 segundos (tempo do sorteio + feedback)
+          if (winnerId === 'AI') {
+            setTimeout(() => {
+              if (!rooms.has(roomCode)) return;
+              const aiColor = Math.random() > 0.5 ? 'white' : 'black';
+
+              if (aiColor === 'white') {
+                room.white = room.player2; // AI
+                room.black = room.player1; // Player
+              } else {
+                room.white = room.player1; // Player
+                room.black = room.player2; // AI
+              }
+
+              room.board = createInitialBoard();
+              room.hasMoved = createHasMoved();
+              room.turn = 'w';
+              room.phase = 'PLAYING';
+              room.moves = [];
+
+              peaoNsp.to(roomCode).emit('peao-game-ready', {
+                board: room.board,
+                turn: room.turn,
+                white: room.white,
+                black: room.black,
+                whiteName: room.white.userName,
+                blackName: room.black.userName,
+                timeLimit: room.timeLimit,
+                aiChoice: aiColor,
+              });
+            }, 3500);
+          }
+        }, 800);
       } else {
         socket.emit('peao-room-created', { roomCode, color: 'white', timeLimit });
       }

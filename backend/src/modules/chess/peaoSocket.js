@@ -175,7 +175,7 @@ module.exports = function peaoSocket(io) {
     console.log(`[Peão] Player connected: ${socket.id}`);
 
     // ── CREATE ROOM ──────────────────────────────────────────────────────────
-    socket.on('create-peao-room', ({ userId, userName, mode = 'PVP', aiLevel = 3 }) => {
+    socket.on('create-peao-room', ({ userId, userName, mode = 'PVP', aiLevel = 3, timeLimit = 300 }) => {
       const roomCode = generateRoomCode();
       const room = {
         roomCode,
@@ -190,6 +190,7 @@ module.exports = function peaoSocket(io) {
         player2: null,
         white: null,
         black: null,
+        timeLimit,
       };
 
       rooms.set(roomCode, room);
@@ -202,15 +203,16 @@ module.exports = function peaoSocket(io) {
         room.black = room.player2;
         room.phase = 'PLAYING';
 
-        socket.emit('peao-room-created', { roomCode, color: 'white' });
+        socket.emit('peao-room-created', { roomCode, color: 'white', timeLimit });
         socket.emit('peao-game-ready', {
           board: room.board,
           turn: room.turn,
           whiteName: userName,
           blackName: 'Computador',
+          timeLimit,
         });
       } else {
-        socket.emit('peao-room-created', { roomCode, color: 'white' });
+        socket.emit('peao-room-created', { roomCode, color: 'white', timeLimit });
       }
 
       console.log(`[Peão] Room created: ${roomCode} by ${userName} (mode: ${mode})`);
@@ -233,7 +235,7 @@ module.exports = function peaoSocket(io) {
       });
 
       // Notifica quem entrou
-      socket.emit('peao-room-joined', { roomCode });
+      socket.emit('peao-room-joined', { roomCode, timeLimit: room.timeLimit });
 
       // Sorteio automático
       setTimeout(() => {
@@ -275,6 +277,7 @@ module.exports = function peaoSocket(io) {
         turn: room.turn,
         whiteName: room.white.userName,
         blackName: room.black.userName,
+        timeLimit: room.timeLimit,
       });
     });
 
@@ -364,6 +367,54 @@ module.exports = function peaoSocket(io) {
       _persistPeaoResult(room, result, 'resignation');
     });
 
+    // ── OFFER DRAW ────────────────────────────────────────────────────────────
+    socket.on('peao-offer-draw', ({ roomCode }) => {
+      const room = rooms.get(roomCode);
+      if (!room) return;
+
+      const isWhite = room.white?.socketId === socket.id;
+      room.drawOfferedBy = isWhite ? 'white' : 'black';
+
+      // Notifica o oponente
+      const opponentSocketId = isWhite ? room.black?.socketId : room.white?.socketId;
+      if (opponentSocketId) {
+        peaoNsp.to(opponentSocketId).emit('peao-draw-offered');
+      }
+    });
+
+    // ── ACCEPT DRAW ───────────────────────────────────────────────────────────
+    socket.on('peao-accept-draw', ({ roomCode }) => {
+      const room = rooms.get(roomCode);
+      if (!room || !room.drawOfferedBy) return;
+
+      room.phase = 'FINISHED';
+      peaoNsp.to(roomCode).emit('peao-game-over', { result: 'DRAW', reason: 'agreement' });
+      _persistPeaoResult(room, 'DRAW', 'agreement');
+    });
+
+    // ── DECLINE DRAW ──────────────────────────────────────────────────────────
+    socket.on('peao-decline-draw', ({ roomCode }) => {
+      const room = rooms.get(roomCode);
+      if (!room) return;
+
+      const offererSocketId =
+        room.drawOfferedBy === 'white' ? room.white?.socketId : room.black?.socketId;
+      room.drawOfferedBy = null;
+      if (offererSocketId) {
+        peaoNsp.to(offererSocketId).emit('peao-draw-declined');
+      }
+    });
+
+    // ── CLAIM TIMEOUT ─────────────────────────────────────────────────────────
+    socket.on('peao-claim-timeout', ({ roomCode }) => {
+      const room = rooms.get(roomCode);
+      if (!room || room.phase !== 'PLAYING') return;
+      const result = room.turn === 'w' ? 'BLACK_WIN' : 'WHITE_WIN';
+      room.phase = 'FINISHED';
+      peaoNsp.to(roomCode).emit('peao-game-over', { result, reason: 'timeout' });
+      _persistPeaoResult(room, result, 'timeout');
+    });
+
     // ── REMATCH ──────────────────────────────────────────────────────────────
     socket.on('peao-request-rematch', ({ roomCode }) => {
       const room = rooms.get(roomCode);
@@ -391,6 +442,7 @@ module.exports = function peaoSocket(io) {
           whiteName: room.white.userName,
           blackName: room.black.userName,
           isRematch: true,
+          timeLimit: room.timeLimit,
         });
       }
     });

@@ -18,6 +18,7 @@ export default function PeaoScreen({ user, onBack }) {
   const [mode,        setMode]        = useState(null);    // null | 'PVP' | 'PVC'
   const [subMode,     setSubMode]     = useState(null);    // 'create' | 'join'
   const [aiLevel,     setAiLevel]     = useState(3);
+  const [timeLimit,   setTimeLimit]   = useState(300);     // 300s = 5 min, 600s = 10 min
   const [joinCode,    setJoinCode]    = useState('');
   const [error,       setError]       = useState('');
   const [loading,     setLoading]     = useState(false);
@@ -29,10 +30,10 @@ export default function PeaoScreen({ user, onBack }) {
 
   useEffect(() => {
     const unsubs = [
-      on('peao-room-created', ({ roomCode, color }) => {
+      on('peao-room-created', ({ roomCode, color, timeLimit: serverTime }) => {
         setLoading(false);
         if (mode === 'PVC') {
-          setGameSession({ roomCode, color: 'white', mode: 'PVC', aiLevel, myId });
+          setGameSession({ roomCode, color: 'white', mode: 'PVC', aiLevel, myId, timeLimit: serverTime || timeLimit });
         }
         // PVP: aguarda adversário
       }),
@@ -46,16 +47,16 @@ export default function PeaoScreen({ user, onBack }) {
         setGameSession(prev => prev ? { ...prev, drawWinnerId: winnerId, drawWinnerName: winnerName, phase: 'DRAW' } : null);
       }),
 
-      on('peao-game-ready', ({ board, turn, whiteName, blackName }) => {
+      on('peao-game-ready', ({ board, turn, whiteName, blackName, timeLimit: serverTime }) => {
         setGameSession(prev => prev
-          ? { ...prev, phase: 'PLAYING', whiteName, blackName }
+          ? { ...prev, phase: 'PLAYING', whiteName, blackName, timeLimit: serverTime || prev.timeLimit }
           : null
         );
       }),
 
-      on('peao-room-joined', ({ roomCode }) => {
+      on('peao-room-joined', ({ roomCode, timeLimit: serverTime }) => {
         setLoading(false);
-        setGameSession({ roomCode, color: 'black', mode: 'PVP', myId });
+        setGameSession({ roomCode, color: 'black', mode: 'PVP', myId, timeLimit: serverTime });
       }),
 
       on('peao-error', ({ message }) => {
@@ -65,17 +66,18 @@ export default function PeaoScreen({ user, onBack }) {
     ];
 
     return () => unsubs.forEach(fn => fn());
-  }, [on, mode, aiLevel, myId]);
+  }, [on, mode, aiLevel, myId, timeLimit]);
 
   function handleCreatePVP() {
     setLoading(true); setError('');
-    emit('create-peao-room', { userId: myId, userName: myName, mode: 'PVP' });
-    setGameSession({ roomCode: null, color: 'white', mode: 'PVP', phase: 'WAITING', myId });
+    emit('create-peao-room', { userId: myId, userName: myName, mode: 'PVP', timeLimit });
+    setGameSession({ roomCode: null, color: 'white', mode: 'PVP', phase: 'WAITING', myId, timeLimit });
   }
 
+  // AI Level logic (pode ser usado junto com o tempo limite no PVC)
   function handleCreatePVC() {
     setLoading(true); setError('');
-    emit('create-peao-room', { userId: myId, userName: myName, mode: 'PVC', aiLevel });
+    emit('create-peao-room', { userId: myId, userName: myName, mode: 'PVC', aiLevel, timeLimit });
   }
 
   function handleJoin() {
@@ -108,6 +110,7 @@ export default function PeaoScreen({ user, onBack }) {
           whiteName:   gameSession.whiteName || (color === 'white' ? myName : gameSession.opponentName || '...'),
           blackName:   gameSession.blackName || (color === 'black' ? myName : gameSession.opponentName || 'Computador'),
           myId,
+          timeLimit:   gameSession.timeLimit || 300,
         }}
         onExit={handleBack}
       />
@@ -121,12 +124,12 @@ export default function PeaoScreen({ user, onBack }) {
       <div className="peao-lobby">
         <div className="peao-lobby-bg"><div className="peao-lobby-grid" /></div>
         <div className="peao-lobby-content" style={{ alignItems: 'center', justifyContent: 'center', minHeight: '100dvh' }}>
-          <div style={{ textAlign: 'center', color: 'white' }}>
+          <div style={{ textAlign: 'center', color: 'var(--color-accent)' }}>
             <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>🎲</div>
             {isWinner ? (
               <>
                 <h2 style={{ fontWeight: 900, fontSize: '1.4rem', marginBottom: '0.5rem' }}>Você ganhou o sorteio!</h2>
-                <p style={{ color: 'rgba(255,255,255,0.6)', marginBottom: '1.5rem', fontSize: '0.9rem' }}>Escolha sua cor:</p>
+                <p style={{ color: '#64748b', marginBottom: '1.5rem', fontSize: '0.9rem', fontWeight: 500 }}>Escolha sua cor:</p>
                 <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
                   <button onClick={() => handlePickColor('white')} className="peao-btn peao-btn--primary" style={{ maxWidth: 140 }}>⬜ Brancas</button>
                   <button onClick={() => handlePickColor('black')} className="peao-btn peao-btn--secondary" style={{ maxWidth: 140 }}>⬛ Pretas</button>
@@ -135,7 +138,7 @@ export default function PeaoScreen({ user, onBack }) {
             ) : (
               <>
                 <h2 style={{ fontWeight: 900, fontSize: '1.4rem', marginBottom: '0.5rem' }}>{gameSession.drawWinnerName} ganhou o sorteio</h2>
-                <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.9rem' }}>Aguardando escolha de cor...</p>
+                <p style={{ color: '#64748b', fontSize: '0.9rem', fontWeight: 500 }}>Aguardando escolha de cor...</p>
               </>
             )}
           </div>
@@ -151,18 +154,18 @@ export default function PeaoScreen({ user, onBack }) {
         <div className="peao-lobby-bg"><div className="peao-lobby-grid" /></div>
         <div className="peao-lobby-content" style={{ alignItems: 'center', justifyContent: 'center', minHeight: '100dvh' }}>
           <div className="peao-action-panel" style={{ textAlign: 'center', maxWidth: 400 }}>
-            <div style={{ fontSize: '0.7rem', fontWeight: 900, color: 'rgba(255,255,255,0.4)', letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: '1rem' }}>
+            <div style={{ fontSize: '12px', fontWeight: 900, color: '#64748b', letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: '1rem' }}>
               Sala Criada
             </div>
-            <div style={{ fontSize: '2.5rem', fontWeight: 900, letterSpacing: '0.3em', color: '#FFCE00', marginBottom: '0.5rem' }}>
+            <div style={{ fontSize: '2.5rem', fontWeight: 900, letterSpacing: '0.3em', color: 'var(--color-primary)', marginBottom: '0.5rem' }}>
               {gameSession.roomCode || '…'}
             </div>
-            <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.8rem', marginBottom: '1.5rem' }}>
+            <p style={{ color: '#64748b', fontSize: '0.85rem', marginBottom: '1.5rem', fontWeight: 500 }}>
               Compartilhe esse código com um amigo
             </p>
             <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', justifyContent: 'center', marginBottom: '1.5rem' }}>
               <div className="peao-conn-dot peao-conn-dot--ok" style={{ animation: 'pulse 1.5s infinite' }} />
-              <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.75rem', fontWeight: 700 }}>Aguardando adversário…</span>
+              <span style={{ color: 'var(--color-primary)', fontSize: '0.75rem', fontWeight: 800 }}>Aguardando adversário…</span>
             </div>
             <button className="peao-btn peao-btn--secondary" onClick={handleBack}>← Cancelar</button>
           </div>
@@ -190,13 +193,13 @@ export default function PeaoScreen({ user, onBack }) {
           <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
             <button
               onClick={() => setShowRanking(true)}
-              style={{ background: 'rgba(255,206,0,0.1)', border: '1px solid rgba(255,206,0,0.25)', color: '#FFCE00', borderRadius: '9999px', padding: '0.4rem 0.9rem', fontWeight: 800, fontSize: '0.7rem', cursor: 'pointer', letterSpacing: '0.08em', textTransform: 'uppercase' }}
+              style={{ background: '#fef3c7', border: '2px solid #fcd34d', color: '#b45309', borderRadius: '9999px', padding: '0.4rem 0.9rem', fontWeight: 800, fontSize: '11px', cursor: 'pointer', letterSpacing: '0.08em', textTransform: 'uppercase', minHeight: '36px' }}
             >
               🏆 Ranking
             </button>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '9999px', padding: '0.35rem 0.75rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', background: '#f8fafc', border: '2px solid #e2e8f0', borderRadius: '9999px', padding: '0.35rem 0.75rem', minHeight: '36px' }}>
               <div className={`peao-conn-dot ${isConnected ? 'peao-conn-dot--ok' : 'peao-conn-dot--off'}`} />
-              <span style={{ fontSize: '0.6rem', fontWeight: 800, letterSpacing: '0.1em', color: isConnected ? '#22c55e' : '#ef4444', textTransform: 'uppercase' }}>
+              <span style={{ fontSize: '10px', fontWeight: 800, letterSpacing: '0.1em', color: isConnected ? '#15803d' : '#b91c1c', textTransform: 'uppercase' }}>
                 {isConnected ? 'Online' : 'Offline'}
               </span>
             </div>
@@ -251,9 +254,35 @@ export default function PeaoScreen({ user, onBack }) {
           <section>
             <p className="peao-section-title">Criar Sala</p>
             <div className="peao-action-panel" style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.85rem' }}>
-                Clique em "Criar" e compartilhe o código com seu adversário.
+              <p style={{ color: '#64748b', fontSize: '0.85rem', fontWeight: 500 }}>
+                Selecione o tempo e clique em "Criar Sala" para obter o código de convite.
               </p>
+
+              {/* Seletor de Tempo */}
+              <div className="peao-time-selector" style={{ margin: '0.5rem 0 1rem' }}>
+                <p style={{ fontSize: '12px', fontWeight: 800, color: '#64748b', marginBottom: '8px', letterSpacing: '0.05em', textTransform: 'uppercase', textAlign: 'left' }}>
+                  ⏱️ Tempo de Partida
+                </p>
+                <div style={{ display: 'flex', gap: '0.75rem' }}>
+                  <button
+                    type="button"
+                    onClick={() => setTimeLimit(300)}
+                    className={`peao-btn ${timeLimit === 300 ? 'peao-btn--primary' : 'peao-btn--secondary'}`}
+                    style={{ flex: 1, padding: '0.5rem 0', margin: 0, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  >
+                    5 Minutos
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setTimeLimit(600)}
+                    className={`peao-btn ${timeLimit === 600 ? 'peao-btn--primary' : 'peao-btn--secondary'}`}
+                    style={{ flex: 1, padding: '0.5rem 0', margin: 0, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  >
+                    10 Minutos
+                  </button>
+                </div>
+              </div>
+
               {error && <div className="peao-error">{error}</div>}
               <button className="peao-btn peao-btn--primary" onClick={handleCreatePVP} disabled={loading || !isConnected}>
                 {loading ? 'Criando…' : '♙ Criar Sala'}
@@ -300,11 +329,37 @@ export default function PeaoScreen({ user, onBack }) {
                     className={`peao-ai-level-btn ${aiLevel === l.value ? 'peao-ai-level-btn--active' : ''}`}
                     onClick={() => setAiLevel(l.value)}
                   >
-                    <span style={{ fontWeight: 900 }}>{l.label}</span>
-                    <span style={{ marginLeft: '0.5rem', opacity: 0.6, fontSize: '0.75rem' }}>— {l.description}</span>
+                    <strong>{l.label}</strong>
+                    <span>{l.description}</span>
                   </button>
                 ))}
               </div>
+
+              {/* Seletor de Tempo no PVC */}
+              <div className="peao-time-selector" style={{ margin: '0.5rem 0 1rem' }}>
+                <p style={{ fontSize: '12px', fontWeight: 800, color: '#64748b', marginBottom: '8px', letterSpacing: '0.05em', textTransform: 'uppercase', textAlign: 'left' }}>
+                  ⏱️ Tempo de Partida
+                </p>
+                <div style={{ display: 'flex', gap: '0.75rem' }}>
+                  <button
+                    type="button"
+                    onClick={() => setTimeLimit(300)}
+                    className={`peao-btn ${timeLimit === 300 ? 'peao-btn--primary' : 'peao-btn--secondary'}`}
+                    style={{ flex: 1, padding: '0.5rem 0', margin: 0, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  >
+                    5 Minutos
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setTimeLimit(600)}
+                    className={`peao-btn ${timeLimit === 600 ? 'peao-btn--primary' : 'peao-btn--secondary'}`}
+                    style={{ flex: 1, padding: '0.5rem 0', margin: 0, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  >
+                    10 Minutos
+                  </button>
+                </div>
+              </div>
+
               {error && <div className="peao-error">{error}</div>}
               <button className="peao-btn peao-btn--primary" onClick={handleCreatePVC} disabled={loading}>
                 {loading ? 'Iniciando…' : '🤖 Jogar contra IA'}

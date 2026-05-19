@@ -7,9 +7,16 @@
  *  - Avanço 1 casa; avanço 2 no primeiro movimento (caminho livre)
  *  - Captura diagonal (1 casa à frente-esquerda ou frente-direita)
  *  - Vitória: chegar à linha oposta, capturar todos os adversários ou forçar stalemate
+ *
+ * Visual:
+ *  - Layout de duas colunas (tabuleiro na esquerda, PeaoSidebar na direita).
+ *  - Altura sincronizada, visual idêntico ao Xadrez Tradicional.
+ *  - Suporte a temas Madeira e Escuro.
+ *  - Temporizadores sincronizados.
  */
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { usePeaoSocket } from '../../../hooks/usePeaoSocket';
+import PeaoSidebar from './PeaoSidebar';
 import './peao.css';
 
 // ── Engine de regras (espelhada do backend) ───────────────────────────────────
@@ -108,48 +115,9 @@ function getBestAIMove(board, hasMoved, depth = 3) {
   return { from: bestFrom, to: bestTo };
 }
 
-// ── RESULTADO ─────────────────────────────────────────────────────────────────
-function ResultOverlay({ result, myColor, whiteName, blackName, onRematch, onExit }) {
-  const isWin  = (result === 'WHITE_WIN' && myColor === 'white') || (result === 'BLACK_WIN' && myColor === 'black');
-  const isDraw = result === 'DRAW';
-  const cls    = isDraw ? 'draw' : isWin ? 'win' : 'loss';
-  const emoji  = isDraw ? '🤝' : isWin ? '🏆' : '💔';
-  const title  = isDraw ? 'Empate!' : isWin ? 'Você Venceu!' : 'Você Perdeu!';
-  const winner = result === 'WHITE_WIN' ? whiteName : result === 'BLACK_WIN' ? blackName : null;
-  const reasonMsg = winner ? `${winner} conquistou a linha inimiga!` : 'Nenhum lado pôde avançar.';
-
-  return (
-    <div className="peao-result-overlay">
-      <div className={`peao-result-card ${cls}`}>
-        <div style={{ fontSize: '3.5rem', marginBottom: '0.5rem' }}>{emoji}</div>
-        <h2 style={{ fontWeight: 900, fontSize: '1.6rem', color: isDraw ? '#64748b' : isWin ? '#009660' : '#ef4444', marginBottom: '0.25rem' }}>
-          {title}
-        </h2>
-        <p style={{ color: '#64748b', fontSize: '0.85rem', marginBottom: '1.5rem' }}>{reasonMsg}</p>
-        <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center' }}>
-          {onRematch && (
-            <button
-              onClick={onRematch}
-              style={{ background: '#009660', color: 'white', border: 'none', borderRadius: '0.75rem', padding: '0.7rem 1.4rem', fontWeight: 900, fontSize: '0.8rem', cursor: 'pointer', letterSpacing: '0.08em', textTransform: 'uppercase' }}
-            >
-              🔄 Revanche
-            </button>
-          )}
-          <button
-            onClick={onExit}
-            style={{ background: '#f1f5f9', color: '#475569', border: 'none', borderRadius: '0.75rem', padding: '0.7rem 1.4rem', fontWeight: 900, fontSize: '0.8rem', cursor: 'pointer', letterSpacing: '0.08em', textTransform: 'uppercase' }}
-          >
-            🚪 Sair
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 // ── COMPONENTE PRINCIPAL ──────────────────────────────────────────────────────
 export default function PeaoGame({ user, roomData, onExit }) {
-  const { emit, on, isConnected } = usePeaoSocket();
+  const { emit, on } = usePeaoSocket();
   const isPVC = roomData.mode === 'PVC';
   const myColor = roomData.color; // 'white' | 'black'
   const myPiece = myColor === 'white' ? 'w' : 'b';
@@ -161,10 +129,19 @@ export default function PeaoGame({ user, roomData, onExit }) {
   const [selected,  setSelected]  = useState(null);
   const [validMov,  setValidMov]  = useState([]);
   const [lastMove,  setLastMove]  = useState(null);
+  const [moves,     setMoves]     = useState([]);
   const [gameOver,  setGameOver]  = useState(null);  // { result, reason }
   const [whiteName, setWhiteName] = useState(myColor === 'white' ? (user?.fullName || 'Você') : (roomData.opponentName || '...'));
   const [blackName, setBlackName] = useState(myColor === 'black' ? (user?.fullName || 'Você') : (roomData.opponentName || '...'));
-  const [rematchReq, setRematchReq] = useState(false);
+  const [rematchRequested, setRematchRequested] = useState(false);
+  const [opponentWantsRematch, setOpponentWantsRematch] = useState(false);
+  const [drawOffered, setDrawOffered] = useState(false);
+  const [currentTheme, setCurrentTheme] = useState('wood');
+
+  // Timers
+  const initialTime = roomData.timeLimit || 300;
+  const [whiteTime, setWhiteTime] = useState(initialTime);
+  const [blackTime, setBlackTime] = useState(initialTime);
 
   const boardRef   = useRef(board);
   const hasMovRef  = useRef(hasMoved);
@@ -176,27 +153,74 @@ export default function PeaoGame({ user, roomData, onExit }) {
     if (isPVC) return;
 
     const unsubs = [
-      on('peao-game-ready', ({ board: b, turn: t, whiteName: wn, blackName: bn, isRematch }) => {
+      on('peao-game-ready', ({ board: b, turn: t, whiteName: wn, blackName: bn }) => {
         setBoard(b); setHasMoved(createHasMoved()); setTurn(t);
         setSelected(null); setValidMov([]); setLastMove(null); setGameOver(null);
+        setMoves([]);
+        setWhiteTime(initialTime);
+        setBlackTime(initialTime);
         if (wn) setWhiteName(wn);
         if (bn) setBlackName(bn);
-        setRematchReq(false);
+        setRematchRequested(false);
+        setOpponentWantsRematch(false);
+        setDrawOffered(false);
       }),
       on('peao-piece-moved', ({ board: b, turn: t, lastMove: lm }) => {
         setBoard(b);
         setTurn(t);
         setLastMove(lm);
+        setMoves(prev => [...prev, lm]);
         setSelected(null);
         setValidMov([]);
         setHasMoved(prev => { const n = [...prev]; n[lm.from] = false; n[lm.to] = true; return n; });
       }),
-      on('peao-game-over', ({ result, reason }) => setGameOver({ result, reason })),
-      on('peao-rematch-requested', () => setRematchReq(true)),
+      on('peao-game-over', ({ result, reason }) => {
+        setGameOver({ result, reason });
+        setDrawOffered(false);
+      }),
+      on('peao-rematch-requested', () => setOpponentWantsRematch(true)),
+      on('peao-draw-offered', () => setDrawOffered(true)),
+      on('peao-draw-declined', () => setDrawOffered(false)),
     ];
 
     return () => unsubs.forEach(fn => fn());
-  }, [isPVC, on]);
+  }, [isPVC, on, initialTime]);
+
+  // ── Timer ticking logic ───────────────────────────────────────────────────
+  const status = gameOver ? 'finished' : 'playing';
+
+  const handleTimeout = useCallback((lostColor) => {
+    if (gameOver) return;
+
+    if (isPVC) {
+      const result = lostColor === 'white' ? 'BLACK_WIN' : 'WHITE_WIN';
+      setGameOver({ result, reason: 'timeout' });
+    } else {
+      emit('peao-claim-timeout', { roomCode: roomData.roomCode });
+    }
+  }, [gameOver, isPVC, emit, roomData.roomCode]);
+
+  useEffect(() => {
+    if (status !== 'playing' || gameOver) return;
+
+    const interval = setInterval(() => {
+      if (turn === 'w') {
+        setWhiteTime(prev => {
+          const next = Math.max(0, prev - 0.1);
+          if (next === 0) handleTimeout('white');
+          return next;
+        });
+      } else {
+        setBlackTime(prev => {
+          const next = Math.max(0, prev - 0.1);
+          if (next === 0) handleTimeout('black');
+          return next;
+        });
+      }
+    }, 100);
+
+    return () => clearInterval(interval);
+  }, [status, gameOver, turn, handleTimeout]);
 
   // ── Click na casa ─────────────────────────────────────────────────────────
   const handleSquareClick = useCallback((idx) => {
@@ -221,6 +245,7 @@ export default function PeaoGame({ user, roomData, onExit }) {
       setSelected(null);
       setValidMov([]);
       setLastMove({ from, to });
+      setMoves(prev => [...prev, { from, to }]);
 
       const newTurn = turn === 'w' ? 'b' : 'w';
       setTurn(newTurn);
@@ -238,7 +263,9 @@ export default function PeaoGame({ user, roomData, onExit }) {
           const ab = [...newBoard]; const am = [...newMoved];
           ab[aiMove.to] = 'b'; ab[aiMove.from] = null; am[aiMove.to] = true;
           setBoard(ab); setHasMoved(am);
-          setLastMove(aiMove); setTurn('w');
+          setLastMove(aiMove);
+          setMoves(prev => [...prev, aiMove]);
+          setTurn('w');
 
           const aiWin = checkWinLocal(ab);
           if (aiWin) { setGameOver({ result: aiWin, reason: 'breakthrough' }); return; }
@@ -273,14 +300,36 @@ export default function PeaoGame({ user, roomData, onExit }) {
     emit('peao-resign', { roomCode: roomData.roomCode });
   };
 
+  // ── Draw Handlers ────────────────────────────────────────────────────────
+  const handleOfferDraw = () => {
+    if (isPVC) return;
+    emit('peao-offer-draw', { roomCode: roomData.roomCode });
+  };
+
+  const handleAcceptDraw = () => {
+    if (isPVC) return;
+    emit('peao-accept-draw', { roomCode: roomData.roomCode });
+    setDrawOffered(false);
+  };
+
+  const handleDeclineDraw = () => {
+    if (isPVC) return;
+    emit('peao-decline-draw', { roomCode: roomData.roomCode });
+    setDrawOffered(false);
+  };
+
   // ── Rematch ──────────────────────────────────────────────────────────────
   const handleRematch = () => {
     if (isPVC) {
       setBoard(createInitialBoard());
       setHasMoved(createHasMoved());
       setTurn('w'); setSelected(null); setValidMov([]); setLastMove(null); setGameOver(null);
+      setMoves([]);
+      setWhiteTime(initialTime);
+      setBlackTime(initialTime);
     } else {
       emit('peao-request-rematch', { roomCode: roomData.roomCode });
+      setRematchRequested(true);
     }
   };
 
@@ -299,104 +348,114 @@ export default function PeaoGame({ user, roomData, onExit }) {
   const isMyTurn = turn === myPiece && !gameOver;
 
   return (
-    <div className="peao-game-wrapper">
-      {/* Barra superior */}
-      <div className="peao-info-bar">
-        <div className={`peao-player-badge ${turn === 'b' && !gameOver ? 'peao-player-badge--active' : ''}`}>
-          <span>⬛</span> {blackName}
-        </div>
-        <div className="peao-turn-indicator">
-          {gameOver ? '🏁 Fim de Jogo' : isMyTurn ? '⚡ Sua vez' : '⏳ Aguardando...'}
-        </div>
-        <div className={`peao-player-badge ${turn === 'w' && !gameOver ? 'peao-player-badge--active' : ''}`}>
-          <span>⬜</span> {whiteName}
-        </div>
-      </div>
-
-      {/* Notação X (topo) */}
-      <div className="peao-notation-x">
-        {files.map(f => <span key={`tx-${f}`}>{f}</span>)}
-      </div>
-
-      {/* Tabuleiro + notação Y */}
-      <div className="peao-board-container">
-        <div className="peao-notation-y">
-          {ranks.map(r => <span key={`ly-${r}`}>{r}</span>)}
-        </div>
-
-        <div className="peao-board">
-          {squares.map((idx) => {
-            const row = Math.floor(idx / 8);
-            const col = idx % 8;
-            const isLight     = (row + col) % 2 === 0;
-            const isSelected  = selected === idx;
-            const isValidMove = validMov.includes(idx) && board[idx] === null;
-            const isCapture   = validMov.includes(idx) && board[idx] !== null;
-            const isLastMove  = lastMove && (lastMove.from === idx || lastMove.to === idx);
-
-            let cls = `peao-sq ${isLight ? 'peao-sq--light' : 'peao-sq--dark'}`;
-            if (isLastMove && !isSelected) cls += ' peao-sq--last-move';
-            if (isSelected)    cls += ' peao-sq--selected';
-            if (isValidMove)   cls += ' peao-sq--valid-move';
-            if (isCapture)     cls += ' peao-sq--valid-capture';
-
-            const piece = board[idx];
-            const pieceFile = piece === 'w' ? '/assets/chess/3d/wP.png' : '/assets/chess/3d/bP.png';
-
-            return (
-              <div key={idx} className={cls} onClick={() => handleSquareClick(idx)}>
-                {piece && <img src={pieceFile} alt={piece === 'w' ? 'Peão Branco' : 'Peão Preto'} className="peao-piece" />}
-              </div>
-            );
-          })}
-        </div>
-
-        <div className="peao-notation-y">
-          {ranks.map(r => <span key={`ry-${r}`}>{r}</span>)}
-        </div>
-      </div>
-
-      {/* Notação X (base) */}
-      <div className="peao-notation-x">
-        {files.map(f => <span key={`bx-${f}`}>{f}</span>)}
-      </div>
-
-      {/* Ações */}
-      <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', justifyContent: 'center' }}>
-        {!gameOver && (
-          <button
-            onClick={handleResign}
-            style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', color: '#fca5a5', borderRadius: '0.75rem', padding: '0.6rem 1.2rem', fontWeight: 800, fontSize: '0.75rem', cursor: 'pointer', letterSpacing: '0.08em', textTransform: 'uppercase' }}
-          >
-            🏳️ Abandonar
-          </button>
-        )}
+    <div className="peao-screen">
+      {/* Theme switcher — top right */}
+      <div className="peao-theme-switcher">
         <button
-          onClick={onExit}
-          style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.6)', borderRadius: '0.75rem', padding: '0.6rem 1.2rem', fontWeight: 800, fontSize: '0.75rem', cursor: 'pointer', letterSpacing: '0.08em', textTransform: 'uppercase' }}
+          className={`peao-theme-btn ${currentTheme === 'wood' ? 'peao-theme-btn--active' : ''}`}
+          onClick={() => setCurrentTheme('wood')}
+          title="Madeira Clássica"
         >
-          ← Sair
+          🪵 Madeira Clássica
+        </button>
+        <button
+          className={`peao-theme-btn ${currentTheme === 'dark' ? 'peao-theme-btn--active' : ''}`}
+          onClick={() => setCurrentTheme('dark')}
+          title="Dark Moderno"
+        >
+          🌑 Dark Moderno
         </button>
       </div>
 
-      {/* Notificação de revanche pendente */}
-      {rematchReq && !gameOver && (
-        <div style={{ background: 'rgba(0,150,96,0.15)', border: '1px solid rgba(0,150,96,0.3)', borderRadius: '0.75rem', padding: '0.75rem 1.25rem', color: 'white', fontSize: '0.8rem', fontWeight: 700 }}>
-          ⚔️ Adversário pediu revanche!
-        </div>
-      )}
+      <div className="peao-layout">
+        {/* Board area */}
+        <div className="peao-board-area">
+          <div className={`peao-board-wrapper peao-theme-${currentTheme}`}>
+            {/* Notação X (topo) */}
+            <div className="peao-notation-x">
+              {files.map(f => <span key={`tx-${f}`}>{f}</span>)}
+            </div>
 
-      {/* Overlay de resultado */}
-      {gameOver && (
-        <ResultOverlay
-          result={gameOver.result}
-          myColor={myColor}
-          whiteName={whiteName}
-          blackName={blackName}
-          onRematch={handleRematch}
-          onExit={onExit}
-        />
-      )}
+            {/* Tabuleiro + notações Y */}
+            <div className="peao-board-middle">
+              <div className="peao-notation-y">
+                {ranks.map(r => <span key={`ly-${r}`}>{r}</span>)}
+              </div>
+
+              <div className="peao-board-inner">
+                <div className="peao-board-grid">
+                  {squares.map((idx) => {
+                    const row = Math.floor(idx / 8);
+                    const col = idx % 8;
+                    const isLight     = (row + col) % 2 === 0;
+                    const isSelected  = selected === idx;
+                    const isValidMove = validMov.includes(idx) && board[idx] === null;
+                    const isCapture   = validMov.includes(idx) && board[idx] !== null;
+                    const isLastMove  = lastMove && (lastMove.from === idx || lastMove.to === idx);
+
+                    let cls = `peao-board-sq ${isLight ? 'peao-board-sq--light' : 'peao-board-sq--dark'}`;
+                    if (isLastMove && !isSelected) cls += ' peao-board-sq--last-move';
+                    if (isSelected)    cls += ' peao-board-sq--selected';
+                    if (isValidMove)   cls += ' peao-board-sq--valid-move';
+                    if (isCapture)     cls += ' peao-board-sq--valid-capture';
+
+                    const piece = board[idx];
+                    const pieceFile = piece === 'w' ? '/assets/chess/3d/wP.png' : '/assets/chess/3d/bP.png';
+
+                    return (
+                      <div key={idx} className={cls} onClick={() => handleSquareClick(idx)}>
+                        {piece && (
+                          <img 
+                            src={pieceFile} 
+                            alt={piece === 'w' ? 'Peão Branco' : 'Peão Preto'} 
+                            className="peao-board-piece" 
+                          />
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="peao-notation-y">
+                {ranks.map(r => <span key={`ry-${r}`}>{r}</span>)}
+              </div>
+            </div>
+
+            {/* Notação X (base) */}
+            <div className="peao-notation-x">
+              {files.map(f => <span key={`bx-${f}`}>{f}</span>)}
+            </div>
+          </div>
+        </div>
+
+        {/* Sidebar container */}
+        <div className="peao-sidebar-container">
+          <PeaoSidebar
+            myColor={myColor}
+            whiteName={whiteName}
+            blackName={blackName}
+            moves={moves}
+            status={status}
+            gameOver={gameOver}
+            drawOffered={drawOffered}
+            isMyTurn={isMyTurn}
+            mode={roomData.mode}
+            aiLevel={roomData.aiLevel}
+            onResign={handleResign}
+            onOfferDraw={handleOfferDraw}
+            onAcceptDraw={handleAcceptDraw}
+            onDeclineDraw={handleDeclineDraw}
+            onRematch={handleRematch}
+            rematchRequested={rematchRequested}
+            opponentWantsRematch={opponentWantsRematch}
+            onBack={onExit}
+            roomCode={roomData.roomCode}
+            whiteTime={whiteTime}
+            blackTime={blackTime}
+          />
+        </div>
+      </div>
     </div>
   );
 }

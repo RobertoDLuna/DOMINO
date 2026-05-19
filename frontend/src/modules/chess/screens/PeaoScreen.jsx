@@ -47,11 +47,22 @@ export default function PeaoScreen({ user, onBack }) {
         setGameSession(prev => prev ? { ...prev, drawWinnerId: winnerId, drawWinnerName: winnerName, phase: 'DRAW' } : null);
       }),
 
-      on('peao-game-ready', ({ board, turn, whiteName, blackName, timeLimit: serverTime }) => {
-        setGameSession(prev => prev
-          ? { ...prev, phase: 'PLAYING', whiteName, blackName, timeLimit: serverTime || prev.timeLimit }
-          : null
-        );
+      on('peao-game-ready', ({ board, turn, white, black, whiteName, blackName, timeLimit: serverTime }) => {
+        setGameSession(prev => {
+          if (!prev) return null;
+          let assignedColor = prev.color;
+          if (white && black) {
+            assignedColor = white.userId === myId ? 'white' : 'black';
+          }
+          return {
+            ...prev,
+            phase: 'PLAYING',
+            color: assignedColor,
+            whiteName,
+            blackName,
+            timeLimit: serverTime || prev.timeLimit
+          };
+        });
       }),
 
       on('peao-room-joined', ({ roomCode, timeLimit: serverTime }) => {

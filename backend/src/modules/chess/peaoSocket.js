@@ -275,6 +275,8 @@ module.exports = function peaoSocket(io) {
       peaoNsp.to(roomCode).emit('peao-game-ready', {
         board: room.board,
         turn: room.turn,
+        white: room.white,
+        black: room.black,
         whiteName: room.white.userName,
         blackName: room.black.userName,
         timeLimit: room.timeLimit,
@@ -439,6 +441,8 @@ module.exports = function peaoSocket(io) {
         peaoNsp.to(roomCode).emit('peao-game-ready', {
           board: room.board,
           turn: room.turn,
+          white: room.white,
+          black: room.black,
           whiteName: room.white.userName,
           blackName: room.black.userName,
           isRematch: true,

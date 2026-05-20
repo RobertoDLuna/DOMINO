@@ -9,6 +9,7 @@ import GameHub from "./core/hub/GameHub";
 import ChessHomeScreen from "./modules/chess/screens/ChessHomeScreen";
 import AuthService from "./services/AuthService";
 import { useGameContext } from "./context/GameContext";
+import ConfirmModal from "./shared/ui/ConfirmModal";
 
 function App() {
   const { room, gameState, leaveRoom } = useGameContext();
@@ -20,6 +21,7 @@ function App() {
   });
   const [selectedTheme, setSelectedTheme] = useState(null);
   const [activeGame, setActiveGame] = useState(null);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   // Checks if we should be in a game screen even if context hasn't updated yet
   const [manualJoin, setManualJoin] = useState(false);
   const isInRoomSession = !!room || !!localStorage.getItem('domino_current_room') || manualJoin;
@@ -73,16 +75,19 @@ function App() {
     );
   }
 
-  const handleLogout = () => {
-    if (confirm('Deseja realmente sair?')) {
-      AuthService.logout();
-      setUser(null);
-      setGuestMode(false);
-      setActiveGame(null);
-      setSelectedTheme(null);
-      window.location.reload();
-    }
+  const requestLogout = () => setShowLogoutConfirm(true);
+
+  const confirmLogout = () => {
+    AuthService.logout();
+    setUser(null);
+    setGuestMode(false);
+    setActiveGame(null);
+    setSelectedTheme(null);
+    setShowLogoutConfirm(false);
+    window.location.reload();
   };
+
+  const cancelLogout = () => setShowLogoutConfirm(false);
 
   return (
     <>
@@ -114,7 +119,7 @@ function App() {
         <GameHub 
           user={user} 
           onSelectGame={(gameId) => setActiveGame(gameId)}
-          onLogout={handleLogout}
+          onLogout={requestLogout}
         />
       )}
 
@@ -122,6 +127,14 @@ function App() {
       {showAdminPanel && user?.role === 'ADMIN' && (
         <AdminDashboard onBack={() => toggleAdminPanel(false)} />
       )}
+
+      <ConfirmModal 
+        isOpen={showLogoutConfirm}
+        title="Sair do Jogo"
+        message="Deseja realmente sair da sua conta?"
+        onConfirm={confirmLogout}
+        onCancel={cancelLogout}
+      />
     </>
   );
 }

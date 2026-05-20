@@ -8,7 +8,7 @@ async function seedAdmin() {
 
   const fullName = "robertoluna";
   const email = "robertocgw@gmail.com";
-  const password = "admin123";
+  const password = process.env.ADMIN_SEED_PASSWORD || "admin123";
 
   try {
     const existingAdmin = await prisma.user.findUnique({ where: { email } });

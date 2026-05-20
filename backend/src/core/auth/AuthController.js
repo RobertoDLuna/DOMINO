@@ -2,7 +2,11 @@ const { getPrisma } = require('../../shared/config/prismaClient');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'domino-secret-key-2026';
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  console.error("❌ FATAL: JWT_SECRET não está configurado no .env");
+  process.exit(1);
+}
 
 class AuthController {
   async register(req, res) {
@@ -10,6 +14,10 @@ class AuthController {
 
     if (!fullName || !email || !password || !role) {
       return res.status(400).json({ error: "Todos os campos obrigatórios devem ser preenchidos." });
+    }
+    
+    if (password.length < 8) {
+      return res.status(400).json({ error: "A senha deve ter pelo menos 8 caracteres." });
     }
     
     email = email.toLowerCase();
@@ -107,8 +115,8 @@ class AuthController {
 
   async changePassword(req, res) {
     const { newPassword } = req.body;
-    if (!newPassword || newPassword.length < 6) {
-      return res.status(400).json({ error: "A nova senha deve ter pelo menos 6 caracteres." });
+    if (!newPassword || newPassword.length < 8) {
+      return res.status(400).json({ error: "A nova senha deve ter pelo menos 8 caracteres." });
     }
 
     try {

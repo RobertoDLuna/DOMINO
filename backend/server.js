@@ -43,7 +43,11 @@ const setupSocket = require("./src/shared/config/socketConfig");
 const errorMiddleware = require("./src/shared/middleware/errorMiddleware");
 
 const app = express();
-app.use(cors());
+const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+app.use(cors({
+  origin: frontendUrl,
+  credentials: true
+}));
 app.use(express.json());
 
 // Log de requisições para depuração (Raio-X)

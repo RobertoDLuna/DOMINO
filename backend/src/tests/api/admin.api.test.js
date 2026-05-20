@@ -4,8 +4,26 @@ const app = require('../../../server');
 describe('Admin API (Security & Data)', () => {
   const adminCredentials = {
     email: 'admin@test.com',
-    password: 'test123'
+    password: 'password123'
   };
+
+  beforeAll(async () => {
+    const { getPrisma } = require('../../shared/config/prismaClient');
+    const bcrypt = require('bcryptjs');
+    const prisma = getPrisma();
+    const hash = await bcrypt.hash(adminCredentials.password, 10);
+    
+    await prisma.user.upsert({
+      where: { email: adminCredentials.email },
+      update: { password: hash, role: 'ADMIN' },
+      create: {
+        fullName: 'Admin Test',
+        email: adminCredentials.email,
+        password: hash,
+        role: 'ADMIN'
+      }
+    });
+  });
 
   const getAdminToken = async () => {
     const res = await request(app)

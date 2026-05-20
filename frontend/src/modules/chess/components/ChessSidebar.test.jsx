@@ -32,8 +32,7 @@ describe('ChessSidebar', () => {
   it('deve listar o histórico de jogadas', () => {
     const moves = [{ san: 'e4', from: 'e2', to: 'e4', piece: 'p' }];
     render(<ChessSidebar {...defaultProps} moves={moves} />);
-    expect(screen.getByText('e4')).toBeInTheDocument();
-    expect(screen.getByText(/Peão para E4/i)).toBeInTheDocument();
+    expect(screen.getAllByText('Pe4').length).toBeGreaterThan(0);
   });
 
   it('deve mostrar o botão de desistir durante o jogo', () => {

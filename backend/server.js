@@ -10,8 +10,6 @@ const schoolRoutes = require("./src/core/schools/schoolRoutes");
 const adminRoutes = require("./src/core/admin/adminRoutes");
 const rankingRoutes = require("./src/modules/domino/rankingRoutes");
 const chessRankingRoutes = require("./src/modules/chess/chessRoutes");
-const peaoRankingRoutes  = require("./src/modules/chess/peaoRoutes");
-
 // Global error handlers for Docker troubleshooting
 process.on("uncaughtException", (err) => {
   console.error("❌ FATAL: Uncaught Exception:", err);
@@ -56,8 +54,6 @@ app.use((req, res, next) => {
   next();
 });
 
-const velhaRoutes = require("./src/modules/chess/velhaRoutes");
-
 // API Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/schools", schoolRoutes);
@@ -65,8 +61,6 @@ app.use("/api/themes", themeRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/ranking", rankingRoutes);
 app.use("/api/chess/ranking", chessRankingRoutes);
-app.use("/api/velha/ranking", velhaRoutes);
-app.use("/api/peao/ranking",  peaoRankingRoutes);
 
 // Serving Static Frontend Files (Production)
 const frontendPath = path.join(__dirname, "../frontend/dist");
@@ -95,22 +89,6 @@ try {
   console.log("♟️  Handlers do Socket (Xadrez) carregados com sucesso");
 } catch (err) {
   console.error("❌ Erro ao carregar chessSocket:", err);
-  process.exit(1);
-}
-
-try {
-  require("./src/modules/chess/velhaSocket")(io);
-  console.log("♟️  Handlers do Socket (Xadrez da Velha) carregados com sucesso");
-} catch (err) {
-  console.error("❌ Erro ao carregar velhaSocket:", err);
-  process.exit(1);
-}
-
-try {
-  require("./src/modules/chess/peaoSocket")(io);
-  console.log("♙  Handlers do Socket (Batalha dos Peões) carregados com sucesso");
-} catch (err) {
-  console.error("❌ Erro ao carregar peaoSocket:", err);
   process.exit(1);
 }
 

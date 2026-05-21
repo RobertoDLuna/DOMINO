@@ -1,21 +1,24 @@
 /**
  * ChessHomeScreen.jsx
- * Chess lobby: choose game mode (PVP or PVC), create or join a room.
- * Design follows the EduGames premium visual language.
+ * Lobby de Xadrez Premium: Selecione modos de jogo (PVP ou PVC), crie ou entre em salas.
+ * Design alinhado com a identidade moderna e refinada do EduGames.
  */
 import React, { useState, useEffect } from 'react';
 import ChessScreen from './ChessScreen';
 import XadrezVelhaScreen from './XadrezVelhaScreen';
 import PeaoScreen from './PeaoScreen';
 import { useChessSocket } from '../../../hooks/useChessSocket';
+import logoCampina from '../../../assets/logo-campina.png';
+import AuthService from '../../../services/AuthService';
+import ChessRankingBoard from '../components/ChessRankingBoard';
 import '../components/chess.css';
 
 const AI_LEVELS = [
-  { value: 1, label: 'Iniciante', description: 'Ideal para aprender' },
-  { value: 3, label: 'Fácil', description: 'Comete erros ocasionais' },
-  { value: 5, label: 'Médio', description: 'Joga de forma sólida' },
-  { value: 8, label: 'Difícil', description: 'Pensa vários lances à frente' },
-  { value: 10, label: 'Mestre', description: 'Quase imbatível' },
+  { value: 1, label: 'Iniciante', description: 'Ideal para aprender as regras básicas' },
+  { value: 3, label: 'Fácil', description: 'Comete alguns erros estratégicos' },
+  { value: 5, label: 'Médio', description: 'Joga de forma consistente e sólida' },
+  { value: 8, label: 'Difícil', description: 'Antecipa jogadas e cria armadilhas' },
+  { value: 10, label: 'Mestre', description: 'Desafio extremo, praticamente imbatível' },
 ];
 
 const TIME_OPTIONS = [
@@ -25,32 +28,43 @@ const TIME_OPTIONS = [
   { value: null, label: 'Sem tempo' },
 ];
 
-import ChessRankingBoard from '../components/ChessRankingBoard';
-
 export default function ChessHomeScreen({ user, onBack }) {
   const { emit, on, connected } = useChessSocket();
 
-  // game type state
-  const [gameType, setGameType] = useState(null); // null | 'classic' | 'velha' | 'peao'
+  // Estados principais
+  const [gameType, setGameType] = useState(null); // null (Todos) | 'classic' | 'velha' | 'peao'
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [isChildSessionActive, setIsChildSessionActive] = useState(false);
+  const [showRanking, setShowRanking] = useState(false);
 
-  // lobby state
+  // Estados do lobby clássico (Xadrez Real)
   const [mode, setMode] = useState(null); // null | 'PVP' | 'PVC'
-  const [subMode, setSubMode] = useState(null); // 'create' | 'join'
+  const [subMode, setSubMode] = useState(null); // null | 'create' | 'join'
   const [aiLevel, setAiLevel] = useState(5);
   const [timeLimit, setTimeLimit] = useState(600); // 10 min padrão
   const [joinCode, setJoinCode] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [showRanking, setShowRanking] = useState(false);
 
-  // game session
+  // Sessão do jogo clássico
   const [gameSession, setGameSession] = useState(null);
 
-  // Identidade do usuário para esta sessão
+  // Identidade do usuário
   const myId = user?.id || `guest_${Date.now().toString().slice(-6)}`;
   const myName = user?.fullName || 'Convidado';
 
-  // ── Socket event listeners ──────────────────────────────────────────────
+  // Sincronização do estado de sessão ativa
+  const isGameActive = !!gameSession || isChildSessionActive;
+
+  // Logout unificado
+  const handleLogout = () => {
+    if (confirm('Deseja realmente sair da conta?')) {
+      AuthService.logout();
+      window.location.reload();
+    }
+  };
+
+  // ── Listeners de Evento do Socket (Xadrez Real) ───────────────────────────
   useEffect(() => {
     const unsubCreated = ({ roomCode, color, fen, timeLimit: serverTimeLimit }) => {
       setLoading(false);
@@ -84,9 +98,6 @@ export default function ChessHomeScreen({ user, onBack }) {
       });
     };
 
-    const offCreated = on('chess-room-created', unsubCreated);
-    const offJoined = on('chess-room-joined', unsubJoined);
-
     const unsubOpponent = on('chess-opponent-joined', (data) => {
       setGameSession(prev => prev ? {
         ...prev,
@@ -100,6 +111,9 @@ export default function ChessHomeScreen({ user, onBack }) {
       setError(message);
     });
 
+    const offCreated = on('chess-room-created', unsubCreated);
+    const offJoined = on('chess-room-joined', unsubJoined);
+
     return () => {
       offCreated();
       offJoined();
@@ -108,7 +122,7 @@ export default function ChessHomeScreen({ user, onBack }) {
     };
   }, [on, user, myId, myName]);
 
-  // ── Handlers ────────────────────────────────────────────────────────────
+  // ── Handlers do Xadrez Real ───────────────────────────────────────────────
   function handleCreateRoom() {
     if (!connected) { setError('Sem conexão com o servidor.'); return; }
     setError('');
@@ -149,7 +163,7 @@ export default function ChessHomeScreen({ user, onBack }) {
     });
   }
 
-  function handleBack() {
+  function handleBackClassic() {
     setGameSession(null);
     setMode(null);
     setSubMode(null);
@@ -157,324 +171,573 @@ export default function ChessHomeScreen({ user, onBack }) {
     setError('');
   }
 
-  // ── Render: Batalha dos Peões ────────────────────────────────────────────
-  if (gameType === 'peao') {
-    return <PeaoScreen user={user} onBack={() => setGameType(null)} />;
+  // ── RENDERIZAÇÃO COMPLETA EM TELA CHEIA (Jogo Ativo) ───────────────────────
+  if (isGameActive) {
+    if (gameType === 'peao') {
+      return (
+        <PeaoScreen 
+          user={user} 
+          onBack={() => { setGameType(null); setIsChildSessionActive(false); }} 
+          onSessionActive={setIsChildSessionActive} 
+        />
+      );
+    }
+
+    if (gameType === 'velha') {
+      return (
+        <XadrezVelhaScreen 
+          user={user} 
+          onBack={() => { setGameType(null); setIsChildSessionActive(false); }} 
+          onSessionActive={setIsChildSessionActive} 
+        />
+      );
+    }
+
+    if (gameType === 'classic' && gameSession) {
+      return (
+        <ChessScreen
+          user={user}
+          roomCode={gameSession.roomCode}
+          myColor={gameSession.myColor}
+          mode={gameSession.mode}
+          aiLevel={gameSession.aiLevel}
+          whiteName={gameSession.whiteName}
+          blackName={gameSession.blackName}
+          initialFen={gameSession.initialFen}
+          timeLimit={gameSession.timeLimit}
+          myId={gameSession.myId}
+          boardTheme="wood"
+          onBack={handleBackClassic}
+        />
+      );
+    }
   }
 
-  // ── Render: Mode Selector ────────────────────────────────────────────────
-  if (!gameType) {
-    return (
-      <div className="chess-lobby">
-         <div className="chess-lobby-bg" aria-hidden="true"><div className="chess-lobby-grid" /></div>
-         
-         <div className="chess-lobby-content">
-           <header className="chess-lobby-header">
-              <button 
-                className="chess-lobby-back group flex items-center gap-2" 
-                onClick={onBack}
-              >
-                <span className="transition-transform group-hover:-translate-x-1">←</span> 
-                Voltar
-              </button>
-              
-              <div className="chess-lobby-title-wrap">
-                <span className="chess-lobby-icon" aria-hidden="true">🎮</span>
-                <div>
-                  <h1 className="chess-lobby-title">EduGames</h1>
-                  <p className="chess-lobby-sub">SELECIONE O SEU DESAFIO</p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2 bg-black/5 px-3 py-1.5 rounded-full border border-black/5">
-                  <div className="chess-conn-dot chess-conn-dot--ok" />
-                  <span className="text-[9px] font-bold tracking-widest text-green-600">LIVE</span>
-                </div>
-              </div>
-           </header>
-
-           <section className="chess-mode-select">
-             <h2 className="chess-section-title">Como deseja jogar?</h2>
-             <div className="chess-mode-cards">
-               <button 
-                 className="chess-mode-card chess-mode-card--pvp" 
-                 onClick={() => setGameType('classic')}
-               >
-                  <span className="chess-mode-emoji">♟️</span>
-                  <strong>Xadrez Real</strong>
-                  <p>O clássico jogo de estratégia</p>
-                  <span className="chess-mode-badge">Competitivo</span>
-               </button>
-               <button 
-                  className="chess-mode-card chess-mode-card--pvc" 
-                  onClick={() => setGameType('velha')}
-                >
-                   <span className="chess-mode-emoji text-[#769656]">⚔️</span>
-                   <strong>Xadrez da Velha</strong>
-                   <p>Mistura de Velha com Xadrez</p>
-                   <span className="chess-mode-badge chess-mode-badge--gray">Modo Casual</span>
-                </button>
-                <button 
-                  className="chess-mode-card" 
-                  onClick={() => setGameType('peao')}
-                  style={{ borderColor: 'rgba(0,150,96,0.3)', background: 'rgba(0,150,96,0.04)' }}
-                >
-                   <span className="chess-mode-emoji">♙</span>
-                   <strong>Batalha dos Peões</strong>
-                   <p>Leve seus peões à linha inimiga</p>
-                   <span className="chess-mode-badge">Novo!</span>
-                </button>
-             </div>
-           </section>
-           
-           <footer className="chess-lobby-footer mt-12">
-             <span>🎮 Plataforma EduGames v2.0</span>
-             <span>·</span>
-             <span>Ambiente Educativo Integrado</span>
-             <span>·</span>
-             <span>Desenvolvimento de Raciocínio</span>
-           </footer>
-         </div>
-      </div>
-    );
-  }
-
-  if (gameType === 'velha') {
-    return <XadrezVelhaScreen user={user} onBack={() => setGameType(null)} />;
-  }
-
-  // ── Render: Game active ──────────────────────────────────────────────────
-  if (gameSession) {
-    return (
-      <ChessScreen
-        user={user}
-        roomCode={gameSession.roomCode}
-        myColor={gameSession.myColor}
-        mode={gameSession.mode}
-        aiLevel={gameSession.aiLevel}
-        whiteName={gameSession.whiteName}
-        blackName={gameSession.blackName}
-        initialFen={gameSession.initialFen}
-        timeLimit={gameSession.timeLimit}
-        myId={gameSession.myId}
-        boardTheme="wood"
-        onBack={handleBack}
-      />
-    );
-  }
-
-  // ── Render: Lobby ────────────────────────────────────────────────────────
+  // ── RENDERIZAÇÃO DO LOBBY GERAL + BARRA LATERAL ───────────────────────────
   return (
-    <div className="chess-lobby">
-      {/* Background pattern */}
-      <div className="chess-lobby-bg" aria-hidden="true">
-        <div className="chess-lobby-grid" />
-      </div>
+    <div className="flex min-h-screen bg-[#F0FDF4] w-full relative overflow-hidden">
+      {/* Mobile Overlay */}
+      {showMobileMenu && (
+        <div
+          className="fixed inset-0 bg-emerald-950/40 z-40 lg:hidden backdrop-blur-sm"
+          onClick={() => setShowMobileMenu(false)}
+        />
+      )}
 
-      <div className="chess-lobby-content">
-        {/* Header */}
-        <header className="chess-lobby-header">
-          <button 
-            className="chess-lobby-back" 
-            onClick={() => {
-              if (subMode) setSubMode(null);
-              else if (mode) setMode(null);
-              else setGameType(null);
-            }}
+      {/* Sidebar (Visual idêntico ao Dominó) */}
+      <aside className={`fixed inset-y-0 left-0 w-72 bg-white/95 backdrop-blur-xl border-r-2 border-emerald-100 p-6 sm:p-8 flex flex-col z-50 transform transition-transform duration-300 lg:static lg:translate-x-0 ${showMobileMenu ? 'translate-x-0 shadow-2xl' : '-translate-x-full'}`}>
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex flex-col">
+            {/* Branding EduGames - Sempre visível */}
+            <div className="flex items-center gap-3 mb-6 animate-in fade-in slide-in-from-top-4">
+              <img src={logoCampina} alt="Seduc" className="h-6 sm:h-12 w-auto object-contain pointer-events-none" />
+              <div className="flex flex-col">
+                <span className="text-2xl font-black text-emerald-950 italic tracking-tighter leading-none uppercase">EduGames</span>
+              </div>
+            </div>
+
+            <div className="pl-1">
+              <h1 className="text-3xl font-black text-[#009660] italic tracking-tighter leading-none mb-1">XADREZ</h1>
+              <p className="text-[10px] font-black uppercase text-emerald-900/40 tracking-[0.2em]">Educação & Diversão</p>
+            </div>
+          </div>
+          <button
+            onClick={() => setShowMobileMenu(false)}
+            className="lg:hidden text-emerald-950 bg-emerald-50 w-8 h-8 rounded-full flex items-center justify-center hover:bg-emerald-100 transition-colors"
           >
-            ← Voltar
+            ✕
           </button>
-          <div className="chess-lobby-title-wrap">
-            <span className="chess-lobby-icon" aria-hidden="true">♟️</span>
-            <div>
-              <h1 className="chess-lobby-title">Xadrez Real</h1>
-              <p className="chess-lobby-sub">Estratégia • Raciocínio • Domínio</p>
+        </div>
+
+        <nav className="flex-1 space-y-8 overflow-y-auto pr-2 scrollbar-hide">
+          {/* Categorias / Desafios */}
+          <div>
+            <h3 className="text-[10px] font-black uppercase text-emerald-900/40 tracking-widest mb-4 flex items-center gap-2">
+              <span>♟️</span> MODOS DE JOGO
+            </h3>
+            <div className="space-y-2">
+              <button
+                onClick={() => { setGameType(null); setShowMobileMenu(false); }}
+                className={`w-full text-left p-3.5 rounded-2xl font-black text-xs uppercase tracking-tight transition-all active:scale-95 ${!gameType ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/20' : 'text-emerald-900/60 hover:bg-emerald-50'}`}
+              >
+                🎮 Todos os Modos
+              </button>
+
+              <button
+                onClick={() => { setGameType('classic'); setShowMobileMenu(false); }}
+                className={`w-full text-left p-3.5 rounded-2xl font-black text-xs uppercase tracking-tight transition-all active:scale-95 ${gameType === 'classic' ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/20' : 'text-emerald-900/60 hover:bg-emerald-50'}`}
+              >
+                ♟️ Xadrez Real
+              </button>
+
+              <button
+                onClick={() => { setGameType('velha'); setShowMobileMenu(false); }}
+                className={`w-full text-left p-3.5 rounded-2xl font-black text-xs uppercase tracking-tight transition-all active:scale-95 ${gameType === 'velha' ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/20' : 'text-emerald-900/60 hover:bg-emerald-50'}`}
+              >
+                ⚔️ Xadrez da Velha
+              </button>
+
+              <button
+                onClick={() => { setGameType('peao'); setShowMobileMenu(false); }}
+                className={`w-full text-left p-3.5 rounded-2xl font-black text-xs uppercase tracking-tight transition-all active:scale-95 ${gameType === 'peao' ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/20' : 'text-emerald-900/60 hover:bg-emerald-50'}`}
+              >
+                ♙ Batalha dos Peões
+              </button>
             </div>
           </div>
-          
-          <div className="flex items-center gap-4">
-            <button 
-              onClick={() => setShowRanking(true)}
-              className="bg-[#f1c40f] text-black px-4 py-2 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-[0_4px_0_#b7950b] hover:brightness-110 transition-all active:translate-y-1 active:shadow-none flex items-center gap-2"
+        </nav>
+
+        {/* Rodapé da Sidebar - Perfil e Logout */}
+        <div className="mt-auto pt-8 border-t-2 border-emerald-50 space-y-4">
+          <div className="flex items-center gap-3 p-4 bg-emerald-50 rounded-3xl relative group">
+            <div className="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center text-white font-black shrink-0">
+              {user?.fullName?.charAt(0) || 'U'}
+            </div>
+            <div className="overflow-hidden flex-1">
+              <p className="text-[10px] font-black text-emerald-900/40 uppercase leading-none mb-1">Logado como</p>
+              <p className="text-xs font-black text-emerald-950 truncate">{user?.fullName || 'Usuário'}</p>
+            </div>
+            <button
+              onClick={handleLogout}
+              className="w-10 h-10 rounded-xl bg-red-50 text-red-500 flex items-center justify-center border-2 border-red-100 transition-all hover:bg-red-500 hover:text-white shrink-0"
+              title="Sair"
             >
-              <span>🏆</span> Ranking
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                <polyline points="16 17 21 12 16 7" />
+                <line x1="21" y1="12" x2="9" y2="12" />
+              </svg>
             </button>
-            <div className="flex items-center gap-2 bg-black/5 px-3 py-1.5 rounded-full border border-black/5">
-              <div className={`chess-conn-dot ${connected ? 'chess-conn-dot--ok' : 'chess-conn-dot--off'}`} />
-              <span className={`text-[9px] font-bold tracking-widest ${connected ? 'text-green-600' : 'text-red-600'}`}>
-                {connected ? 'LIVE' : 'OFFLINE'}
-              </span>
-            </div>
           </div>
-        </header>
+        </div>
+      </aside>
 
-        {/* Mode selector */}
-        {!mode && (
-          <section className="chess-mode-select">
-            <h2 className="chess-section-title">Como deseja jogar?</h2>
-            <div className="chess-mode-cards">
-              <button
-                className="chess-mode-card chess-mode-card--pvp"
-                onClick={() => { setMode('PVP'); setSubMode(null); setError(''); }}
-              >
-                <span className="chess-mode-emoji">🧑‍🤝‍🧑</span>
-                <strong>Jogador vs Jogador</strong>
-                <p>Desafie um amigo em tempo real</p>
-                {user && <span className="chess-mode-badge">Conta para o Ranking</span>}
-              </button>
-
-              <button
-                className="chess-mode-card chess-mode-card--pvc"
-                onClick={() => setMode('PVC')}
-              >
-                <span className="chess-mode-emoji">🤖</span>
-                <strong>Jogador vs Computador</strong>
-                <p>Treine contra a inteligência artificial</p>
-                <span className="chess-mode-badge chess-mode-badge--gray">Sem Ranking</span>
-              </button>
-            </div>
-          </section>
-        )}
-
-        {/* PVP sub-options */}
-        {mode === 'PVP' && !subMode && (
-          <section className="chess-pvp-options">
-            <h2 className="chess-section-title">Multiplayer</h2>
-            <div className="chess-mode-cards">
-              <button
-                className="chess-mode-card"
-                onClick={() => setSubMode('create')}
-              >
-                <span className="chess-mode-emoji">➕</span>
-                <strong>Criar Sala</strong>
-                <p>Gere um código e convide um amigo</p>
-              </button>
-              <button
-                className="chess-mode-card"
-                onClick={() => setSubMode('join')}
-              >
-                <span className="chess-mode-emoji">🔗</span>
-                <strong>Entrar em Sala</strong>
-                <p>Digite o código recebido</p>
-              </button>
-            </div>
-          </section>
-        )}
-
-        {/* PVP — Create */}
-        {mode === 'PVP' && subMode === 'create' && (
-          <section className="chess-action-panel">
-            <h2 className="chess-section-title">Criar Nova Sala</h2>
-            <p className="chess-action-desc">
-              Uma sala será criada e será realizado um <strong>sorteio</strong> para definir quem escolhe as peças.
-            </p>
-
-            <div className="chess-time-selector mt-4">
-              <span className="text-[11px] font-black uppercase tracking-widest text-[#64748b] mb-3 block">Controle de Tempo</span>
-              <div className="flex flex-wrap gap-2">
-                {TIME_OPTIONS.map((opt) => (
+      {/* Main Content Area */}
+      <main className="flex-1 p-6 sm:p-10 lg:p-12 overflow-y-auto h-screen relative">
+        
+        {/* Renderiza: TODOS OS MODOS (SELEÇÃO) */}
+        {gameType === null && (
+          <div className="flex flex-col">
+            <header className="flex justify-between items-center mb-12">
+              <div className="flex items-center gap-4">
+                {onBack && (
                   <button
-                    key={opt.label}
-                    className={`chess-time-btn ${timeLimit === opt.value ? 'chess-time-btn--active' : ''}`}
-                    onClick={() => setTimeLimit(opt.value)}
+                    onClick={onBack}
+                    className="w-12 h-12 flex items-center justify-center bg-white rounded-2xl shadow-sm text-emerald-950 border-2 border-emerald-100 active:scale-95 transition-all shrink-0 font-black text-xl"
+                    title="Voltar"
                   >
-                    {opt.label}
+                    ←
                   </button>
-                ))}
-              </div>
-            </div>
-
-            {error && <p className="chess-error mt-4">{error}</p>}
-            <button
-              className="chess-primary-btn"
-              onClick={handleCreateRoom}
-              disabled={loading}
-              id="btn-create-chess-room"
-            >
-              {loading ? '⏳ Criando...' : '🎮 Criar Sala'}
-            </button>
-          </section>
-        )}
-
-        {/* PVP — Join */}
-        {mode === 'PVP' && subMode === 'join' && (
-          <section className="chess-action-panel">
-            <h2 className="chess-section-title">Entrar em Sala</h2>
-            <p className="chess-action-desc">
-              Digite o código de 6 letras compartilhado pelo criador da sala.
-            </p>
-            <input
-              className="chess-code-input"
-              type="text"
-              placeholder="Ex: ABC123"
-              value={joinCode}
-              onChange={(e) => { setJoinCode(e.target.value.toUpperCase()); setError(''); }}
-              maxLength={8}
-              id="chess-room-code-input"
-            />
-            {error && <p className="chess-error">{error}</p>}
-            <button
-              className="chess-primary-btn"
-              onClick={handleJoinRoom}
-              disabled={loading || !joinCode}
-              id="btn-join-chess-room"
-            >
-              {loading ? '⏳ Entrando...' : '🔗 Entrar'}
-            </button>
-          </section>
-        )}
-
-        {/* PVC — Level selector */}
-        {mode === 'PVC' && (
-          <section className="chess-action-panel">
-            <h2 className="chess-section-title">Escolha a Dificuldade</h2>
-            <div className="chess-ai-levels">
-              {AI_LEVELS.map((lvl) => (
+                )}
                 <button
-                  key={lvl.value}
-                  className={`chess-ai-level-btn ${aiLevel === lvl.value ? 'chess-ai-level-btn--active' : ''}`}
-                  onClick={() => setAiLevel(lvl.value)}
+                  onClick={() => setShowMobileMenu(true)}
+                  className="lg:hidden w-12 h-12 flex items-center justify-center bg-white rounded-2xl shadow-sm text-emerald-950 border-2 border-emerald-100 active:scale-95 transition-all shrink-0"
                 >
-                  <strong>{lvl.label}</strong>
-                  <span>{lvl.description}</span>
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                  </svg>
                 </button>
-              ))}
-            </div>
-
-            <div className="chess-time-selector mt-6">
-              <span className="text-[11px] font-black uppercase tracking-widest text-[#64748b] mb-3 block">Controle de Tempo</span>
-              <div className="flex flex-wrap gap-2">
-                {TIME_OPTIONS.map((opt) => (
-                  <button
-                    key={opt.label}
-                    className={`chess-time-btn ${timeLimit === opt.value ? 'chess-time-btn--active' : ''}`}
-                    onClick={() => setTimeLimit(opt.value)}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
+                <div>
+                  <h2 className="text-3xl sm:text-4xl font-black text-emerald-950 uppercase italic tracking-tighter">Escolha seu Desafio</h2>
+                  <p className="text-xs sm:text-sm font-medium text-emerald-900/60 font-medium">Selecione um modo de jogo para começar a desenvolver suas habilidades!</p>
+                </div>
               </div>
-            </div>
-            <button
-              className="chess-primary-btn"
-              onClick={handlePlayVsAI}
-              id="btn-play-vs-ai"
-            >
-              🤖 Jogar contra a IA
-            </button>
-          </section>
+            </header>
+
+            <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
+              {/* Card: Xadrez Real */}
+              <button
+                onClick={() => setGameType('classic')}
+                className="group relative flex flex-col bg-white rounded-[2rem] border-2 border-emerald-100 p-8 text-left transition-all hover:scale-[1.03] hover:shadow-[0_20px_50px_rgba(0,150,96,0.12)] hover:border-emerald-300 active:scale-95 overflow-hidden h-[340px]"
+              >
+                <div className="absolute top-0 right-0 w-32 h-32 -mr-16 -mt-16 rounded-full opacity-10 group-hover:opacity-20 transition-opacity bg-[#009660]" />
+                <div className="w-16 h-16 bg-emerald-50 rounded-2xl flex items-center justify-center text-4xl mb-6 group-hover:scale-110 transition-transform">
+                  ♟️
+                </div>
+                <h3 className="text-emerald-950 font-black text-xl uppercase italic tracking-tight mb-2 truncate">Xadrez Real</h3>
+                <p className="text-emerald-900/60 text-xs font-semibold leading-relaxed mb-6 line-clamp-3">
+                  Enfrente IA ou adversários reais nas regras clássicas oficiais de xadrez da FIDE. Roque, En Passant e promoção completa.
+                </p>
+                <div className="mt-auto space-y-4">
+                  <span className="inline-block bg-emerald-100 text-emerald-700 text-[9px] font-black px-3.5 py-1.5 rounded-full uppercase tracking-widest">
+                    Competitivo FIDE
+                  </span>
+                  <div className="pt-3 border-t border-emerald-50 flex justify-between items-center text-[10px] font-black text-emerald-900/30 uppercase tracking-wider">
+                    <span>Modos: PVP / PVC</span>
+                    <span>Tempo Controlado</span>
+                  </div>
+                </div>
+              </button>
+
+              {/* Card: Xadrez da Velha */}
+              <button
+                onClick={() => setGameType('velha')}
+                className="group relative flex flex-col bg-white rounded-[2rem] border-2 border-emerald-100 p-8 text-left transition-all hover:scale-[1.03] hover:shadow-[0_20px_50px_rgba(0,150,96,0.12)] hover:border-emerald-300 active:scale-95 overflow-hidden h-[340px]"
+              >
+                <div className="absolute top-0 right-0 w-32 h-32 -mr-16 -mt-16 rounded-full opacity-10 group-hover:opacity-20 transition-opacity bg-amber-400" />
+                <div className="w-16 h-16 bg-amber-50 rounded-2xl flex items-center justify-center text-4xl mb-6 group-hover:scale-110 transition-transform">
+                  ⚔️
+                </div>
+                <h3 className="text-emerald-950 font-black text-xl uppercase italic tracking-tight mb-2 truncate">Xadrez da Velha</h3>
+                <p className="text-emerald-900/60 text-xs font-semibold leading-relaxed mb-6 line-clamp-3">
+                  Uma fusão alucinante! Controle peças de xadrez e capture oponentes em uma grade de jogo da velha. Rapidez e atenção!
+                </p>
+                <div className="mt-auto space-y-4">
+                  <span className="inline-block bg-amber-100 text-amber-800 text-[9px] font-black px-3.5 py-1.5 rounded-full uppercase tracking-widest">
+                    Estratégia Casual
+                  </span>
+                  <div className="pt-3 border-t border-emerald-50 flex justify-between items-center text-[10px] font-black text-emerald-900/30 uppercase tracking-wider">
+                    <span>Partidas Rápidas</span>
+                    <span>PVC Integrado</span>
+                  </div>
+                </div>
+              </button>
+
+              {/* Card: Batalha dos Peões */}
+              <button
+                onClick={() => setGameType('peao')}
+                className="group relative flex flex-col bg-white rounded-[2rem] border-2 border-emerald-100 p-8 text-left transition-all hover:scale-[1.03] hover:shadow-[0_20px_50px_rgba(0,150,96,0.12)] hover:border-emerald-300 active:scale-95 overflow-hidden h-[340px]"
+              >
+                <div className="absolute top-0 right-0 w-32 h-32 -mr-16 -mt-16 rounded-full opacity-10 group-hover:opacity-20 transition-opacity bg-indigo-500" />
+                <div className="w-16 h-16 bg-indigo-50 rounded-2xl flex items-center justify-center text-4xl mb-6 group-hover:scale-110 transition-transform">
+                  ♙
+                </div>
+                <h3 className="text-emerald-950 font-black text-xl uppercase italic tracking-tight mb-2 truncate">Batalha dos Peões</h3>
+                <p className="text-emerald-900/60 text-xs font-semibold leading-relaxed mb-6 line-clamp-3">
+                  Leve o seu exército de peões até a linha de fundo do oponente e vença o combate tático de avanços e capturas.
+                </p>
+                <div className="mt-auto space-y-4">
+                  <span className="inline-block bg-indigo-100 text-indigo-700 text-[9px] font-black px-3.5 py-1.5 rounded-full uppercase tracking-widest">
+                    Novo!
+                  </span>
+                  <div className="pt-3 border-t border-emerald-50 flex justify-between items-center text-[10px] font-black text-emerald-900/30 uppercase tracking-wider">
+                    <span>Avanço Dinâmico</span>
+                    <span>PVP / PVC</span>
+                  </div>
+                </div>
+              </button>
+            </section>
+          </div>
         )}
 
-        {/* Info strip */}
-        <footer className="chess-lobby-footer">
-          <span>♟ Todas as regras FIDE implementadas</span>
-          <span>·</span>
-          <span>En passant · Roque · Promoção</span>
-          <span>·</span>
-          <span>Empate por repetição · 50 lances · Afogamento</span>
-        </footer>
-      </div>
+        {/* Renderiza: LOBBY DE XADREZ REAL (CLÁSSICO) */}
+        {gameType === 'classic' && (
+          <div className="flex flex-col h-full">
+            {/* Header */}
+            <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
+              <div className="flex items-center gap-4">
+                <button 
+                  onClick={() => {
+                    if (subMode) setSubMode(null);
+                    else if (mode) setMode(null);
+                    else setGameType(null);
+                  }}
+                  className="w-12 h-12 flex items-center justify-center bg-white rounded-2xl shadow-sm text-emerald-950 border-2 border-emerald-100 active:scale-95 transition-all shrink-0 font-black text-xl"
+                  title="Voltar"
+                >
+                  ←
+                </button>
+                <button
+                  onClick={() => setShowMobileMenu(true)}
+                  className="lg:hidden w-12 h-12 flex items-center justify-center bg-white rounded-2xl shadow-sm text-emerald-950 border-2 border-emerald-100 active:scale-95 transition-all shrink-0"
+                >
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                  </svg>
+                </button>
+                <div>
+                  <h2 className="text-3xl sm:text-4xl font-black text-emerald-950 uppercase italic tracking-tighter">Xadrez Real</h2>
+                  <p className="text-xs sm:text-sm font-medium text-emerald-900/60">Desafie sua mente no clássico jogo de estratégia.</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <button 
+                  onClick={() => setShowRanking(true)}
+                  className="bg-amber-400 text-amber-950 px-5 py-3 rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-[0_5px_0_#d97706] hover:brightness-105 transition-all active:translate-y-1 active:shadow-none flex items-center gap-2"
+                >
+                  <span>🏆</span> Ranking
+                </button>
+                <div className="flex items-center gap-2 bg-emerald-100/50 px-4 py-2 rounded-full border border-emerald-100">
+                  <div className={`w-2.5 h-2.5 rounded-full ${connected ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
+                  <span className={`text-[9px] font-black tracking-widest ${connected ? 'text-green-700' : 'text-red-700'}`}>
+                    {connected ? 'LIVE' : 'OFFLINE'}
+                  </span>
+                </div>
+              </div>
+            </header>
+
+            {/* PVP/PVC selector */}
+            {!mode && (
+              <section className="animate-in fade-in slide-in-from-bottom-4 duration-300">
+                <h2 className="text-xl font-black text-emerald-950 uppercase italic tracking-tight mb-6">Como deseja jogar?</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <button
+                    className="group relative flex flex-col bg-white rounded-[2rem] border-2 border-emerald-100 p-8 text-left transition-all hover:scale-[1.02] hover:shadow-[0_20px_50px_rgba(0,150,96,0.1)] hover:border-emerald-300 active:scale-95 overflow-hidden"
+                    onClick={() => { setMode('PVP'); setSubMode(null); setError(''); }}
+                  >
+                    <div className="w-16 h-16 bg-emerald-50 rounded-2xl flex items-center justify-center text-4xl mb-6 group-hover:scale-110 transition-transform">
+                      🧑‍🤝‍🧑
+                    </div>
+                    <h3 className="text-emerald-950 font-black text-xl uppercase italic tracking-tight mb-2">Jogador vs Jogador</h3>
+                    <p className="text-emerald-900/60 text-sm font-medium mb-6">Desafie um amigo ou outro estudante online em tempo real.</p>
+                    <span className="bg-emerald-100 text-emerald-700 text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-wider mt-auto w-fit">
+                      Conta para o Ranking
+                    </span>
+                  </button>
+
+                  <button
+                    className="group relative flex flex-col bg-white rounded-[2rem] border-2 border-emerald-100 p-8 text-left transition-all hover:scale-[1.02] hover:shadow-[0_20px_50px_rgba(0,150,96,0.1)] hover:border-emerald-300 active:scale-95 overflow-hidden"
+                    onClick={() => setMode('PVC')}
+                  >
+                    <div className="w-16 h-16 bg-emerald-50 rounded-2xl flex items-center justify-center text-4xl mb-6 group-hover:scale-110 transition-transform">
+                      🤖
+                    </div>
+                    <h3 className="text-emerald-950 font-black text-xl uppercase italic tracking-tight mb-2">Jogador vs Computador</h3>
+                    <p className="text-emerald-900/60 text-sm font-medium mb-6">Treine e aprimore suas jogadas contra a Inteligência Artificial.</p>
+                    <span className="bg-slate-100 text-slate-700 text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-wider mt-auto w-fit">
+                      Treino Casual
+                    </span>
+                  </button>
+                </div>
+              </section>
+            )}
+
+            {/* PVP options */}
+            {mode === 'PVP' && !subMode && (
+              <section className="animate-in fade-in slide-in-from-bottom-4 duration-300">
+                <h2 className="text-xl font-black text-emerald-950 uppercase italic tracking-tight mb-6">Opções do Jogo</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <button
+                    className="group relative flex flex-col bg-white rounded-[2rem] border-2 border-emerald-100 p-8 text-left transition-all hover:scale-[1.02] hover:shadow-[0_20px_50px_rgba(0,150,96,0.1)] hover:border-emerald-300 active:scale-95 overflow-hidden"
+                    onClick={() => setSubMode('create')}
+                  >
+                    <div className="w-16 h-16 bg-emerald-50 rounded-2xl flex items-center justify-center text-4xl mb-6 group-hover:scale-110 transition-transform">
+                      ➕
+                    </div>
+                    <h3 className="text-emerald-950 font-black text-xl uppercase italic tracking-tight mb-2">Criar Nova Sala</h3>
+                    <p className="text-emerald-900/60 text-sm font-medium">Gere um código exclusivo e convide um colega para jogar.</p>
+                  </button>
+
+                  <button
+                    className="group relative flex flex-col bg-white rounded-[2rem] border-2 border-emerald-100 p-8 text-left transition-all hover:scale-[1.02] hover:shadow-[0_20px_50px_rgba(0,150,96,0.1)] hover:border-emerald-300 active:scale-95 overflow-hidden"
+                    onClick={() => setSubMode('join')}
+                  >
+                    <div className="w-16 h-16 bg-emerald-50 rounded-2xl flex items-center justify-center text-4xl mb-6 group-hover:scale-110 transition-transform">
+                      🔗
+                    </div>
+                    <h3 className="text-emerald-950 font-black text-xl uppercase italic tracking-tight mb-2">Entrar em Sala</h3>
+                    <p className="text-emerald-900/60 text-sm font-medium">Digite o código de acesso gerado pelo seu oponente.</p>
+                  </button>
+                </div>
+              </section>
+            )}
+
+            {/* PVP Create Panel */}
+            {mode === 'PVP' && subMode === 'create' && (
+              <section className="max-w-2xl bg-white border-2 border-emerald-100 rounded-[2.5rem] p-8 sm:p-10 shadow-[0_20px_50px_rgba(0,150,96,0.05)] animate-in fade-in slide-in-from-bottom-4 duration-300">
+                <h2 className="text-2xl font-black text-emerald-950 uppercase italic tracking-tight mb-2">Criar Nova Sala</h2>
+                <p className="text-emerald-900/60 text-sm font-medium mb-8">
+                  Uma sala exclusiva será aberta. Um sorteio inicial definirá as cores de cada jogador de forma justa.
+                </p>
+
+                <div className="mb-8">
+                  <span className="text-xs font-black uppercase tracking-widest text-emerald-900/40 mb-3 block">Controle de Tempo</span>
+                  <div className="flex flex-wrap gap-2">
+                    {TIME_OPTIONS.map((opt) => (
+                      <button
+                        key={opt.label}
+                        className={`px-5 py-3.5 rounded-2xl font-black text-xs uppercase tracking-tight transition-all active:scale-95 ${timeLimit === opt.value ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/20' : 'bg-slate-50 text-emerald-900/60 hover:bg-slate-100'}`}
+                        onClick={() => setTimeLimit(opt.value)}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {error && (
+                  <div className="bg-red-50 text-red-600 border border-red-100 p-4 rounded-2xl text-xs font-black uppercase mb-6">
+                    ⚠ {error}
+                  </div>
+                )}
+
+                <div className="flex gap-4">
+                  <button
+                    onClick={() => setSubMode(null)}
+                    className="flex-1 py-4 rounded-2xl bg-slate-50 text-slate-500 font-black uppercase tracking-widest text-xs hover:bg-slate-100 transition-all active:scale-95 border border-slate-200"
+                  >
+                    Voltar
+                  </button>
+                  <button
+                    onClick={handleCreateRoom}
+                    disabled={loading}
+                    className="flex-[2] py-4 rounded-2xl bg-emerald-600 text-white font-black uppercase tracking-widest text-xs shadow-[0_6px_0_#004d33] hover:brightness-105 transition-all active:translate-y-1 active:shadow-none"
+                  >
+                    {loading ? '⏳ CRIANDO...' : '🎮 INICIAR DESAFIO'}
+                  </button>
+                </div>
+              </section>
+            )}
+
+            {/* PVP Join Panel */}
+            {mode === 'PVP' && subMode === 'join' && (
+              <section className="max-w-md bg-white border-2 border-emerald-100 rounded-[2.5rem] p-8 sm:p-10 shadow-[0_20px_50px_rgba(0,150,96,0.05)] animate-in fade-in slide-in-from-bottom-4 duration-300">
+                <h2 className="text-2xl font-black text-emerald-950 uppercase italic tracking-tight mb-2">Entrar em Sala</h2>
+                <p className="text-emerald-900/60 text-sm font-medium mb-8">
+                  Digite o código de 6 caracteres fornecido pelo criador do jogo.
+                </p>
+
+                <input
+                  type="text"
+                  placeholder="CÓDIGO (EX: ABC123)"
+                  value={joinCode}
+                  onChange={(e) => { setJoinCode(e.target.value.toUpperCase()); setError(''); }}
+                  maxLength={8}
+                  className="w-full bg-slate-50 border-2 border-emerald-100/50 p-4 rounded-2xl focus:border-emerald-300 transition-all outline-none font-black text-base text-emerald-950 text-center uppercase placeholder:text-emerald-900/20 shadow-inner mb-6 tracking-[0.2em]"
+                />
+
+                {error && (
+                  <div className="bg-red-50 text-red-600 border border-red-100 p-4 rounded-2xl text-xs font-black uppercase mb-6">
+                    ⚠ {error}
+                  </div>
+                )}
+
+                <div className="flex gap-4">
+                  <button
+                    onClick={() => setSubMode(null)}
+                    className="flex-1 py-4 rounded-2xl bg-slate-50 text-slate-500 font-black uppercase tracking-widest text-xs hover:bg-slate-100 transition-all active:scale-95 border border-slate-200"
+                  >
+                    Voltar
+                  </button>
+                  <button
+                    onClick={handleJoinRoom}
+                    disabled={loading || !joinCode}
+                    className="flex-[2] py-4 rounded-2xl bg-emerald-600 text-white font-black uppercase tracking-widest text-xs shadow-[0_6px_0_#004d33] hover:brightness-105 transition-all active:translate-y-1 active:shadow-none"
+                  >
+                    {loading ? '⏳ ENTRANDO...' : '🔗 CONECTAR'}
+                  </button>
+                </div>
+              </section>
+            )}
+
+            {/* PVC Panel */}
+            {mode === 'PVC' && (
+              <section className="max-w-2xl bg-white border-2 border-emerald-100 rounded-[2.5rem] p-8 sm:p-10 shadow-[0_20px_50px_rgba(0,150,96,0.05)] animate-in fade-in slide-in-from-bottom-4 duration-300">
+                <h2 className="text-2xl font-black text-emerald-950 uppercase italic tracking-tight mb-2">Treinar Contra o Computador</h2>
+                <p className="text-emerald-900/60 text-sm font-medium mb-8">
+                  Desafie o computador para treinar suas estratégias e aprimorar o seu xadrez no seu próprio ritmo.
+                </p>
+
+                <div className="mb-8">
+                  <span className="text-xs font-black uppercase tracking-widest text-emerald-900/40 mb-4 block">Selecione a Dificuldade</span>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {AI_LEVELS.map((lvl) => (
+                      <button
+                        key={lvl.value}
+                        className={`flex flex-col p-4 rounded-2xl border-2 text-left transition-all active:scale-[0.98] ${aiLevel === lvl.value ? 'border-emerald-500 bg-emerald-50/50' : 'border-slate-100 hover:border-emerald-100'}`}
+                        onClick={() => setAiLevel(lvl.value)}
+                      >
+                        <strong className="text-emerald-950 font-black text-sm">{lvl.label}</strong>
+                        <span className="text-emerald-900/50 text-[10px] font-medium">{lvl.description}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="mb-8">
+                  <span className="text-xs font-black uppercase tracking-widest text-emerald-900/40 mb-3 block">Controle de Tempo</span>
+                  <div className="flex flex-wrap gap-2">
+                    {TIME_OPTIONS.map((opt) => (
+                      <button
+                        key={opt.label}
+                        className={`px-5 py-3.5 rounded-2xl font-black text-xs uppercase tracking-tight transition-all active:scale-95 ${timeLimit === opt.value ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/20' : 'bg-slate-50 text-emerald-900/60 hover:bg-slate-100'}`}
+                        onClick={() => setTimeLimit(opt.value)}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex gap-4">
+                  <button
+                    onClick={() => setMode(null)}
+                    className="flex-1 py-4 rounded-2xl bg-slate-50 text-slate-500 font-black uppercase tracking-widest text-xs hover:bg-slate-100 transition-all active:scale-95 border border-slate-200"
+                  >
+                    Voltar
+                  </button>
+                  <button
+                    onClick={handlePlayVsAI}
+                    className="flex-[2] py-4 rounded-2xl bg-emerald-600 text-white font-black uppercase tracking-widest text-xs shadow-[0_6px_0_#004d33] hover:brightness-105 transition-all active:translate-y-1 active:shadow-none"
+                  >
+                    🤖 JOGAR CONTRA IA
+                  </button>
+                </div>
+              </section>
+            )}
+
+            <footer className="mt-auto pt-12 flex flex-col sm:flex-row gap-2 text-[10px] font-black text-emerald-900/30 uppercase tracking-widest">
+              <span>♟ Todas as regras FIDE implementadas</span>
+              <span className="hidden sm:inline">·</span>
+              <span>En passant · Roque · Promoção</span>
+              <span className="hidden sm:inline">·</span>
+              <span>Empates Regulamentares</span>
+            </footer>
+          </div>
+        )}
+
+        {/* Renderiza: LOBBY DE XADREZ DA VELHA (EMBUTIDO) */}
+        {gameType === 'velha' && (
+          <div className="h-full relative select-none">
+            {/* Botão Hambúrguer para celular se o menu lateral estiver fechado */}
+            <button
+              onClick={() => setShowMobileMenu(true)}
+              className="lg:hidden absolute top-0 left-0 w-12 h-12 flex items-center justify-center bg-white rounded-2xl shadow-sm text-emerald-950 border-2 border-emerald-100 active:scale-95 transition-all shrink-0 z-20"
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="3" y1="12" x2="21" y2="12"></line>
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+              </svg>
+            </button>
+            <XadrezVelhaScreen 
+              user={user} 
+              onBack={() => setGameType(null)} 
+              onSessionActive={setIsChildSessionActive} 
+            />
+          </div>
+        )}
+
+        {/* Renderiza: LOBBY DE BATALHA DOS PEÕES (EMBUTIDO) */}
+        {gameType === 'peao' && (
+          <div className="h-full relative select-none">
+            {/* Botão Hambúrguer para celular se o menu lateral estiver fechado */}
+            <button
+              onClick={() => setShowMobileMenu(true)}
+              className="lg:hidden absolute top-0 left-0 w-12 h-12 flex items-center justify-center bg-white rounded-2xl shadow-sm text-emerald-950 border-2 border-emerald-100 active:scale-95 transition-all shrink-0 z-20"
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="3" y1="12" x2="21" y2="12"></line>
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+              </svg>
+            </button>
+            <PeaoScreen 
+              user={user} 
+              onBack={() => setGameType(null)} 
+              onSessionActive={setIsChildSessionActive} 
+            />
+          </div>
+        )}
+
+      </main>
+
+      {/* Modais flutuantes */}
       {showRanking && <ChessRankingBoard onClose={() => setShowRanking(false)} />}
     </div>
   );

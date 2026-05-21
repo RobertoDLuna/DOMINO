@@ -12,7 +12,7 @@ const AI_LEVELS = [
   { value: 5, label: 'Mestre', description: 'Quase perfeito, resolve o jogo' },
 ];
 
-export default function XadrezVelhaScreen({ user, onBack }) {
+export default function XadrezVelhaScreen({ user, onBack, onSessionActive }) {
   const { emit, on, isConnected } = useVelhaSocket();
 
   // lobby state
@@ -83,6 +83,12 @@ export default function XadrezVelhaScreen({ user, onBack }) {
       unsubError();
     };
   }, [on, user, myId, myName]);
+
+  useEffect(() => {
+    if (onSessionActive) {
+      onSessionActive(!!gameSession);
+    }
+  }, [gameSession, onSessionActive]);
 
   function handleCreateRoom() {
     if (!isConnected) { setError('Sem conexão com o servidor.'); return; }

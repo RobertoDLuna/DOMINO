@@ -13,7 +13,7 @@ const AI_LEVELS = [
   { value: 5, label: 'Mestre',       description: 'Praticamente invencível' },
 ];
 
-export default function PeaoScreen({ user, onBack }) {
+export default function PeaoScreen({ user, onBack, onSessionActive }) {
   const { emit, on, isConnected } = usePeaoSocket();
 
   const [mode,        setMode]        = useState(null);    // null | 'PVP' | 'PVC'
@@ -111,6 +111,12 @@ export default function PeaoScreen({ user, onBack }) {
       return () => clearTimeout(timer);
     }
   }, [gameSession?.phase]);
+
+  useEffect(() => {
+    if (onSessionActive) {
+      onSessionActive(!!gameSession);
+    }
+  }, [gameSession, onSessionActive]);
 
   function handleCreatePVP() {
     setLoading(true); setError('');

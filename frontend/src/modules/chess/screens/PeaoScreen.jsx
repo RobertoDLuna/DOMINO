@@ -126,18 +126,52 @@ export default function PeaoScreen({ user, onBack, onSessionActive }) {
 
   function handleCreatePVC() {
     setLoading(true); setError('');
-    setGameSession({
+    
+    const sessionData = {
       roomCode: `ai_${Date.now()}`,
-      color: 'white', 
       mode: 'PVC',
       aiLevel,
       timeLimit,
-      whiteName: myName,
-      blackName: `Computador (Nív.${aiLevel})`,
-      myId: myId,
-      phase: 'PLAYING'
-    });
-    setLoading(false);
+      myId,
+      myName,
+      opponentName: `Computador (Nív.${aiLevel})`
+    };
+
+    const isHumanWinner = Math.random() > 0.5;
+    
+    if (isHumanWinner) {
+      setGameSession({
+        ...sessionData,
+        drawWinnerId: myId,
+        drawWinnerName: myName,
+        phase: 'DRAWING'
+      });
+      setLoading(false);
+    } else {
+      setGameSession({
+        ...sessionData,
+        drawWinnerId: 'AI',
+        drawWinnerName: 'Computador',
+        phase: 'DRAWING'
+      });
+      
+      setTimeout(() => {
+        const aiChoice = Math.random() > 0.5 ? 'white' : 'black';
+        setAiChoiceFeedback(aiChoice);
+        
+        setTimeout(() => {
+          setGameSession(prev => ({
+            ...prev,
+            color: aiChoice === 'white' ? 'black' : 'white',
+            whiteName: aiChoice === 'white' ? prev.opponentName : prev.myName,
+            blackName: aiChoice === 'black' ? prev.opponentName : prev.myName,
+            phase: 'PLAYING'
+          }));
+          setAiChoiceFeedback(null);
+        }, 2000);
+      }, 3000);
+      setLoading(false);
+    }
   }
 
   function handleJoin() {
@@ -148,6 +182,18 @@ export default function PeaoScreen({ user, onBack, onSessionActive }) {
 
   function handlePickColor(color) {
     if (!gameSession?.roomCode) return;
+    
+    if (gameSession.mode === 'PVC') {
+      setGameSession(prev => ({
+        ...prev,
+        color: color,
+        whiteName: color === 'white' ? prev.myName : prev.opponentName,
+        blackName: color === 'black' ? prev.myName : prev.opponentName,
+        phase: 'PLAYING'
+      }));
+      return;
+    }
+
     emit('peao-pick-color', { roomCode: gameSession.roomCode, color });
   }
 

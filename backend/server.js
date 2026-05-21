@@ -92,6 +92,22 @@ try {
   process.exit(1);
 }
 
+try {
+  require("./src/modules/chess/velhaSocket")(io);
+  console.log("❌ Handlers do Socket (Xadrez da Velha) carregados com sucesso");
+} catch (err) {
+  console.error("❌ Erro ao carregar velhaSocket:", err);
+  process.exit(1);
+}
+
+try {
+  require("./src/modules/chess/peaoSocket")(io);
+  console.log("♟️ Handlers do Socket (Peões) carregados com sucesso");
+} catch (err) {
+  console.error("❌ Erro ao carregar peaoSocket:", err);
+  process.exit(1);
+}
+
 const PORT = process.env.PORT || 3001;
 
 // Healthcheck

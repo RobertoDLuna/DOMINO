@@ -173,26 +173,6 @@ export default function ChessHomeScreen({ user, onBack }) {
 
   // ── RENDERIZAÇÃO COMPLETA EM TELA CHEIA (Jogo Ativo) ───────────────────────
   if (isGameActive) {
-    if (gameType === 'peao') {
-      return (
-        <PeaoScreen 
-          user={user} 
-          onBack={() => { setGameType(null); setIsChildSessionActive(false); }} 
-          onSessionActive={setIsChildSessionActive} 
-        />
-      );
-    }
-
-    if (gameType === 'velha') {
-      return (
-        <XadrezVelhaScreen 
-          user={user} 
-          onBack={() => { setGameType(null); setIsChildSessionActive(false); }} 
-          onSessionActive={setIsChildSessionActive} 
-        />
-      );
-    }
-
     if (gameType === 'classic' && gameSession) {
       return (
         <ChessScreen
@@ -217,7 +197,7 @@ export default function ChessHomeScreen({ user, onBack }) {
   return (
     <div className="flex min-h-screen bg-[#F0FDF4] w-full relative overflow-hidden">
       {/* Mobile Overlay */}
-      {showMobileMenu && (
+      {showMobileMenu && !isGameActive && (
         <div
           className="fixed inset-0 bg-emerald-950/40 z-40 lg:hidden backdrop-blur-sm"
           onClick={() => setShowMobileMenu(false)}
@@ -225,7 +205,8 @@ export default function ChessHomeScreen({ user, onBack }) {
       )}
 
       {/* Sidebar (Visual idêntico ao Dominó) */}
-      <aside className={`fixed inset-y-0 left-0 w-72 bg-white/95 backdrop-blur-xl border-r-2 border-emerald-100 p-6 sm:p-8 flex flex-col z-50 transform transition-transform duration-300 lg:static lg:translate-x-0 ${showMobileMenu ? 'translate-x-0 shadow-2xl' : '-translate-x-full'}`}>
+      {!isGameActive && (
+        <aside className={`fixed inset-y-0 left-0 w-72 bg-white/95 backdrop-blur-xl border-r-2 border-emerald-100 p-6 sm:p-8 flex flex-col z-50 transform transition-transform duration-300 lg:static lg:translate-x-0 ${showMobileMenu ? 'translate-x-0 shadow-2xl' : '-translate-x-full'}`}>
         <div className="flex items-center justify-between mb-8">
           <div className="flex flex-col">
             {/* Branding EduGames - Sempre visível */}
@@ -311,6 +292,7 @@ export default function ChessHomeScreen({ user, onBack }) {
           </div>
         </div>
       </aside>
+      )}
 
       {/* Main Content Area */}
       <main className="flex-1 p-6 sm:p-10 lg:p-12 overflow-y-auto h-screen relative">
@@ -539,9 +521,9 @@ export default function ChessHomeScreen({ user, onBack }) {
 
             {/* PVP Create Panel */}
             {mode === 'PVP' && subMode === 'create' && (
-              <section className="max-w-2xl bg-white border-2 border-emerald-100 rounded-[2.5rem] p-8 sm:p-10 shadow-[0_20px_50px_rgba(0,150,96,0.05)] animate-in fade-in slide-in-from-bottom-4 duration-300">
-                <h2 className="text-2xl font-black text-emerald-950 uppercase italic tracking-tight mb-2">Criar Nova Sala</h2>
-                <p className="text-emerald-900/60 text-sm font-medium mb-8">
+              <section className="max-w-2xl mx-auto w-full bg-white border-2 border-emerald-100 rounded-[2.5rem] p-8 sm:p-10 shadow-[0_20px_50px_rgba(0,150,96,0.05)] animate-in fade-in slide-in-from-bottom-4 duration-300">
+                <h2 className="text-2xl font-black text-emerald-950 uppercase italic tracking-tight mb-2 text-center">Criar Nova Sala</h2>
+                <p className="text-emerald-900/60 text-sm font-medium mb-8 text-center">
                   Uma sala exclusiva será aberta. Um sorteio inicial definirá as cores de cada jogador de forma justa.
                 </p>
 
@@ -586,9 +568,9 @@ export default function ChessHomeScreen({ user, onBack }) {
 
             {/* PVP Join Panel */}
             {mode === 'PVP' && subMode === 'join' && (
-              <section className="max-w-md bg-white border-2 border-emerald-100 rounded-[2.5rem] p-8 sm:p-10 shadow-[0_20px_50px_rgba(0,150,96,0.05)] animate-in fade-in slide-in-from-bottom-4 duration-300">
+              <section className="max-w-md mx-auto w-full bg-white border-2 border-emerald-100 rounded-[2.5rem] p-8 sm:p-10 shadow-[0_20px_50px_rgba(0,150,96,0.05)] animate-in fade-in slide-in-from-bottom-4 duration-300 text-center">
                 <h2 className="text-2xl font-black text-emerald-950 uppercase italic tracking-tight mb-2">Entrar em Sala</h2>
-                <p className="text-emerald-900/60 text-sm font-medium mb-8">
+                <p className="text-emerald-900/60 text-sm font-medium mb-8 text-center">
                   Digite o código de 6 caracteres fornecido pelo criador do jogo.
                 </p>
 
@@ -627,9 +609,9 @@ export default function ChessHomeScreen({ user, onBack }) {
 
             {/* PVC Panel */}
             {mode === 'PVC' && (
-              <section className="max-w-2xl bg-white border-2 border-emerald-100 rounded-[2.5rem] p-8 sm:p-10 shadow-[0_20px_50px_rgba(0,150,96,0.05)] animate-in fade-in slide-in-from-bottom-4 duration-300">
-                <h2 className="text-2xl font-black text-emerald-950 uppercase italic tracking-tight mb-2">Treinar Contra o Computador</h2>
-                <p className="text-emerald-900/60 text-sm font-medium mb-8">
+              <section className="max-w-2xl mx-auto w-full bg-white border-2 border-emerald-100 rounded-[2.5rem] p-8 sm:p-10 shadow-[0_20px_50px_rgba(0,150,96,0.05)] animate-in fade-in slide-in-from-bottom-4 duration-300">
+                <h2 className="text-2xl font-black text-emerald-950 uppercase italic tracking-tight mb-2 text-center">Treinar Contra o Computador</h2>
+                <p className="text-emerald-900/60 text-sm font-medium mb-8 text-center">
                   Desafie o computador para treinar suas estratégias e aprimorar o seu xadrez no seu próprio ritmo.
                 </p>
 

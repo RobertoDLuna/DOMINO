@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { io } from 'socket.io-client';
 import { SOCKET_URL } from '../config/api';
 
-const socket = io(`${SOCKET_URL}/peao`, {
+const socket = io(`${SOCKET_URL}/chess`, {
   transports: ['websocket'],
   autoConnect: false,
 });

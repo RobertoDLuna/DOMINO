@@ -345,8 +345,8 @@ export default function XadrezVelhaGame({ user, roomData, onExit }) {
         setAiChoiceFeedback(aiChoice);
 
         setTimeout(() => {
-          const white = aiChoice === 'white' ? { userId: 'AI', userName: 'Computador' } : { userId: currentUserId, userName: roomData.whiteName };
-          const black = aiChoice === 'black' ? { userId: 'AI', userName: 'Computador' } : { userId: currentUserId, userName: roomData.whiteName };
+          const white = aiChoice === 'white' ? { userId: 'AI', userName: 'Computador' } : { userId: myId, userName: roomData.whiteName };
+          const black = aiChoice === 'black' ? { userId: 'AI', userName: 'Computador' } : { userId: myId, userName: roomData.whiteName };
           setAssignedColors({ white, black });
           setSetupPhase('READY');
           setAiChoiceFeedback(null);
@@ -514,15 +514,15 @@ export default function XadrezVelhaGame({ user, roomData, onExit }) {
   // ── RENDERIZAÇÃO ────────────────────────────────────────────────────────
   if (setupPhase === 'WAITING' && !isPVC) {
     return (
-      <div className="velha-container flex flex-col items-center justify-center min-h-[60vh]">
+      <div className="flex flex-col items-center justify-center min-h-[60vh] w-full">
         <div className="text-center p-8 bg-white rounded-2xl shadow-xl w-full max-w-sm">
-          <div className="w-16 h-16 border-4 border-t-[#769656] border-gray-200 rounded-full animate-spin mx-auto mb-6"></div>
+          <div className="w-16 h-16 border-4 border-t-emerald-600 border-gray-200 rounded-full animate-spin mx-auto mb-6"></div>
 
-          <h2 className="text-2xl font-black mb-2 uppercase text-gray-800">Aguardando Oponente</h2>
+          <h2 className="text-2xl font-black mb-2 uppercase text-emerald-950">Aguardando Oponente</h2>
           <p className="text-gray-500 mb-8 font-medium">Compartilhe o código abaixo com seu adversário:</p>
 
           <div className="bg-gray-50 p-6 rounded-2xl border-2 border-dashed border-gray-200 mb-8">
-            <span className="text-4xl font-black tracking-[0.2em] text-[#769656]">{roomData.roomCode}</span>
+            <span className="text-4xl font-black tracking-[0.2em] text-emerald-600">{roomData.roomCode}</span>
           </div>
 
           <p className="text-xs text-gray-400 mb-6 italic">O sorteio começará automaticamente assim que alguém entrar.</p>
@@ -540,17 +540,17 @@ export default function XadrezVelhaGame({ user, roomData, onExit }) {
 
   if (setupPhase === 'DRAWING') {
     return (
-      <div className="velha-container flex flex-col items-center justify-center min-h-[60vh]">
+      <div className="flex flex-col items-center justify-center min-h-[60vh] w-full">
         <div className="text-center p-8 bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden relative">
-          <h2 className="text-2xl font-black mb-8 uppercase tracking-tighter text-gray-800">Realizando Sorteio...</h2>
+          <h2 className="text-2xl font-black mb-8 uppercase tracking-tighter text-emerald-950">Realizando Sorteio...</h2>
           <div className="velha-draw-coin-wrapper mb-8">
             <div className="velha-draw-coin">
-              <div className="coin-face front">?</div>
-              <div className="coin-face back">⚔️</div>
+              <div className="coin-face front" style={{ borderColor: '#059669', color: '#059669' }}>?</div>
+              <div className="coin-face back" style={{ borderColor: '#059669', background: '#059669' }}>⚔️</div>
             </div>
           </div>
           {drawWinner && (
-            <div className="animate-bounce font-black text-[#769656] text-xl">
+            <div className="animate-bounce font-black text-emerald-600 text-xl">
               Vencedor: {drawWinner.userName}!
             </div>
           )}
@@ -562,16 +562,16 @@ export default function XadrezVelhaGame({ user, roomData, onExit }) {
   if (setupPhase === 'CHOOSING') {
     const iAmWinner = drawWinner.userId == myId;
     return (
-      <div className="velha-container flex flex-col items-center justify-center min-h-[60vh]">
+      <div className="flex flex-col items-center justify-center min-h-[60vh] w-full">
         <div className="text-center p-8 bg-white rounded-2xl shadow-xl w-full max-w-sm">
           {iAmWinner ? (
             <>
-              <h2 className="text-2xl font-black mb-2 uppercase text-gray-800">Você Venceu!</h2>
+              <h2 className="text-2xl font-black mb-2 uppercase text-emerald-950">Você Venceu!</h2>
               <p className="text-gray-500 mb-8 font-medium">Escolha sua cor para começar:</p>
               <div className="flex gap-4">
                 <button
                   onClick={() => handlePickColor('white')}
-                  className="flex-1 p-6 rounded-2xl border-2 border-gray-200 hover:border-[#769656] transition-all group"
+                  className="flex-1 p-6 rounded-2xl border-2 border-gray-200 hover:border-emerald-600 transition-all group"
                 >
                   <span className="text-4xl mb-2 block group-hover:scale-110 transition-transform">⚪</span>
                   <strong className="block text-sm uppercase">Brancas</strong>
@@ -579,7 +579,7 @@ export default function XadrezVelhaGame({ user, roomData, onExit }) {
                 </button>
                 <button
                   onClick={() => handlePickColor('black')}
-                  className="flex-1 p-6 rounded-2xl border-2 border-gray-200 hover:border-[#769656] transition-all group"
+                  className="flex-1 p-6 rounded-2xl border-2 border-gray-200 hover:border-emerald-600 transition-all group"
                 >
                   <span className="text-4xl mb-2 block group-hover:scale-110 transition-transform">⚫</span>
                   <strong className="block text-sm uppercase">Pretas</strong>
@@ -589,7 +589,7 @@ export default function XadrezVelhaGame({ user, roomData, onExit }) {
             </>
           ) : (
             <>
-              <h2 className="text-2xl font-black mb-2 uppercase text-gray-800">{drawWinner.userName} Venceu</h2>
+              <h2 className="text-2xl font-black mb-2 uppercase text-emerald-950">{drawWinner.userName} Venceu</h2>
               <p className="text-gray-500 mb-8 font-medium">
                 {aiChoiceFeedback
                   ? `O Computador escolheu as ${aiChoiceFeedback === 'white' ? 'BRANCAS' : 'PRETAS'}!`
@@ -600,7 +600,7 @@ export default function XadrezVelhaGame({ user, roomData, onExit }) {
                   {aiChoiceFeedback === 'white' ? '⚪' : '⚫'}
                 </div>
               ) : (
-                <div className="w-12 h-12 border-4 border-t-[#769656] border-gray-100 rounded-full animate-spin mx-auto"></div>
+                <div className="w-12 h-12 border-4 border-t-emerald-600 border-gray-100 rounded-full animate-spin mx-auto"></div>
               )}
             </>
           )}
@@ -667,13 +667,13 @@ export default function XadrezVelhaGame({ user, roomData, onExit }) {
 
   return (
     <div className="velha-container pt-4 pb-20 relative">
-      <div className="absolute top-4 left-4 z-10">
+      <div className="absolute top-4 left-4 sm:top-6 sm:left-6 z-10">
         <button
-          className="chess-lobby-back group flex items-center gap-2"
+          className="w-12 h-12 flex items-center justify-center bg-white rounded-2xl shadow-sm text-emerald-950 border-2 border-emerald-100 active:scale-95 transition-all shrink-0 font-black text-xl hover:border-emerald-300 hover:shadow-md"
           onClick={onExit}
+          title="Voltar"
         >
-          <span className="transition-transform group-hover:-translate-x-1">←</span>
-          Voltar
+          ←
         </button>
       </div>
 

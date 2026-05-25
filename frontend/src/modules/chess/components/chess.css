@@ -1287,6 +1287,133 @@
   font-weight: 800;
 }
 
+/* ── Mobile Specifics (HUD & Bottom Sheet) ─────────────── */
+.chess-mobile-hud {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  margin: 0 0 16px 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.chess-mobile-hud.top-hud {
+  margin-bottom: 16px;
+}
+
+.chess-mobile-hud.bottom-hud {
+  margin-top: 16px;
+  margin-bottom: 0;
+}
+
+.chess-hud-player {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.chess-hud-avatar {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  border-radius: 50%;
+  background: #f8fafc;
+  border: 2px solid #e2e8f0;
+}
+.chess-hud-avatar--white {
+  color: #1e293b;
+}
+.chess-hud-avatar--black {
+  color: #f8fafc;
+  background: #1e293b;
+}
+
+.chess-hud-name {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--color-text);
+  max-width: 100px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chess-hud-timer {
+  transform: scale(0.9);
+}
+
+.chess-menu-btn {
+  background: var(--color-bg);
+  border: 2px solid var(--color-primary);
+  color: var(--color-accent);
+  padding: 8px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+/* Mobile Bottom Sheet Styles */
+@media (max-width: 767px) {
+  .chess-sidebar-container {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    background: white;
+    border-radius: 24px 24px 0 0;
+    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.15);
+    transform: translateY(100%);
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1);
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .chess-sidebar-container.open {
+    transform: translateY(0);
+  }
+  
+  .chess-sidebar {
+    padding: 24px 20px;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    border-radius: 0;
+    overflow-y: auto;
+    flex: 1;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Esconder o player hud duplicado na sidebar no mobile */
+  .chess-sidebar .chess-players {
+    display: none;
+  }
+
+  .chess-menu-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 90;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+
+  .chess-menu-backdrop.open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
 /* â”€â”€ Responsive: Desktop â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 @media (min-width: 768px) {
   .chess-screen {

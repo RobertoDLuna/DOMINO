@@ -6,7 +6,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Chess } from 'chess.js';
 import ChessBoard, { BOARD_THEMES } from '../components/ChessBoard';
-import ChessSidebar from '../components/ChessSidebar';
+import ChessSidebar, { ChessTimer } from '../components/ChessSidebar';
 import CapturedPieces from '../components/CapturedPieces';
 import { useChessSocket } from '../../../hooks/useChessSocket';
 
@@ -49,6 +49,7 @@ export default function ChessScreen({
   const [currentTheme, setCurrentTheme] = useState(boardTheme || 'wood');
   const [rematchRequested, setRematchRequested] = useState(false);
   const [opponentWantsRematch, setOpponentWantsRematch] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
   // Timers (em segundos)
   const [whiteTime, setWhiteTime] = useState(timeLimit === undefined ? 600 : timeLimit); 
@@ -445,10 +446,38 @@ export default function ChessScreen({
     );
   }
 
+  const opponentColor = myColor === 'white' ? 'black' : 'white';
+  const opponentName = myColor === 'white' ? (blackName || (mode === 'PVC' ? `IA Nível ${aiLevel}` : 'Aguardando...')) : (whiteName || 'Aguardando...');
+  const playerName = myColor === 'white' ? (whiteName || 'Você') : (blackName || 'Você');
+  
+  const MobileHUD = ({ playerColor, name, playerTime, isActive, isTop }) => (
+    <div className={`chess-mobile-hud ${isTop ? 'top-hud' : 'bottom-hud'} md:hidden`}>
+      <div className="chess-hud-player">
+        <div className={`chess-hud-avatar chess-hud-avatar--${playerColor}`}>
+          {playerColor === 'white' ? '♔' : '♚'}
+        </div>
+        <span className="chess-hud-name">{name}</span>
+      </div>
+      <div className="flex items-center gap-3">
+        <div className="chess-hud-timer">
+          {status === 'playing' && <ChessTimer seconds={playerTime} active={isActive} />}
+        </div>
+        {!isTop && (
+          <button 
+            className="chess-menu-btn"
+            onClick={() => setIsMobileMenuOpen(true)}
+          >
+            ☰ Menu
+          </button>
+        )}
+      </div>
+    </div>
+  );
+
   return (
     <div className="chess-screen">
-      {/* Theme switcher — top right */}
-      <div className="chess-theme-switcher">
+      {/* Theme switcher — top right (Desktop) */}
+      <div className="chess-theme-switcher hidden md:flex">
         {Object.entries(BOARD_THEMES).map(([key, t]) => (
           <button
             key={key}
@@ -460,6 +489,15 @@ export default function ChessScreen({
           </button>
         ))}
       </div>
+
+      {/* Top Mobile HUD (Opponent) */}
+      <MobileHUD 
+        playerColor={opponentColor} 
+        name={opponentName} 
+        playerTime={opponentColor === 'white' ? whiteTime : blackTime} 
+        isActive={status === 'playing' && !isMyTurn}
+        isTop={true}
+      />
 
       <div className="chess-layout">
         {/* Captured pieces area */}
@@ -481,8 +519,45 @@ export default function ChessScreen({
           />
         </div>
 
+        {/* Mobile HUD Bottom (You) */}
+        <MobileHUD 
+          playerColor={myColor} 
+          name={playerName} 
+          playerTime={myColor === 'white' ? whiteTime : blackTime} 
+          isActive={status === 'playing' && isMyTurn}
+          isTop={false}
+        />
+
+        {/* Backdrop for Mobile Menu */}
+        <div 
+          className={`chess-menu-backdrop md:hidden ${isMobileMenuOpen ? 'open' : ''}`}
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+
         {/* Sidebar container para sincronização de altura */}
-        <div className="chess-sidebar-container">
+        <div className={`chess-sidebar-container ${isMobileMenuOpen ? 'open' : ''}`}>
+          
+          {/* Header Mobile com Theme Switcher e Fechar */}
+          <div className="flex md:hidden justify-between items-center mb-4 pb-4 border-b-2 border-gray-100">
+            <div className="flex gap-2">
+              {Object.entries(BOARD_THEMES).map(([key, t]) => (
+                <button
+                  key={key}
+                  className={`chess-theme-btn !min-h-[32px] !px-3 ${currentTheme === key ? 'chess-theme-btn--active' : ''}`}
+                  onClick={() => setCurrentTheme(key)}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+            <button 
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="w-8 h-8 flex items-center justify-center bg-gray-100 rounded-full text-gray-500 hover:bg-gray-200"
+            >
+              ✕
+            </button>
+          </div>
+
           <ChessSidebar
             myColor={myColor}
             whiteName={whiteName}

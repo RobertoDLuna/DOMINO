@@ -74,7 +74,7 @@ function SidebarVictoryAnimation({ type }) {
   );
 }
 
-function ChessTimer({ seconds, active }) {
+export function ChessTimer({ seconds, active }) {
   if (seconds === null || seconds === undefined || Number.isNaN(seconds)) return null;
   
   const isLow = seconds < 30;

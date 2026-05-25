@@ -183,6 +183,9 @@ export default function ChessScreen({
       setGameOver(null);
       setRematchRequested(false);
       setOpponentWantsRematch(false);
+      const resetTime = data.timeLimit !== undefined ? data.timeLimit : (timeLimit === undefined ? 600 : timeLimit);
+      setWhiteTime(resetTime);
+      setBlackTime(resetTime);
     });
 
     const unsubOver = on('chess-game-over', ({ result, reason }) => {
@@ -305,6 +308,9 @@ export default function ChessScreen({
       setGameOver(null);
       setRematchRequested(false);
       setOpponentWantsRematch(false);
+      const resetTime = timeLimit === undefined ? 600 : timeLimit;
+      setWhiteTime(resetTime);
+      setBlackTime(resetTime);
     } else {
       setRematchRequested(true);
       emit('chess-request-rematch', { roomCode });

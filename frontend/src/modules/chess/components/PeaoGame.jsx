@@ -162,12 +162,13 @@ export default function PeaoGame({ user, roomData, onExit }) {
     if (isPVC) return;
 
     const unsubs = [
-      on('peao-game-ready', ({ board: b, turn: t, whiteName: wn, blackName: bn }) => {
+      on('peao-game-ready', ({ board: b, turn: t, whiteName: wn, blackName: bn, timeLimit: serverTime }) => {
         setBoard(b); setHasMoved(createHasMoved()); setTurn(t);
         setSelected(null); setValidMov([]); setLastMove(null); setGameOver(null);
         setMoves([]);
-        setWhiteTime(initialTime);
-        setBlackTime(initialTime);
+        const resetTime = serverTime !== undefined ? serverTime : initialTime;
+        setWhiteTime(resetTime);
+        setBlackTime(resetTime);
         if (wn) setWhiteName(wn);
         if (bn) setBlackName(bn);
         setRematchRequested(false);

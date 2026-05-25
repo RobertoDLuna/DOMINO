@@ -97,8 +97,9 @@ export default function ChessScreen({
     const aiColor = myColor === 'white' ? 'b' : 'w';
     if (chessRef.current.turn() !== aiColor) return;
 
-    // Depth maps to aiLevel (1-10 → depth 1-15)
-    const depth = Math.min(15, Math.max(1, Math.floor(aiLevel * 1.5)));
+    // Array de profundidades para os níveis de 1 a 10
+    const profundidades = [1, 2, 3, 4, 5, 7, 9, 11, 13, 15];
+    const depth = profundidades[aiLevel - 1] || 1;
     stockfishRef.current.postMessage(`position fen ${chessRef.current.fen()}`);
     stockfishRef.current.postMessage(`go depth ${depth}`);
   }, [fen, mode, myColor, aiLevel, gameOver]);

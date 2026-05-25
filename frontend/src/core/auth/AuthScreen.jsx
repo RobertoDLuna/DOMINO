@@ -32,8 +32,8 @@ const PreviewPanel = ({ previews, chessPreviews }) => {
     <div className="flex flex-col mt-8 w-full relative z-10">
       {/* Game Selector */}
       <div className="flex bg-black/20 p-1 rounded-xl gap-1 mb-6 self-start border border-white/5">
-        <button onClick={() => { setGame('DOMINO'); setTab('GERAL'); }} className={`px-4 py-1.5 text-[10px] font-black rounded-lg transition-all ${game === 'DOMINO' ? 'bg-white/20 text-white' : 'text-white/40 hover:text-white/60'}`}>🀄 DOMINÓ</button>
-        <button onClick={() => { setGame('CHESS'); setTab('GERAL'); }} className={`px-4 py-1.5 text-[10px] font-black rounded-lg transition-all ${game === 'CHESS' ? 'bg-white/20 text-white' : 'text-white/40 hover:text-white/60'}`}>♟️ XADREZ</button>
+        <button onClick={() => { setGame('DOMINO'); setTab('GERAL'); }} className={`px-4 py-1.5 text-[10px] font-black rounded-lg transition-all ${game === 'DOMINO' ? 'bg-white/20 text-white' : 'text-white/70 hover:text-white/60'}`}>🀄 DOMINÓ</button>
+        <button onClick={() => { setGame('CHESS'); setTab('GERAL'); }} className={`px-4 py-1.5 text-[10px] font-black rounded-lg transition-all ${game === 'CHESS' ? 'bg-white/20 text-white' : 'text-white/70 hover:text-white/60'}`}>♟️ XADREZ</button>
       </div>
 
       <div className="flex flex-wrap bg-black/15 p-2 rounded-2xl shadow-inner backdrop-blur-md self-start max-w-full border border-white/10 gap-2">
@@ -69,7 +69,7 @@ const PreviewPanel = ({ previews, chessPreviews }) => {
                 </div>
                 <div className="flex-1 overflow-hidden">
                   <h3 className="font-black text-white/80 text-[11px] sm:text-xs truncate uppercase">{user.name}</h3>
-                  <p className="text-[8px] uppercase font-bold text-white/40 tracking-widest truncate">{user.school || 'Sem vínculo'}</p>
+                  <p className="text-[8px] uppercase font-bold text-white/70 tracking-widest truncate">{user.school || 'Sem vínculo'}</p>
                 </div>
                 <div className="text-right">
                   <div className="font-black text-lg leading-none" style={{ color: activeColor }}>{user.points}</div>

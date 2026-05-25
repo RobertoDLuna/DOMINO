@@ -327,8 +327,8 @@ export default function GameContainer({ user, isGuest, initialTheme, onBack }) {
                   />
                 </div>
 
-                {isGuest && <p className="text-[10px] font-black uppercase text-white/40 sm:text-emerald-900/40 tracking-[0.3em] mt-1 sm:mt-0 italic sm:not-italic">Modo Convidado</p>}
-                {user && <p className="text-[10px] font-black uppercase text-white/40 sm:text-emerald-900/40 tracking-[0.3em] mt-1 sm:mt-0 italic sm:not-italic">{user.role} | {user.school || 'Externo'}</p>}
+                {isGuest && <p className="text-[10px] font-black uppercase text-white/70 sm:text-emerald-900/70 tracking-[0.3em] mt-1 sm:mt-0 italic sm:not-italic">Modo Convidado</p>}
+                {user && <p className="text-[10px] font-black uppercase text-white/70 sm:text-emerald-900/70 tracking-[0.3em] mt-1 sm:mt-0 italic sm:not-italic">{user.role} | {user.school || 'Externo'}</p>}
               </div>
               <button
                 onClick={handleCreateRoom}
@@ -353,7 +353,7 @@ export default function GameContainer({ user, isGuest, initialTheme, onBack }) {
                 </button>
                 <button
                   onClick={onBack}
-                  className="mt-4 text-emerald-900/40 hover:text-emerald-900 font-black text-sm uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 hover:translate-y-[-2px] active:translate-y-0"
+                  className="mt-4 text-emerald-900/70 hover:text-emerald-900 font-black text-sm uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 hover:translate-y-[-2px] active:translate-y-0"
                 >
                   VOLTAR PARA SELEÇÃO DE TEMAS
                 </button>
@@ -489,7 +489,7 @@ export default function GameContainer({ user, isGuest, initialTheme, onBack }) {
                   )}
 
                   <div className="bg-white/5 backdrop-blur-sm p-4 rounded-[2rem] border-2 border-white/10 w-full shadow-2xl">
-                    <p className="text-[9px] font-black text-white/40 uppercase tracking-[0.2em] text-center mb-3 border-b border-white/10 pb-1.5 leading-none">Participantes na Mesa</p>
+                    <p className="text-[9px] font-black text-white/70 uppercase tracking-[0.2em] text-center mb-3 border-b border-white/10 pb-1.5 leading-none">Participantes na Mesa</p>
                     <div className="flex flex-wrap justify-center gap-2">
                       {players.map((p, i) => (
                         <div key={i} className={`px-4 py-1.5 rounded-xl shadow-lg transition-all flex items-center gap-2 border-b-4 ${p.id === myId ? 'bg-[#FFCE00] text-[#009660] border-yellow-600' : 'bg-white/90 text-emerald-900 border-gray-300'}`}>
@@ -617,7 +617,7 @@ export default function GameContainer({ user, isGuest, initialTheme, onBack }) {
         <div className={`bg-white/95 p-1.5 sm:p-3 shadow-[0_-10px_60px_rgba(0,0,0,0.05)] relative z-30 border-t border-emerald-100 flex flex-col sm:flex-row items-center justify-between gap-2 overflow-visible ${gameState === 'finished' ? 'blur-md translate-y-full' : ''} transition-all duration-1000`}>
           {/* Hint de scroll: visível apenas em mobile */}
           <div className="flex sm:hidden items-center justify-center gap-1.5 pt-1 pb-0 w-full">
-            <span className="text-[9px] font-black uppercase tracking-widest text-emerald-900/30 flex items-center gap-1">
+            <span className="text-[9px] font-black uppercase tracking-widest text-emerald-900/70 flex items-center gap-1">
               <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16l-4-4m0 0l4-4m-4 4h18" /></svg>
               Role para ver todas as peças da sua mão
               <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>

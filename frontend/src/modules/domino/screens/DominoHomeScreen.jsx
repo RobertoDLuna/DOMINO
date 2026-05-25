@@ -44,17 +44,17 @@ const GameCard = ({ theme, onClick }) => {
 
       <div className="mt-auto space-y-2 relative z-10">
         <div className="flex items-center gap-2">
-          <span className="text-[10px] font-black text-emerald-900/40 uppercase tracking-widest">Nível:</span>
+          <span className="text-[10px] font-black text-emerald-900/70 uppercase tracking-widest">Nível:</span>
           <span className="text-[10px] font-black text-emerald-600 uppercase">{categoryName}</span>
         </div>
 
         <div className="flex justify-between items-center pt-3 border-t border-emerald-50">
           <div className="flex flex-col">
-            <span className="text-[8px] font-black text-emerald-900/30 uppercase tracking-tighter">Autor</span>
+            <span className="text-[8px] font-black text-emerald-900/70 uppercase tracking-tighter">Autor</span>
             <span className="text-[9px] font-black text-emerald-800 uppercase truncate max-w-[80px]">{author}</span>
           </div>
           <div className="flex flex-col text-right">
-            <span className="text-[8px] font-black text-emerald-900/30 uppercase tracking-tighter">Criado em</span>
+            <span className="text-[8px] font-black text-emerald-900/70 uppercase tracking-tighter">Criado em</span>
             <span className="text-[9px] font-black text-emerald-800">{date}</span>
           </div>
         </div>
@@ -218,7 +218,7 @@ const HomeScreen = ({
 
             <div className="pl-1">
               <h1 className="text-3xl font-black text-[#009660] italic tracking-tighter leading-none mb-1">DOMINÓ</h1>
-              <p className="text-[10px] font-black uppercase text-emerald-900/40 tracking-[0.2em]">Educação & Diversão</p>
+              <p className="text-[10px] font-black uppercase text-emerald-900/70 tracking-[0.2em]">Educação & Diversão</p>
             </div>
           </div>
           <button
@@ -232,7 +232,7 @@ const HomeScreen = ({
         <nav className="flex-1 space-y-8 overflow-y-auto pr-2 scrollbar-hide">
           {/* Categories */}
           <div>
-            <h3 className="text-[10px] font-black uppercase text-emerald-900/40 tracking-widest mb-4 flex items-center gap-2">
+            <h3 className="text-[10px] font-black uppercase text-emerald-900/70 tracking-widest mb-4 flex items-center gap-2">
               <span>📚</span> NÍVEIS DE ENSINO
             </h3>
             <div className="space-y-2">
@@ -257,7 +257,7 @@ const HomeScreen = ({
           {/* Subcategories */}
           {selectedCategory && (
             <div className="animate-in slide-in-from-left-4">
-              <h3 className="text-[10px] font-black uppercase text-emerald-900/40 tracking-widest mb-4 flex items-center gap-2">
+              <h3 className="text-[10px] font-black uppercase text-emerald-900/70 tracking-widest mb-4 flex items-center gap-2">
                 <span>🍎</span> DISCIPLINAS
               </h3>
               <div className="space-y-2">
@@ -287,7 +287,7 @@ const HomeScreen = ({
               {user?.fullName?.charAt(0) || 'U'}
             </div>
             <div className="overflow-hidden flex-1">
-              <p className="text-[10px] font-black text-emerald-900/40 uppercase leading-none mb-1">Logado como</p>
+              <p className="text-[10px] font-black text-emerald-900/70 uppercase leading-none mb-1">Logado como</p>
               <p className="text-xs font-black text-emerald-900 truncate">{user?.fullName || 'Usuário'}</p>
             </div>
             <button
@@ -331,7 +331,7 @@ const HomeScreen = ({
             </button>
             <div>
               <h2 className="text-3xl sm:text-4xl font-black text-emerald-900 uppercase italic tracking-tighter">Explorar Jogos</h2>
-              <p className="text-xs sm:text-sm font-medium text-emerald-900/40">Escolha um tema e comece o desafio!</p>
+              <p className="text-xs sm:text-sm font-medium text-emerald-900/70">Escolha um tema e comece o desafio!</p>
             </div>
           </div>
 
@@ -379,9 +379,9 @@ const HomeScreen = ({
 
         {/* Grid and Tabs (omitted for brevity, keeping existing logic) */}
         <div className="flex gap-2 mb-8 bg-emerald-100/50 p-1.5 rounded-[2rem] w-fit">
-          <button onClick={() => setActiveTab('ALL')} className={`px-6 py-3 rounded-[1.5rem] font-black text-[10px] uppercase tracking-widest transition-all ${activeTab === 'ALL' ? 'bg-white text-emerald-900 shadow-md' : 'text-emerald-900/40 hover:text-emerald-900'}`}>Todos</button>
-          <button onClick={() => setActiveTab('DEFAULT')} className={`px-6 py-3 rounded-[1.5rem] font-black text-[10px] uppercase tracking-widest transition-all ${activeTab === 'DEFAULT' ? 'bg-white text-emerald-900 shadow-md' : 'text-emerald-900/40 hover:text-emerald-900'}`}>Padrão</button>
-          <button onClick={() => setActiveTab('CUSTOM')} className={`px-6 py-3 rounded-[1.5rem] font-black text-[10px] uppercase tracking-widest transition-all ${activeTab === 'CUSTOM' ? 'bg-white text-emerald-900 shadow-md' : 'text-emerald-900/40 hover:text-emerald-900'}`}>Customizados</button>
+          <button onClick={() => setActiveTab('ALL')} className={`px-6 py-3 rounded-[1.5rem] font-black text-[10px] uppercase tracking-widest transition-all ${activeTab === 'ALL' ? 'bg-white text-emerald-900 shadow-md' : 'text-emerald-900/70 hover:text-emerald-900'}`}>Todos</button>
+          <button onClick={() => setActiveTab('DEFAULT')} className={`px-6 py-3 rounded-[1.5rem] font-black text-[10px] uppercase tracking-widest transition-all ${activeTab === 'DEFAULT' ? 'bg-white text-emerald-900 shadow-md' : 'text-emerald-900/70 hover:text-emerald-900'}`}>Padrão</button>
+          <button onClick={() => setActiveTab('CUSTOM')} className={`px-6 py-3 rounded-[1.5rem] font-black text-[10px] uppercase tracking-widest transition-all ${activeTab === 'CUSTOM' ? 'bg-white text-emerald-900 shadow-md' : 'text-emerald-900/70 hover:text-emerald-900'}`}>Customizados</button>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
@@ -396,7 +396,7 @@ const HomeScreen = ({
           ) : (
             <div className="col-span-full py-20 text-center">
               <div className="text-6xl mb-6 truncate grayscale">🏜️</div>
-              <p className="text-emerald-900/40 font-black uppercase tracking-widest">Nenhum jogo encontrado.</p>
+              <p className="text-emerald-900/70 font-black uppercase tracking-widest">Nenhum jogo encontrado.</p>
             </div>
           )}
         </div>

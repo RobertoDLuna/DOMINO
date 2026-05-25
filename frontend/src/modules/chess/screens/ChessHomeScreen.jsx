@@ -219,7 +219,7 @@ export default function ChessHomeScreen({ user, onBack }) {
 
             <div className="pl-1">
               <h1 className="text-3xl font-black text-[#009660] italic tracking-tighter leading-none mb-1">XADREZ</h1>
-              <p className="text-[10px] font-black uppercase text-emerald-900/40 tracking-[0.2em]">Educação & Diversão</p>
+              <p className="text-[10px] font-black uppercase text-emerald-900/70 tracking-[0.2em]">Educação & Diversão</p>
             </div>
           </div>
           <button
@@ -233,7 +233,7 @@ export default function ChessHomeScreen({ user, onBack }) {
         <nav className="flex-1 space-y-8 overflow-y-auto pr-2 scrollbar-hide">
           {/* Categorias / Desafios */}
           <div>
-            <h3 className="text-[10px] font-black uppercase text-emerald-900/40 tracking-widest mb-4 flex items-center gap-2">
+            <h3 className="text-[10px] font-black uppercase text-emerald-900/70 tracking-widest mb-4 flex items-center gap-2">
               <span>♟️</span> MODOS DE JOGO
             </h3>
             <div className="space-y-2">
@@ -275,7 +275,7 @@ export default function ChessHomeScreen({ user, onBack }) {
               {user?.fullName?.charAt(0) || 'U'}
             </div>
             <div className="overflow-hidden flex-1">
-              <p className="text-[10px] font-black text-emerald-900/40 uppercase leading-none mb-1">Logado como</p>
+              <p className="text-[10px] font-black text-emerald-900/70 uppercase leading-none mb-1">Logado como</p>
               <p className="text-xs font-black text-emerald-950 truncate">{user?.fullName || 'Usuário'}</p>
             </div>
             <button
@@ -346,7 +346,7 @@ export default function ChessHomeScreen({ user, onBack }) {
                   <span className="inline-block bg-emerald-100 text-emerald-700 text-[9px] font-black px-3.5 py-1.5 rounded-full uppercase tracking-widest">
                     Competitivo FIDE
                   </span>
-                  <div className="pt-3 border-t border-emerald-50 flex justify-between items-center text-[10px] font-black text-emerald-900/30 uppercase tracking-wider">
+                  <div className="pt-3 border-t border-emerald-50 flex justify-between items-center text-[10px] font-black text-emerald-900/70 uppercase tracking-wider">
                     <span>Modos: PVP / PVC</span>
                     <span>Tempo Controlado</span>
                   </div>
@@ -370,7 +370,7 @@ export default function ChessHomeScreen({ user, onBack }) {
                   <span className="inline-block bg-amber-100 text-amber-800 text-[9px] font-black px-3.5 py-1.5 rounded-full uppercase tracking-widest">
                     Estratégia Casual
                   </span>
-                  <div className="pt-3 border-t border-emerald-50 flex justify-between items-center text-[10px] font-black text-emerald-900/30 uppercase tracking-wider">
+                  <div className="pt-3 border-t border-emerald-50 flex justify-between items-center text-[10px] font-black text-emerald-900/70 uppercase tracking-wider">
                     <span>Partidas Rápidas</span>
                     <span>PVC Integrado</span>
                   </div>
@@ -394,7 +394,7 @@ export default function ChessHomeScreen({ user, onBack }) {
                   <span className="inline-block bg-indigo-100 text-indigo-700 text-[9px] font-black px-3.5 py-1.5 rounded-full uppercase tracking-widest">
                     Novo!
                   </span>
-                  <div className="pt-3 border-t border-emerald-50 flex justify-between items-center text-[10px] font-black text-emerald-900/30 uppercase tracking-wider">
+                  <div className="pt-3 border-t border-emerald-50 flex justify-between items-center text-[10px] font-black text-emerald-900/70 uppercase tracking-wider">
                     <span>Avanço Dinâmico</span>
                     <span>PVP / PVC</span>
                   </div>
@@ -528,7 +528,7 @@ export default function ChessHomeScreen({ user, onBack }) {
                 </p>
 
                 <div className="mb-8">
-                  <span className="text-xs font-black uppercase tracking-widest text-emerald-900/40 mb-3 block">Controle de Tempo</span>
+                  <span className="text-xs font-black uppercase tracking-widest text-emerald-900/70 mb-3 block">Controle de Tempo</span>
                   <div className="flex flex-wrap gap-2">
                     {TIME_OPTIONS.map((opt) => (
                       <button
@@ -616,7 +616,7 @@ export default function ChessHomeScreen({ user, onBack }) {
                 </p>
 
                 <div className="mb-8">
-                  <span className="text-xs font-black uppercase tracking-widest text-emerald-900/40 mb-4 block">Selecione a Dificuldade</span>
+                  <span className="text-xs font-black uppercase tracking-widest text-emerald-900/70 mb-4 block">Selecione a Dificuldade</span>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {AI_LEVELS.map((lvl) => (
                       <button
@@ -632,7 +632,7 @@ export default function ChessHomeScreen({ user, onBack }) {
                 </div>
 
                 <div className="mb-8">
-                  <span className="text-xs font-black uppercase tracking-widest text-emerald-900/40 mb-3 block">Controle de Tempo</span>
+                  <span className="text-xs font-black uppercase tracking-widest text-emerald-900/70 mb-3 block">Controle de Tempo</span>
                   <div className="flex flex-wrap gap-2">
                     {TIME_OPTIONS.map((opt) => (
                       <button
@@ -663,7 +663,7 @@ export default function ChessHomeScreen({ user, onBack }) {
               </section>
             )}
 
-            <footer className="mt-auto pt-12 flex flex-col sm:flex-row gap-2 text-[10px] font-black text-emerald-900/30 uppercase tracking-widest">
+            <footer className="mt-auto pt-12 flex flex-col sm:flex-row gap-2 text-[10px] font-black text-emerald-900/70 uppercase tracking-widest">
               <span>♟ Todas as regras FIDE implementadas</span>
               <span className="hidden sm:inline">·</span>
               <span>En passant · Roque · Promoção</span>

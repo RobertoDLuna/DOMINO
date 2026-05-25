@@ -429,7 +429,7 @@ export default function PeaoScreen({ user, onBack, onSessionActive }) {
           <h2 className="text-xl font-black text-emerald-950 uppercase italic tracking-tight mb-4">Criar Sala Privada</h2>
           
           <div className="text-left mb-6">
-            <label className="block text-xs font-black text-emerald-900/40 uppercase tracking-widest mb-3">
+            <label className="block text-xs font-black text-emerald-900/70 uppercase tracking-widest mb-3">
               ⏱️ Tempo de Partida
             </label>
             <div className="flex gap-3">
@@ -477,7 +477,7 @@ export default function PeaoScreen({ user, onBack, onSessionActive }) {
             placeholder="Ex: AB12CD"
             value={joinCode}
             onChange={e => setJoinCode(e.target.value.toUpperCase())}
-            className="w-full bg-emerald-50 border-2 border-emerald-100 rounded-2xl px-6 py-4 text-center text-2xl font-black tracking-[0.25em] text-emerald-950 placeholder:text-emerald-900/30 mb-6 focus:outline-none focus:border-emerald-500 transition-colors"
+            className="w-full bg-emerald-50 border-2 border-emerald-100 rounded-2xl px-6 py-4 text-center text-2xl font-black tracking-[0.25em] text-emerald-950 placeholder:text-emerald-900/70 mb-6 focus:outline-none focus:border-emerald-500 transition-colors"
             maxLength={8}
           />
           {error && <div className="bg-red-50 text-red-600 text-sm font-bold p-4 rounded-xl mb-6">{error}</div>}
@@ -501,7 +501,7 @@ export default function PeaoScreen({ user, onBack, onSessionActive }) {
           </div>
           
           <div className="mb-6">
-            <label className="block text-xs font-black text-emerald-900/40 uppercase tracking-widest mb-3">
+            <label className="block text-xs font-black text-emerald-900/70 uppercase tracking-widest mb-3">
               🤖 Nível da IA
             </label>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -527,7 +527,7 @@ export default function PeaoScreen({ user, onBack, onSessionActive }) {
           </div>
 
           <div className="mb-8">
-            <label className="block text-xs font-black text-emerald-900/40 uppercase tracking-widest mb-3">
+            <label className="block text-xs font-black text-emerald-900/70 uppercase tracking-widest mb-3">
               ⏱️ Tempo de Partida
             </label>
             <div className="flex gap-3">

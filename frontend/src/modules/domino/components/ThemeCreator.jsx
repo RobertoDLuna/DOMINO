@@ -198,7 +198,7 @@ const ThemeCreator = ({ onThemeCreated, onClose }) => {
         <header className="p-6 sm:p-8 bg-gradient-to-r from-emerald-50 to-white border-b-2 border-emerald-100 flex justify-between items-center flex-shrink-0">
           <div>
             <h2 className="text-2xl sm:text-3xl font-black text-[#009660] uppercase italic tracking-tighter leading-none">Novo Tema</h2>
-            <p className="text-[10px] sm:text-xs font-black uppercase text-emerald-900/40 tracking-widest mt-1">Crie seu próprio conjunto de dominó</p>
+            <p className="text-[10px] sm:text-xs font-black uppercase text-emerald-900/70 tracking-widest mt-1">Crie seu próprio conjunto de dominó</p>
           </div>
           <button onClick={onClose} className="w-10 h-10 rounded-full bg-white text-emerald-900 hover:bg-red-50 hover:text-red-500 transition-colors shadow-sm border border-gray-100 flex items-center justify-center font-black text-sm cursor-pointer">✕</button>
         </header>
@@ -440,10 +440,10 @@ const ThemeCreator = ({ onThemeCreated, onClose }) => {
                 ))}
               </div>
               <div className="mt-2 space-y-1">
-                <p className="text-[9px] text-center font-black text-emerald-900/30 uppercase tracking-widest italic leading-tight">
+                <p className="text-[9px] text-center font-black text-emerald-900/70 uppercase tracking-widest italic leading-tight">
                   O ponto '0' (zero) será vazio por padrão
                 </p>
-                <p className="text-[9px] text-center font-black text-emerald-900/40 uppercase tracking-widest italic leading-tight">
+                <p className="text-[9px] text-center font-black text-emerald-900/70 uppercase tracking-widest italic leading-tight">
                   Cada imagem acima vale seu respectivo valor (1 a 6) para o cálculo de pontos no jogo
                 </p>
               </div>

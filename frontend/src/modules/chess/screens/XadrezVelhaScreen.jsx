@@ -281,7 +281,7 @@ export default function XadrezVelhaScreen({ user, onBack, onSessionActive }) {
             placeholder="Ex: AB12CD"
             value={joinCode}
             onChange={e => setJoinCode(e.target.value.toUpperCase())}
-            className="w-full bg-emerald-50 border-2 border-emerald-100 rounded-2xl px-6 py-4 text-center text-2xl font-black tracking-[0.25em] text-emerald-950 placeholder:text-emerald-900/30 mb-6 focus:outline-none focus:border-emerald-500 transition-colors"
+            className="w-full bg-emerald-50 border-2 border-emerald-100 rounded-2xl px-6 py-4 text-center text-2xl font-black tracking-[0.25em] text-emerald-950 placeholder:text-emerald-900/70 mb-6 focus:outline-none focus:border-emerald-500 transition-colors"
             maxLength={6}
           />
           {error && <div className="bg-red-50 text-red-600 text-sm font-bold p-4 rounded-xl mb-6">{error}</div>}

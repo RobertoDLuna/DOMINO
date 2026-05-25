@@ -205,7 +205,7 @@ const AdminDashboard = ({ onBack }) => {
             </button>
             <div>
               <h1 className="text-2xl sm:text-3xl font-black text-[#009660] uppercase italic tracking-tighter drop-shadow-sm">PAINEL ADMIN</h1>
-              <p className="text-[10px] font-black uppercase text-emerald-900/40 tracking-[0.2em]">Gestão da Plataforma</p>
+              <p className="text-[10px] font-black uppercase text-emerald-900/70 tracking-[0.2em]">Gestão da Plataforma</p>
             </div>
           </div>
         </header>
@@ -254,19 +254,19 @@ const AdminDashboard = ({ onBack }) => {
           <div className="flex gap-4">
             <button 
               onClick={() => setActiveTab('pending')}
-              className={`px-6 py-3 rounded-xl font-black text-[11px] uppercase tracking-widest transition-all ${activeTab === 'pending' ? 'bg-white shadow-md text-emerald-900' : 'text-emerald-900/40 hover:bg-white/50'}`}
+              className={`px-6 py-3 rounded-xl font-black text-[11px] uppercase tracking-widest transition-all ${activeTab === 'pending' ? 'bg-white shadow-md text-emerald-900' : 'text-emerald-900/70 hover:bg-white/50'}`}
             >
               Aprovações ({stats.pendingThemes})
             </button>
             <button 
               onClick={() => setActiveTab('approved_themes')}
-              className={`px-6 py-3 rounded-xl font-black text-[11px] uppercase tracking-widest transition-all ${activeTab === 'approved_themes' ? 'bg-purple-500 text-white shadow-md' : 'text-emerald-900/40 hover:bg-white/50'}`}
+              className={`px-6 py-3 rounded-xl font-black text-[11px] uppercase tracking-widest transition-all ${activeTab === 'approved_themes' ? 'bg-purple-500 text-white shadow-md' : 'text-emerald-900/70 hover:bg-white/50'}`}
             >
               Temas Aprovados
             </button>
             <button 
               onClick={() => setActiveTab('users')}
-              className={`px-6 py-3 rounded-xl font-black text-[11px] uppercase tracking-widest transition-all ${activeTab === 'users' ? 'bg-[#FFCE00] shadow-[0_4px_0_#d1a900] text-emerald-900' : 'text-emerald-900/40 hover:bg-white/50'}`}
+              className={`px-6 py-3 rounded-xl font-black text-[11px] uppercase tracking-widest transition-all ${activeTab === 'users' ? 'bg-[#FFCE00] shadow-[0_4px_0_#d1a900] text-emerald-900' : 'text-emerald-900/70 hover:bg-white/50'}`}
             >
               Usuários Registrados
             </button>

@@ -40,7 +40,7 @@ const GameCard = ({ title, description, icon, color, playersOnline, onClick, bad
       <div className="mt-8 pt-6 border-t border-emerald-50 flex items-center justify-between relative z-10">
         <div className="flex items-center gap-2">
           <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
-          <span className="text-[10px] font-black text-emerald-900/40 uppercase tracking-widest">
+          <span className="text-[10px] font-black text-emerald-900/70 uppercase tracking-widest">
             {playersOnline} Online
           </span>
         </div>
@@ -66,7 +66,7 @@ export const Sidebar = ({ user, onLogout }) => {
           <h1 className="text-2xl font-black text-emerald-900 uppercase italic tracking-tighter leading-none">
             EduGames<span className="text-[#009660]">.</span>
           </h1>
-          <p className="text-[8px] font-black uppercase text-emerald-900/40 tracking-[0.2em] mt-1">Plataforma de Aprendizagem</p>
+          <p className="text-[8px] font-black uppercase text-emerald-900/70 tracking-[0.2em] mt-1">Plataforma de Aprendizagem</p>
         </div>
       </div>
 
@@ -96,7 +96,7 @@ export const Sidebar = ({ user, onLogout }) => {
           </div>
           <div className="overflow-hidden">
             <p className="text-sm font-black text-emerald-900 truncate">{user?.fullName || 'Visitante'}</p>
-            <p className="text-[9px] font-black text-emerald-900/40 uppercase tracking-widest">{user?.role || 'EXTERNO'}</p>
+            <p className="text-[9px] font-black text-emerald-900/70 uppercase tracking-widest">{user?.role || 'EXTERNO'}</p>
           </div>
         </div>
 
@@ -204,7 +204,7 @@ const GameHub = ({ user, onSelectGame, onLogout }) => {
                 <h3 className="text-3xl font-black text-emerald-900 uppercase italic tracking-tighter">
                   Nossos Jogos
                 </h3>
-                <p className="text-xs font-black text-emerald-900/30 uppercase tracking-[0.2em] mt-1">Selecione para começar</p>
+                <p className="text-xs font-black text-emerald-900/70 uppercase tracking-[0.2em] mt-1">Selecione para começar</p>
               </div>
               <div className="flex gap-3">
                 <div className="w-10 h-3 rounded-full bg-[#009660] shadow-sm" />
@@ -232,18 +232,18 @@ const GameHub = ({ user, onSelectGame, onLogout }) => {
           <footer className="mt-24 py-12 border-t-2 border-emerald-100 flex flex-col md:flex-row justify-between items-center gap-8">
             <div className="flex items-center gap-4">
               <img src={logoCampina} alt="Seduc" className="h-8 w-auto opacity-50 grayscale hover:grayscale-0 transition-all" />
-              <p className="text-emerald-900/30 font-black uppercase text-[9px] tracking-[0.3em]">
+              <p className="text-emerald-900/70 font-black uppercase text-[9px] tracking-[0.3em]">
                 © 2026 EduGames Plataforma de Jogos Seduc
               </p>
             </div>
             <div className="flex gap-12 bg-white px-10 py-6 rounded-[2.5rem] shadow-sm border border-emerald-50">
               <div className="text-center">
                 <p className="text-3xl font-black text-emerald-900 leading-none">1.2k</p>
-                <p className="text-[10px] font-black text-emerald-900/40 uppercase tracking-widest mt-1">Partidas Hoje</p>
+                <p className="text-[10px] font-black text-emerald-900/70 uppercase tracking-widest mt-1">Partidas Hoje</p>
               </div>
               <div className="text-center">
                 <p className="text-3xl font-black text-emerald-900 leading-none">45</p>
-                <p className="text-[10px] font-black text-emerald-900/40 uppercase tracking-widest mt-1">Escolas Ativas</p>
+                <p className="text-[10px] font-black text-emerald-900/70 uppercase tracking-widest mt-1">Escolas Ativas</p>
               </div>
             </div>
           </footer>

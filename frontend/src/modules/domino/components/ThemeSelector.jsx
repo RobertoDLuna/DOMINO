@@ -100,7 +100,7 @@ const ThemeSelector = ({ selectedTheme, onSelect, onOpenCreator, canCreate }) =>
             </span>
             
             {!theme.isDefault && (
-               <span className="absolute bottom-1 right-2 text-[8px] font-black uppercase text-white/40 tracking-widest">CUSTOM</span>
+               <span className="absolute bottom-1 right-2 text-[8px] font-black uppercase text-white/70 tracking-widest">CUSTOM</span>
             )}
 
             {selectedTheme === theme.id && (

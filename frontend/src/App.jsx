@@ -38,6 +38,11 @@ function App() {
     return () => window.removeEventListener('openAdminPanel', openAdmin);
   }, []);
 
+  // Força o scroll para o topo ao transicionar de telas (evita que a tela permaneça scrollada ao logar)
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [user, guestMode, activeGame, selectedTheme, manualJoin, isInRoomSession]);
+
   const handleAuthSuccess = (userData) => {
     setUser(userData);
     setGuestMode(false);

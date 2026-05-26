@@ -96,8 +96,17 @@ export function ChessTimer({ seconds, active }) {
   }
 
   return (
-    <div className={`chess-timer ${active ? 'active' : ''} ${isLow ? 'low' : ''}`}>
-      {timeStr}
+    <div 
+      className={`chess-timer ${active ? 'active' : ''} ${isLow ? 'low' : ''}`}
+      style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+    >
+      {active && (
+        <span 
+          className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_#10b981]" 
+          style={{ width: '6px', height: '6px', backgroundColor: '#10b981', borderRadius: '50%' }}
+        />
+      )}
+      <span>{timeStr}</span>
     </div>
   );
 }
@@ -126,7 +135,8 @@ export default function ChessSidebar({
   whiteTime,
   blackTime,
 }) {
-  // Removemos o pairedMoves, pois faremos uma lista vertical descritiva
+  const isWhiteActive = status === 'playing' && ((myColor === 'white' && isMyTurn) || (myColor === 'black' && !isMyTurn));
+  const isBlackActive = status === 'playing' && ((myColor === 'black' && isMyTurn) || (myColor === 'white' && !isMyTurn));
 
   return (
     <aside className="chess-sidebar overflow-hidden relative">
@@ -143,9 +153,9 @@ export default function ChessSidebar({
           <PlayerBadge
             name={blackName || (mode === 'PVC' ? `IA (Nível ${aiLevel})` : 'Aguardando...')}
             color="black"
-            active={!isMyTurn && status === 'playing'}
+            active={isBlackActive}
           />
-          {status === 'playing' && <ChessTimer seconds={blackTime} active={!isMyTurn} />}
+          {status === 'playing' && <ChessTimer seconds={blackTime} active={isBlackActive} />}
         </div>
 
         <div className="chess-vs">VS</div>
@@ -154,9 +164,9 @@ export default function ChessSidebar({
           <PlayerBadge
             name={whiteName || 'Você'}
             color="white"
-            active={isMyTurn && status === 'playing'}
+            active={isWhiteActive}
           />
-          {status === 'playing' && <ChessTimer seconds={whiteTime} active={isMyTurn} />}
+          {status === 'playing' && <ChessTimer seconds={whiteTime} active={isWhiteActive} />}
         </div>
       </div>
 

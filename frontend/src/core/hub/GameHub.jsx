@@ -54,7 +54,7 @@ const GameCard = ({ title, description, icon, color, playersOnline, onClick, bad
 
 export const Sidebar = ({ user, onLogout }) => {
   return (
-    <aside className="w-20 lg:w-72 bg-white h-screen fixed left-0 top-0 border-r-2 border-emerald-50 flex flex-col items-center lg:items-stretch p-4 lg:p-6 z-30 transition-all duration-300">
+    <aside className="hidden lg:flex w-72 bg-white h-screen fixed left-0 top-0 border-r-2 border-emerald-50 flex-col items-stretch p-6 z-30 transition-all duration-300">
       {/* Logos */}
       <div className="flex flex-col items-center lg:items-start gap-4 mb-12">
         <div className="flex items-center gap-2">
@@ -162,15 +162,31 @@ const GameHub = ({ user, onSelectGame, onLogout }) => {
     <div className="min-h-screen bg-[#F0FDF4] flex">
       <Sidebar user={user} onLogout={onLogout} />
 
-      <main className="flex-1 pl-20 lg:pl-72 transition-all duration-300">
+      <main className="flex-1 pl-0 lg:pl-72 transition-all duration-300">
         <div className="p-6 sm:p-12 lg:p-16 max-w-7xl mx-auto">
           {/* Header Moble (Visible only on small screens without sidebar info) */}
-          <header className="lg:hidden flex justify-between items-center mb-12">
-             <h1 className="text-3xl font-black text-emerald-900 uppercase italic tracking-tighter leading-none">
-                EduGames<span className="text-[#009660]">.</span>
-             </h1>
-             <div className="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center text-white font-black shrink-0 shadow-lg">
-                {user?.fullName?.charAt(0) || 'U'}
+          <header className="lg:hidden flex justify-between items-center mb-12 bg-white p-4 rounded-3xl border border-emerald-100 shadow-sm">
+             <div className="flex items-center gap-3">
+               <img src={logoCampina} alt="Seduc" className="h-8 w-auto object-contain pointer-events-none" />
+               <h1 className="text-xl font-black text-emerald-900 uppercase italic tracking-tighter leading-none">
+                  EduGames<span className="text-[#009660]">.</span>
+               </h1>
+             </div>
+             <div className="flex items-center gap-3">
+               <div className="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center text-white font-black shrink-0 shadow-md">
+                  {user?.fullName?.charAt(0) || 'U'}
+               </div>
+               <button 
+                 onClick={onLogout}
+                 className="w-10 h-10 rounded-xl bg-red-50 text-red-500 flex items-center justify-center border-2 border-red-100 transition-all hover:bg-red-500 hover:text-white shrink-0 active:scale-95"
+                 title="Sair"
+               >
+                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                   <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                   <polyline points="16 17 21 12 16 7" />
+                   <line x1="21" y1="12" x2="9" y2="12" />
+                 </svg>
+               </button>
              </div>
           </header>
 

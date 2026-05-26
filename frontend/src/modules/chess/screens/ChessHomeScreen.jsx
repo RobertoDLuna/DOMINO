@@ -195,107 +195,158 @@ export default function ChessHomeScreen({ user, onBack }) {
 
   // ── RENDERIZAÇÃO DO LOBBY GERAL + BARRA LATERAL ───────────────────────────
   return (
-    <div className="flex min-h-screen bg-[#F0FDF4] w-full relative overflow-hidden">
-      {/* Mobile Overlay */}
-      {showMobileMenu && !isGameActive && (
-        <div
-          className="fixed inset-0 bg-emerald-950/40 z-40 lg:hidden backdrop-blur-sm"
-          onClick={() => setShowMobileMenu(false)}
-        />
-      )}
-
-      {/* Sidebar (Visual idêntico ao Dominó) */}
+    <div className="flex flex-col lg:flex-row min-h-screen bg-[#F0FDF4] w-full relative overflow-hidden">
+      {/* Header (Mobile) */}
       {!isGameActive && (
-        <aside className={`fixed inset-y-0 left-0 w-72 bg-white/95 backdrop-blur-xl border-r-2 border-emerald-100 p-6 sm:p-8 flex flex-col z-50 transform transition-transform duration-300 lg:static lg:translate-x-0 ${showMobileMenu ? 'translate-x-0 shadow-2xl' : '-translate-x-full'}`}>
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex flex-col">
-            {/* Branding EduGames - Sempre visível */}
-            <div className="flex items-center gap-3 mb-6 animate-in fade-in slide-in-from-top-4">
-              <img src={logoCampina} alt="Seduc" className="h-6 sm:h-12 w-auto object-contain pointer-events-none" />
+        <header className="lg:hidden bg-white border-b-2 border-emerald-100 p-4 sticky top-0 z-40 flex flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <img src={logoCampina} alt="Seduc" className="h-8 w-auto object-contain pointer-events-none" />
               <div className="flex flex-col">
-                <span className="text-2xl font-black text-emerald-950 italic tracking-tighter leading-none uppercase">EduGames</span>
+                <span className="text-lg font-black text-emerald-950 italic tracking-tighter leading-none uppercase">EduGames</span>
+                <span className="text-[9px] font-black text-[#009660] uppercase tracking-widest leading-none mt-0.5">Xadrez</span>
               </div>
             </div>
-
-            <div className="pl-1">
-              <h1 className="text-3xl font-black text-[#009660] italic tracking-tighter leading-none mb-1">XADREZ</h1>
-              <p className="text-[10px] font-black uppercase text-emerald-900/70 tracking-[0.2em]">Educação & Diversão</p>
-            </div>
-          </div>
-          <button
-            onClick={() => setShowMobileMenu(false)}
-            className="lg:hidden text-emerald-950 bg-emerald-50 w-8 h-8 rounded-full flex items-center justify-center hover:bg-emerald-100 transition-colors"
-          >
-            ✕
-          </button>
-        </div>
-
-        <nav className="flex-1 space-y-8 overflow-y-auto pr-2 scrollbar-hide">
-          {/* Categorias / Desafios */}
-          <div>
-            <h3 className="text-[10px] font-black uppercase text-emerald-900/70 tracking-widest mb-4 flex items-center gap-2">
-              <span>♟️</span> MODOS DE JOGO
-            </h3>
-            <div className="space-y-2">
+            
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-100">
+                <div className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center text-white font-black text-xs shrink-0">
+                  {user?.fullName?.charAt(0) || 'U'}
+                </div>
+                <span className="text-[10px] font-black text-emerald-900 truncate max-w-[80px]">
+                  {user?.fullName?.split(' ')[0] || 'Usuário'}
+                </span>
+              </div>
               <button
-                onClick={() => { setGameType(null); setShowMobileMenu(false); }}
-                className={`w-full text-left p-3.5 rounded-2xl font-black text-xs uppercase tracking-tight transition-all active:scale-95 ${!gameType ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/20' : 'text-emerald-900/60 hover:bg-emerald-50'}`}
+                onClick={handleLogout}
+                className="w-8 h-8 rounded-lg bg-red-50 text-red-500 flex items-center justify-center border border-red-100 active:scale-95 transition-all"
+                title="Sair"
               >
-                🎮 Todos os Modos
-              </button>
-
-              <button
-                onClick={() => { setGameType('classic'); setShowMobileMenu(false); }}
-                className={`w-full text-left p-3.5 rounded-2xl font-black text-xs uppercase tracking-tight transition-all active:scale-95 ${gameType === 'classic' ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/20' : 'text-emerald-900/60 hover:bg-emerald-50'}`}
-              >
-                ♟️ Xadrez Real
-              </button>
-
-              <button
-                onClick={() => { setGameType('velha'); setShowMobileMenu(false); }}
-                className={`w-full text-left p-3.5 rounded-2xl font-black text-xs uppercase tracking-tight transition-all active:scale-95 ${gameType === 'velha' ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/20' : 'text-emerald-900/60 hover:bg-emerald-50'}`}
-              >
-                ⚔️ Xadrez da Velha
-              </button>
-
-              <button
-                onClick={() => { setGameType('peao'); setShowMobileMenu(false); }}
-                className={`w-full text-left p-3.5 rounded-2xl font-black text-xs uppercase tracking-tight transition-all active:scale-95 ${gameType === 'peao' ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/20' : 'text-emerald-900/60 hover:bg-emerald-50'}`}
-              >
-                ♙ Batalha dos Peões
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                  <polyline points="16 17 21 12 16 7" />
+                  <line x1="21" y1="12" x2="9" y2="12" />
+                </svg>
               </button>
             </div>
           </div>
-        </nav>
 
-        {/* Rodapé da Sidebar - Perfil e Logout */}
-        <div className="mt-auto pt-8 border-t-2 border-emerald-50 space-y-4">
-          <div className="flex items-center gap-3 p-4 bg-emerald-50 rounded-3xl relative group">
-            <div className="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center text-white font-black shrink-0">
-              {user?.fullName?.charAt(0) || 'U'}
-            </div>
-            <div className="overflow-hidden flex-1">
-              <p className="text-[10px] font-black text-emerald-900/70 uppercase leading-none mb-1">Logado como</p>
-              <p className="text-xs font-black text-emerald-950 truncate">{user?.fullName || 'Usuário'}</p>
-            </div>
+          {/* Horizontal Game Modes Tab Menu */}
+          <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 scrollbar-none">
             <button
-              onClick={handleLogout}
-              className="w-10 h-10 rounded-xl bg-red-50 text-red-500 flex items-center justify-center border-2 border-red-100 transition-all hover:bg-red-500 hover:text-white shrink-0"
-              title="Sair"
+              onClick={() => setGameType(null)}
+              className={`px-4 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-wider whitespace-nowrap transition-all active:scale-95 shrink-0 ${!gameType ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/10' : 'bg-slate-50 text-emerald-900/60'}`}
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                <polyline points="16 17 21 12 16 7" />
-                <line x1="21" y1="12" x2="9" y2="12" />
-              </svg>
+              🎮 Todos
+            </button>
+            <button
+              onClick={() => setGameType('classic')}
+              className={`px-4 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-wider whitespace-nowrap transition-all active:scale-95 shrink-0 ${gameType === 'classic' ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/10' : 'bg-slate-50 text-emerald-900/60'}`}
+            >
+              ♟️ Xadrez Real
+            </button>
+            <button
+              onClick={() => setGameType('velha')}
+              className={`px-4 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-wider whitespace-nowrap transition-all active:scale-95 shrink-0 ${gameType === 'velha' ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/10' : 'bg-slate-50 text-emerald-900/60'}`}
+            >
+              ⚔️ Xadrez da Velha
+            </button>
+            <button
+              onClick={() => setGameType('peao')}
+              className={`px-4 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-wider whitespace-nowrap transition-all active:scale-95 shrink-0 ${gameType === 'peao' ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/10' : 'bg-slate-50 text-emerald-900/60'}`}
+            >
+              ♙ Batalha dos Peões
             </button>
           </div>
-        </div>
-      </aside>
+        </header>
+      )}
+
+      {/* Sidebar (Desktop) */}
+      {!isGameActive && (
+        <aside className="hidden lg:flex lg:flex-col w-72 bg-white/95 backdrop-blur-xl border-r-2 border-emerald-100 p-6 sm:p-8 shrink-0">
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex flex-col">
+              {/* Branding EduGames - Sempre visível */}
+              <div className="flex items-center gap-3 mb-6 animate-in fade-in slide-in-from-top-4">
+                <img src={logoCampina} alt="Seduc" className="h-6 sm:h-12 w-auto object-contain pointer-events-none" />
+                <div className="flex flex-col">
+                  <span className="text-2xl font-black text-emerald-950 italic tracking-tighter leading-none uppercase">EduGames</span>
+                </div>
+              </div>
+
+              <div className="pl-1">
+                <h1 className="text-3xl font-black text-[#009660] italic tracking-tighter leading-none mb-1">XADREZ</h1>
+                <p className="text-[10px] font-black uppercase text-emerald-900/70 tracking-[0.2em]">Educação & Diversão</p>
+              </div>
+            </div>
+          </div>
+
+          <nav className="flex-1 space-y-8 overflow-y-auto pr-2 scrollbar-hide">
+            {/* Categorias / Desafios */}
+            <div>
+              <h3 className="text-[10px] font-black uppercase text-emerald-900/70 tracking-widest mb-4 flex items-center gap-2">
+                <span>♟️</span> MODOS DE JOGO
+              </h3>
+              <div className="space-y-2">
+                <button
+                  onClick={() => setGameType(null)}
+                  className={`w-full text-left p-3.5 rounded-2xl font-black text-xs uppercase tracking-tight transition-all active:scale-95 ${!gameType ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/20' : 'text-emerald-900/60 hover:bg-emerald-50'}`}
+                >
+                  🎮 Todos os Modos
+                </button>
+
+                <button
+                  onClick={() => setGameType('classic')}
+                  className={`w-full text-left p-3.5 rounded-2xl font-black text-xs uppercase tracking-tight transition-all active:scale-95 ${gameType === 'classic' ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/20' : 'text-emerald-900/60 hover:bg-emerald-50'}`}
+                >
+                  ♟️ Xadrez Real
+                </button>
+
+                <button
+                  onClick={() => setGameType('velha')}
+                  className={`w-full text-left p-3.5 rounded-2xl font-black text-xs uppercase tracking-tight transition-all active:scale-95 ${gameType === 'velha' ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/20' : 'text-emerald-900/60 hover:bg-emerald-50'}`}
+                >
+                  ⚔️ Xadrez da Velha
+                </button>
+
+                <button
+                  onClick={() => setGameType('peao')}
+                  className={`w-full text-left p-3.5 rounded-2xl font-black text-xs uppercase tracking-tight transition-all active:scale-95 ${gameType === 'peao' ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/20' : 'text-emerald-900/60 hover:bg-emerald-50'}`}
+                >
+                  ♙ Batalha dos Peões
+                </button>
+              </div>
+            </div>
+          </nav>
+
+          {/* Rodapé da Sidebar - Perfil e Logout */}
+          <div className="mt-auto pt-8 border-t-2 border-emerald-50 space-y-4">
+            <div className="flex items-center gap-3 p-4 bg-emerald-50 rounded-3xl relative group">
+              <div className="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center text-white font-black shrink-0">
+                {user?.fullName?.charAt(0) || 'U'}
+              </div>
+              <div className="overflow-hidden flex-1">
+                <p className="text-[10px] font-black text-emerald-900/70 uppercase leading-none mb-1">Logado como</p>
+                <p className="text-xs font-black text-emerald-950 truncate">{user?.fullName || 'Usuário'}</p>
+              </div>
+              <button
+                onClick={handleLogout}
+                className="w-10 h-10 rounded-xl bg-red-50 text-red-500 flex items-center justify-center border-2 border-red-100 transition-all hover:bg-red-500 hover:text-white shrink-0"
+                title="Sair"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                  <polyline points="16 17 21 12 16 7" />
+                  <line x1="21" y1="12" x2="9" y2="12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </aside>
       )}
 
       {/* Main Content Area */}
-      <main className="flex-1 p-6 sm:p-10 lg:p-12 overflow-y-auto h-screen relative">
+      <main className="flex-1 p-6 sm:p-10 lg:p-12 overflow-y-auto lg:h-screen relative w-full">
         
         {/* Renderiza: TODOS OS MODOS (SELEÇÃO) */}
         {gameType === null && (
@@ -311,16 +362,6 @@ export default function ChessHomeScreen({ user, onBack }) {
                     ←
                   </button>
                 )}
-                <button
-                  onClick={() => setShowMobileMenu(true)}
-                  className="lg:hidden w-12 h-12 flex items-center justify-center bg-white rounded-2xl shadow-sm text-emerald-950 border-2 border-emerald-100 active:scale-95 transition-all shrink-0"
-                >
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <line x1="3" y1="12" x2="21" y2="12"></line>
-                    <line x1="3" y1="6" x2="21" y2="6"></line>
-                    <line x1="3" y1="18" x2="21" y2="18"></line>
-                  </svg>
-                </button>
                 <div>
                   <h2 className="text-3xl sm:text-4xl font-black text-emerald-950 uppercase italic tracking-tighter">Escolha seu Desafio</h2>
                   <p className="text-xs sm:text-sm font-medium text-emerald-900/60 font-medium">Selecione um modo de jogo para começar a desenvolver suas habilidades!</p>
@@ -420,16 +461,6 @@ export default function ChessHomeScreen({ user, onBack }) {
                   title="Voltar"
                 >
                   ←
-                </button>
-                <button
-                  onClick={() => setShowMobileMenu(true)}
-                  className="lg:hidden w-12 h-12 flex items-center justify-center bg-white rounded-2xl shadow-sm text-emerald-950 border-2 border-emerald-100 active:scale-95 transition-all shrink-0"
-                >
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <line x1="3" y1="12" x2="21" y2="12"></line>
-                    <line x1="3" y1="6" x2="21" y2="6"></line>
-                    <line x1="3" y1="18" x2="21" y2="18"></line>
-                  </svg>
                 </button>
                 <div>
                   <h2 className="text-3xl sm:text-4xl font-black text-emerald-950 uppercase italic tracking-tighter">Xadrez Real</h2>
@@ -676,17 +707,6 @@ export default function ChessHomeScreen({ user, onBack }) {
         {/* Renderiza: LOBBY DE XADREZ DA VELHA (EMBUTIDO) */}
         {gameType === 'velha' && (
           <div className="h-full relative select-none">
-            {/* Botão Hambúrguer para celular se o menu lateral estiver fechado */}
-            <button
-              onClick={() => setShowMobileMenu(true)}
-              className="lg:hidden absolute top-0 left-0 w-12 h-12 flex items-center justify-center bg-white rounded-2xl shadow-sm text-emerald-950 border-2 border-emerald-100 active:scale-95 transition-all shrink-0 z-20"
-            >
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="3" y1="12" x2="21" y2="12"></line>
-                <line x1="3" y1="6" x2="21" y2="6"></line>
-                <line x1="3" y1="18" x2="21" y2="18"></line>
-              </svg>
-            </button>
             <XadrezVelhaScreen 
               user={user} 
               onBack={() => setGameType(null)} 
@@ -698,17 +718,6 @@ export default function ChessHomeScreen({ user, onBack }) {
         {/* Renderiza: LOBBY DE BATALHA DOS PEÕES (EMBUTIDO) */}
         {gameType === 'peao' && (
           <div className="h-full relative select-none">
-            {/* Botão Hambúrguer para celular se o menu lateral estiver fechado */}
-            <button
-              onClick={() => setShowMobileMenu(true)}
-              className="lg:hidden absolute top-0 left-0 w-12 h-12 flex items-center justify-center bg-white rounded-2xl shadow-sm text-emerald-950 border-2 border-emerald-100 active:scale-95 transition-all shrink-0 z-20"
-            >
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="3" y1="12" x2="21" y2="12"></line>
-                <line x1="3" y1="6" x2="21" y2="6"></line>
-                <line x1="3" y1="18" x2="21" y2="18"></line>
-              </svg>
-            </button>
             <PeaoScreen 
               user={user} 
               onBack={() => setGameType(null)} 

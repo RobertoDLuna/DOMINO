@@ -54,6 +54,11 @@ export default function ChessBoard({
   const [lastMoveSquares, setLastMoveSquares] = useState({});
   const [promotion, setPromotion] = useState(null); // { from, to }
 
+  const [isTouchDevice, setIsTouchDevice] = useState(false);
+  useEffect(() => {
+    setIsTouchDevice('ontouchstart' in window || navigator.maxTouchPoints > 0);
+  }, []);
+
   // Sync when server sends a new FEN
   useEffect(() => {
     chessRef.current.load(fen);
@@ -236,7 +241,7 @@ export default function ChessBoard({
             onPieceDragBegin={onPieceDragBegin}
             onPieceDrop={onPieceDrop}
             boardOrientation={myColor}
-            arePiecesDraggable={isMyTurn && !gameOver && !disabled}
+            arePiecesDraggable={isMyTurn && !gameOver && !disabled && !isTouchDevice}
             showBoardNotation={false}
             customBoardStyle={{
               backgroundColor: 'transparent',

@@ -58,7 +58,7 @@ export default function ChessScreen({
   const chessRef = useRef(new Chess());
   const stockfishRef = useRef(null);
 
-  const myColor = assignedColors ? (assignedColors.white.userId === user.id ? 'white' : 'black') : 'white';
+  const myColor = assignedColors ? (assignedColors.white.userId === myId ? 'white' : 'black') : 'white';
   const whiteName = assignedColors?.white?.userName || 'Aguardando...';
   const blackName = assignedColors?.black?.userName || 'Aguardando...';
   
@@ -224,8 +224,8 @@ export default function ChessScreen({
       const iAmWinner = drawWinner.userId == myId;
       let white, black;
       if (iAmWinner) {
-        white = color === 'white' ? { userId: user.id, userName: user.fullName || 'Você' } : { userId: 'AI', userName: 'Computador' };
-        black = color === 'black' ? { userId: user.id, userName: user.fullName || 'Você' } : { userId: 'AI', userName: 'Computador' };
+        white = color === 'white' ? { userId: myId, userName: user?.fullName || 'Você' } : { userId: 'AI', userName: 'Computador' };
+        black = color === 'black' ? { userId: myId, userName: user?.fullName || 'Você' } : { userId: 'AI', userName: 'Computador' };
       } else {
         // IA escolhe (já tratado no useEffect abaixo)
         return;

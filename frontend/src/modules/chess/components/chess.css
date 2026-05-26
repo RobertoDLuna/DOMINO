@@ -1,9 +1,9 @@
 /* ============================================================
-   chess.css â€” Estilos EduGames (PadrÃ£o DominÃ³ / Plataforma)
+   chess.css - Estilos EduGames (Padrão Dominó / Plataforma)
    Mobile-first | Educativo | Alto Contraste
    ============================================================ */
 
-/* â”€â”€ Chess Lobby â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* -- Chess Lobby --- */
 .chess-lobby {
   position: relative;
   min-height: 100vh;
@@ -387,7 +387,7 @@
   box-shadow: 0 0 0 1px var(--color-primary);
 }
 
-/* â”€â”€ Chess Screen (in-game) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* -- Chess Screen (in-game) --- */
 /* Layout Principal: Sem Scroll Global */
 .chess-screen {
   position: relative;
@@ -1414,7 +1414,7 @@
   }
 }
 
-/* â”€â”€ Responsive: Desktop â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* -- Responsive: Desktop --- */
 @media (min-width: 768px) {
   .chess-screen {
     padding: 32px 48px;
@@ -1454,7 +1454,7 @@
     align-self: stretch;
     /* Estica para ter a altura do tabuleiro */
     position: relative;
-    /* Serve de Ã¢ncora para a sidebar absoluta */
+    /* Serve de âncora para a sidebar absoluta */
     min-width: 0;
   }
 
@@ -1506,7 +1506,7 @@
   }
 }
 
-/* -- Captured Pieces (Lateral Esquerda) ------------------ */
+/* -- Captured Pieces (Lateral Esquerda) --- */
 .chess-captured-container {
   display: flex;
   flex-direction: column;

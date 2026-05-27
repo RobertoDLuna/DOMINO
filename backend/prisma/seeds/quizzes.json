@@ -1,0 +1,101 @@
+[
+  {
+    "title": "Banco BNCC - Computação (Ensino Fundamental I)",
+    "description": "Questões baseadas nas habilidades da BNCC para Computação e Tecnologias Digitais.",
+    "type": "PEDAGOGICO",
+    "discipline": "Computação",
+    "educStage": "Ensino Fundamental I",
+    "yearGrade": "1º ao 5º Ano",
+    "timePerQuestion": 30,
+    "questions": [
+      {
+        "questionText": "Um algoritmo é uma sequência de passos para realizar uma tarefa. Qual destas atividades do dia a dia mais se parece com um algoritmo?",
+        "bnccCode": "EF01CO01",
+        "bnccSkill": "Reconhecer que algoritmos são usados para realizar tarefas do cotidiano.",
+        "answers": [
+          { "answerText": "Seguir uma receita para fazer um bolo.", "isCorrect": true },
+          { "answerText": "Dormir durante a noite.", "isCorrect": false },
+          { "answerText": "Sentir frio no inverno.", "isCorrect": false },
+          { "answerText": "Ouvir o barulho da chuva.", "isCorrect": false }
+        ]
+      },
+      {
+        "questionText": "O que significa 'reconhecer padrões' no pensamento computacional?",
+        "bnccCode": "EF02CO02",
+        "bnccSkill": "Identificar padrões em sequências.",
+        "answers": [
+          { "answerText": "Encontrar coisas que se repetem de forma igual ou parecida.", "isCorrect": true },
+          { "answerText": "Fazer um desenho totalmente diferente a cada vez.", "isCorrect": false },
+          { "answerText": "Esquecer a ordem de um jogo.", "isCorrect": false },
+          { "answerText": "Apertar botões no teclado aleatoriamente.", "isCorrect": false }
+        ]
+      },
+      {
+        "questionText": "Qual é a principal diferença entre um computador e um ser humano ao resolver problemas?",
+        "bnccCode": "EF03CO03",
+        "bnccSkill": "Diferenciar as capacidades humanas e computacionais.",
+        "answers": [
+          { "answerText": "Computadores seguem regras exatas e são muito rápidos para calcular.", "isCorrect": true },
+          { "answerText": "Computadores têm sentimentos e ficam cansados.", "isCorrect": false },
+          { "answerText": "Humanos precisam de eletricidade para funcionar.", "isCorrect": false },
+          { "answerText": "Computadores sempre sabem a resposta de tudo sozinhos.", "isCorrect": false }
+        ]
+      },
+      {
+        "questionText": "O que é um 'bug' em programação?",
+        "bnccCode": "EF04CO01",
+        "bnccSkill": "Identificar e corrigir erros (bugs) em algoritmos simples.",
+        "answers": [
+          { "answerText": "Um erro nas instruções que faz o programa não funcionar direito.", "isCorrect": true },
+          { "answerText": "Um inseto que mora dentro da tela do computador.", "isCorrect": false },
+          { "answerText": "Um novo recurso que deixa o jogo mais divertido.", "isCorrect": false },
+          { "answerText": "A peça do computador que guarda as imagens.", "isCorrect": false }
+        ]
+      },
+      {
+        "questionText": "Para navegar com segurança na internet, qual informação abaixo você NUNCA deve passar para estranhos?",
+        "bnccCode": "EF05CO05",
+        "bnccSkill": "Adotar práticas seguras ao usar a internet.",
+        "answers": [
+          { "answerText": "Seu endereço de casa e senhas.", "isCorrect": true },
+          { "answerText": "Seu jogo de videogame favorito.", "isCorrect": false },
+          { "answerText": "Sua cor preferida.", "isCorrect": false },
+          { "answerText": "O nome do seu bicho de estimação (se não for senha).", "isCorrect": false }
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Banco BNCC - Matemática (Ensino Fundamental II)",
+    "description": "Questões de Matemática alinhadas à BNCC para fixação de conceitos numéricos.",
+    "type": "PEDAGOGICO",
+    "discipline": "Matemática",
+    "educStage": "Ensino Fundamental II",
+    "yearGrade": "6º ao 9º Ano",
+    "timePerQuestion": 45,
+    "questions": [
+      {
+        "questionText": "Qual é o resultado da operação: -5 + (-3)?",
+        "bnccCode": "EF07MA04",
+        "bnccSkill": "Resolver e elaborar problemas que envolvam operações com números inteiros.",
+        "answers": [
+          { "answerText": "-8", "isCorrect": true },
+          { "answerText": "-2", "isCorrect": false },
+          { "answerText": "8", "isCorrect": false },
+          { "answerText": "2", "isCorrect": false }
+        ]
+      },
+      {
+        "questionText": "Qual fração é equivalente a 0,5?",
+        "bnccCode": "EF06MA08",
+        "bnccSkill": "Reconhecer que os números racionais positivos podem ser expressos nas formas fracionária e decimal.",
+        "answers": [
+          { "answerText": "1/2", "isCorrect": true },
+          { "answerText": "1/5", "isCorrect": false },
+          { "answerText": "2/5", "isCorrect": false },
+          { "answerText": "1/4", "isCorrect": false }
+        ]
+      }
+    ]
+  }
+]

@@ -168,7 +168,6 @@ const syncDefaultThemes = async () => {
   ];
 
   try {
-    // Garante que existe uma categoria "Padrão"
     const cat = await prisma.category.upsert({
       where: { name: 'Padrão' },
       update: {},
@@ -195,10 +194,82 @@ const syncDefaultThemes = async () => {
   }
 };
 
+const syncDefaultQuizzes = async () => {
+  const fs = require('fs');
+  const path = require('path');
+  const { getPrisma } = require('./src/shared/config/prismaClient');
+  const prisma = getPrisma();
+  
+  try {
+    const quizCount = await prisma.quizGame.count();
+    if (quizCount > 0) {
+      console.log(`✅ Banco de Quizzes já contém ${quizCount} quiz(zes). Pulando seed.`);
+      return;
+    }
+
+    const seedPath = path.join(__dirname, 'prisma', 'seeds', 'quizzes.json');
+    if (!fs.existsSync(seedPath)) {
+      console.log(`⚠️ Arquivo de seed de Quizzes não encontrado em: ${seedPath}`);
+      return;
+    }
+
+    const quizzesData = JSON.parse(fs.readFileSync(seedPath, 'utf8'));
+    console.log(`🔄 Iniciando seed de ${quizzesData.length} quizzes padrão...`);
+
+    // Um usuário ADMIN ou do sistema precisa ser vinculado como criador do Quiz.
+    // Vamos pegar o primeiro ADMIN ou criar um fictício caso o banco esteja totalmente limpo.
+    let adminUser = await prisma.user.findFirst({ where: { role: 'ADMIN' } });
+    if (!adminUser) {
+      adminUser = await prisma.user.create({
+        data: {
+          fullName: 'Sistema EduGames',
+          email: 'sistema@edugames.com',
+          password: 'not_used_password',
+          role: 'ADMIN'
+        }
+      });
+    }
+
+    for (const quiz of quizzesData) {
+      await prisma.quizGame.create({
+        data: {
+          title: quiz.title,
+          description: quiz.description,
+          type: quiz.type,
+          discipline: quiz.discipline,
+          educStage: quiz.educStage,
+          yearGrade: quiz.yearGrade,
+          timePerQuestion: quiz.timePerQuestion,
+          isPublic: true,
+          createdById: adminUser.id,
+          questions: {
+            create: quiz.questions.map(q => ({
+              questionText: q.questionText,
+              imageUrl: q.imageUrl,
+              bnccCode: q.bnccCode,
+              bnccSkill: q.bnccSkill,
+              answers: {
+                create: q.answers.map(a => ({
+                  answerText: a.answerText,
+                  isCorrect: a.isCorrect
+                }))
+              }
+            }))
+          }
+        }
+      });
+    }
+    console.log("✅ Seed de Quizzes finalizado com sucesso!");
+  } catch (err) {
+    console.error("❌ Erro ao realizar seed dos quizzes:", err);
+  }
+};
+
 if (require.main === module) {
   server.listen(PORT, async () => {
     console.log(`🚀 Servidor rodando na porta ${PORT}`);
     await syncDefaultThemes();
+    await syncDefaultQuizzes();
   });
 }
 

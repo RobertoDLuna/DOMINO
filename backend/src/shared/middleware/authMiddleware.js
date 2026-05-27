@@ -24,4 +24,19 @@ const restrictRole = (roles) => (req, res, next) => {
   next();
 };
 
-module.exports = { authMiddleware, restrictRole };
+const optionalAuth = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  if (!authHeader) return next();
+
+  const [, token] = authHeader.split(' ');
+
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    req.user = decoded; // { id, email, role }
+  } catch (error) {
+    // optional auth doesn't fail if token is invalid, just ignores it
+  }
+  next();
+};
+
+module.exports = { authMiddleware, restrictRole, optionalAuth };

@@ -235,7 +235,7 @@ const GameHub = ({ user, onSelectGame, onLogout }) => {
                   key={game.id}
                   {...game}
                   onClick={() => {
-                    if (game.id === 'domino' || game.id === 'xadrez') {
+                    if (game.id === 'domino' || game.id === 'xadrez' || game.id === 'quiz') {
                       onSelectGame(game.id);
                     }
                   }}

@@ -1,0 +1,179 @@
+const { getPrisma } = require("../../shared/config/prismaClient");
+
+class QuizService {
+  /**
+   * Generates a unique 5-character room code
+   */
+  generateRoomCode() {
+    return Math.random().toString(36).substring(2, 7).toUpperCase();
+  }
+
+  /**
+   * Create a new Quiz Game
+   */
+  async createQuiz(data, creatorId) {
+    const prisma = getPrisma();
+    const { title, description, type, discipline, educStage, yearGrade, timePerQuestion, isPublic, shuffleQuestions, shuffleAnswers, questions } = data;
+
+    return await prisma.quizGame.create({
+      data: {
+        title,
+        description,
+        type: type || 'PEDAGOGICO',
+        discipline,
+        educStage,
+        yearGrade,
+        timePerQuestion: parseInt(timePerQuestion) || 30,
+        isPublic: isPublic !== undefined ? isPublic : false,
+        shuffleQuestions: shuffleQuestions !== undefined ? shuffleQuestions : true,
+        shuffleAnswers: shuffleAnswers !== undefined ? shuffleAnswers : true,
+        createdById: creatorId,
+        questions: {
+          create: questions?.map((q, index) => ({
+            bnccCode: q.bnccCode,
+            bnccSkill: q.bnccSkill,
+            questionText: q.questionText,
+            imageUrl: q.imageUrl,
+            order: index,
+            answers: {
+              create: q.answers?.map((a, aIndex) => ({
+                answerText: a.answerText,
+                isCorrect: a.isCorrect,
+                order: aIndex
+              })) || []
+            }
+          })) || []
+        }
+      },
+      include: {
+        questions: {
+          include: { answers: true }
+        }
+      }
+    });
+  }
+
+  /**
+   * List quizzes with filters
+   */
+  async listQuizzes(filters = {}) {
+    const prisma = getPrisma();
+    const where = {};
+
+    if (filters.isPublic !== undefined) where.isPublic = filters.isPublic === 'true' || filters.isPublic === true;
+    if (filters.createdById) where.createdById = filters.createdById;
+    if (filters.type) where.type = filters.type;
+    if (filters.discipline) where.discipline = filters.discipline;
+    if (filters.yearGrade) where.yearGrade = filters.yearGrade;
+    if (filters.search) {
+      where.OR = [
+        { title: { contains: filters.search, mode: 'insensitive' } },
+        { description: { contains: filters.search, mode: 'insensitive' } }
+      ];
+    }
+
+    return await prisma.quizGame.findMany({
+      where,
+      include: {
+        createdBy: { select: { fullName: true } },
+        _count: { select: { questions: true } }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+  }
+
+  /**
+   * Get Quiz details
+   */
+  async getQuizById(id) {
+    const prisma = getPrisma();
+    return await prisma.quizGame.findUnique({
+      where: { id },
+      include: {
+        createdBy: { select: { fullName: true } },
+        questions: {
+          orderBy: { order: 'asc' },
+          include: {
+            answers: {
+              orderBy: { order: 'asc' }
+            }
+          }
+        }
+      }
+    });
+  }
+
+  /**
+   * Delete Quiz
+   */
+  async deleteQuiz(id, userId) {
+    const prisma = getPrisma();
+    const quiz = await prisma.quizGame.findUnique({ where: { id } });
+    if (!quiz) throw new Error('Quiz não encontrado');
+    if (quiz.createdById !== userId) throw new Error('Acesso negado');
+
+    await prisma.quizGame.delete({ where: { id } });
+    return { success: true };
+  }
+
+  /**
+   * Start a Quiz (changes status and generates code if not ASYNC only)
+   */
+  async startQuiz(id, mode) {
+    const prisma = getPrisma();
+    const quiz = await prisma.quizGame.findUnique({ where: { id } });
+    if (!quiz) throw new Error('Quiz não encontrado');
+
+    const status = mode === 'ASYNC' ? 'ASYNC' : 'LIVE';
+    let roomCode = quiz.roomCode;
+    
+    // Always generate a room code if it doesn't have one or if starting a new live session
+    if (!roomCode || status === 'LIVE') {
+      roomCode = this.generateRoomCode();
+    }
+
+    return await prisma.quizGame.update({
+      where: { id },
+      data: {
+        status,
+        roomCode
+      }
+    });
+  }
+
+  /**
+   * Stop/Finish a Quiz
+   */
+  async finishQuiz(id) {
+    const prisma = getPrisma();
+    return await prisma.quizGame.update({
+      where: { id },
+      data: {
+        status: 'FINISHED',
+        roomCode: null // free up the room code
+      }
+    });
+  }
+
+  /**
+   * Find Quiz by room code (for students joining)
+   */
+  async getQuizByRoomCode(roomCode) {
+    const prisma = getPrisma();
+    return await prisma.quizGame.findUnique({
+      where: { roomCode },
+      include: {
+        questions: {
+          orderBy: { order: 'asc' },
+          include: {
+            answers: {
+              select: { id: true, answerText: true, order: true } // Do NOT expose isCorrect
+            }
+          }
+        }
+      }
+    });
+  }
+}
+
+module.exports = new QuizService();

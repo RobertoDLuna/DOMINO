@@ -10,6 +10,7 @@ const schoolRoutes = require("./src/core/schools/schoolRoutes");
 const adminRoutes = require("./src/core/admin/adminRoutes");
 const rankingRoutes = require("./src/modules/domino/rankingRoutes");
 const chessRankingRoutes = require("./src/modules/chess/chessRoutes");
+const quizRoutes = require("./src/modules/quiz/quizRoutes");
 // Global error handlers for Docker troubleshooting
 process.on("uncaughtException", (err) => {
   console.error("❌ FATAL: Uncaught Exception:", err);
@@ -61,6 +62,7 @@ app.use("/api/themes", themeRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/ranking", rankingRoutes);
 app.use("/api/chess/ranking", chessRankingRoutes);
+app.use("/api/quiz", quizRoutes);
 
 // Serving Static Frontend Files (Production)
 const frontendPath = path.join(__dirname, "../frontend/dist");
@@ -105,6 +107,14 @@ try {
   console.log("♟️ Handlers do Socket (Peões) carregados com sucesso");
 } catch (err) {
   console.error("❌ Erro ao carregar peaoSocket:", err);
+  process.exit(1);
+}
+
+try {
+  require("./src/modules/quiz/quizSocket")(io);
+  console.log("🧠 Handlers do Socket (Quiz) carregados com sucesso");
+} catch (err) {
+  console.error("❌ Erro ao carregar quizSocket:", err);
   process.exit(1);
 }
 

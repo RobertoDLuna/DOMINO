@@ -30,6 +30,7 @@ model User {
   themes    Theme[]
   rankingPoints Int  @default(0) @map("ranking_points")
   gameMatches   GameMatch[]
+  quizGames     QuizGame[]
   
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -324,4 +325,141 @@ model PeaoRanking {
   updatedAt  DateTime @updatedAt @map("updated_at")
 
   @@map("peao_ranking")
+}
+
+// ─── QUIZ ─────────────────────────────────────────────────────────────────
+
+enum QuizType {
+  PEDAGOGICO    // Vinculado à BNCC — impacta diagnóstico
+  COMEMORATIVO  // Quiz livre, sem vínculo curricular
+}
+
+enum QuizStatus {
+  DRAFT       // Rascunho — não visível para alunos
+  SCHEDULED   // Agendado
+  LIVE        // Ao vivo — ativo agora
+  ASYNC       // Modo assíncrono (prazo aberto)
+  FINISHED    // Encerrado
+}
+
+enum StudentLevel {
+  INICIANTE      // < 40% de acerto nas habilidades avaliadas
+  EM_CONSTRUCAO  // 40–69%
+  PROFICIENTE    // 70–89%
+  AVANCADO       // >= 90%
+}
+
+model QuizGame {
+  id            String      @id @default(uuid())
+  title         String      @db.VarChar(255)
+  description   String?     @db.Text
+  type          QuizType    @default(PEDAGOGICO)
+  status        QuizStatus  @default(DRAFT)
+
+  // Vínculo curricular (opcional para COMEMORATIVO)
+  discipline    String?     @db.VarChar(100)  // Ex: "Matemática", "Língua Portuguesa"
+  educStage     String?     @db.VarChar(50)   // Ex: "Ensino Fundamental"
+  yearGrade     String?     @db.VarChar(20)   // Ex: "5º Ano"
+
+  // Configurações do quiz
+  timePerQuestion Int       @default(30) @map("time_per_question") // segundos
+  roomCode        String?   @unique @map("room_code") @db.VarChar(20)
+  isPublic        Boolean   @default(false) @map("is_public")
+  shuffleQuestions Boolean  @default(true) @map("shuffle_questions")
+  shuffleAnswers  Boolean   @default(true) @map("shuffle_answers")
+
+  // Vínculo com criador
+  createdBy     User        @relation(fields: [createdById], references: [id])
+  createdById   String      @map("created_by_id")
+
+  questions     QuizQuestion[]
+  sessions      QuizSession[]
+
+  createdAt     DateTime    @default(now()) @map("created_at")
+  updatedAt     DateTime    @updatedAt @map("updated_at")
+
+  @@map("quiz_games")
+}
+
+model QuizQuestion {
+  id            String      @id @default(uuid())
+  quiz          QuizGame    @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  quizId        String      @map("quiz_id")
+
+  // Código BNCC (ex: EF05CO03 ou EF05MA01) — opcional para COMEMORATIVO
+  bnccCode      String?     @db.VarChar(30) @map("bncc_code")
+  bnccSkill     String?     @db.Text @map("bncc_skill")       // Texto da habilidade BNCC
+
+  questionText  String      @db.Text @map("question_text")
+  imageUrl      String?     @db.VarChar(500) @map("image_url") // Imagem opcional na questão
+  order         Int         @default(0)
+
+  answers       QuizAnswer[]
+  responses     QuizResponse[]
+
+  createdAt     DateTime    @default(now()) @map("created_at")
+
+  @@map("quiz_questions")
+}
+
+model QuizAnswer {
+  id            String       @id @default(uuid())
+  question      QuizQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  questionId    String       @map("question_id")
+
+  answerText    String       @db.Text @map("answer_text")
+  isCorrect     Boolean      @default(false) @map("is_correct")
+  order         Int          @default(0)
+
+  responses     QuizResponse[]
+
+  createdAt     DateTime     @default(now()) @map("created_at")
+
+  @@map("quiz_answers")
+}
+
+model QuizSession {
+  id            String      @id @default(uuid())
+  quiz          QuizGame    @relation(fields: [quizId], references: [id])
+  quizId        String      @map("quiz_id")
+
+  // Participante (pode ser usuário autenticado ou convidado)
+  userId        String?     @map("user_id")
+  userName      String      @db.VarChar(255) @map("user_name")
+  schoolId      Int?        @map("school_id")
+
+  // Resultados agregados da sessão
+  totalQuestions  Int       @default(0) @map("total_questions")
+  correctAnswers  Int       @default(0) @map("correct_answers")
+  totalPoints     Int       @default(0) @map("total_points")
+  timeSpentSecs   Int       @default(0) @map("time_spent_secs")
+  completedAt     DateTime? @map("completed_at")
+
+  // Nível diagnóstico calculado ao final
+  studentLevel  StudentLevel? @map("student_level")
+
+  responses     QuizResponse[]
+
+  createdAt     DateTime    @default(now()) @map("created_at")
+
+  @@map("quiz_sessions")
+}
+
+model QuizResponse {
+  id            String       @id @default(uuid())
+  session       QuizSession  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  sessionId     String       @map("session_id")
+
+  question      QuizQuestion @relation(fields: [questionId], references: [id])
+  questionId    String       @map("question_id")
+
+  answer        QuizAnswer?  @relation(fields: [answerId], references: [id])
+  answerId      String?      @map("answer_id")
+
+  isCorrect     Boolean      @default(false) @map("is_correct")
+  timeTakenSecs Int          @default(0) @map("time_taken_secs")
+
+  createdAt     DateTime     @default(now()) @map("created_at")
+
+  @@map("quiz_responses")
 }

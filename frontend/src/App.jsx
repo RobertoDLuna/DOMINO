@@ -7,6 +7,7 @@ import AdminDashboard from "./core/admin/AdminDashboard";
 import DominoHomeScreen from "./modules/domino/screens/DominoHomeScreen";
 import GameHub from "./core/hub/GameHub";
 import ChessHomeScreen from "./modules/chess/screens/ChessHomeScreen";
+import QuizAppRouter from "./modules/quiz/QuizAppRouter";
 import AuthService from "./services/AuthService";
 import { useGameContext } from "./context/GameContext";
 import ConfirmModal from "./shared/ui/ConfirmModal";
@@ -120,6 +121,8 @@ function App() {
           user={user}
           onBack={() => setActiveGame(null)}
         />
+      ) : activeGame === 'quiz' ? (
+        <QuizAppRouter user={user} onBack={() => setActiveGame(null)} />
       ) : (
         <GameHub 
           user={user} 

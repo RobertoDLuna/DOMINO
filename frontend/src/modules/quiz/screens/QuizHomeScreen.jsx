@@ -151,10 +151,10 @@ export default function QuizHomeScreen({ user, onNavigate, onBack }) {
 
                   <div className="flex gap-2 mt-auto">
                     <button 
-                      onClick={() => onNavigate('EDITOR', { id: quiz.id })}
-                      className="flex-1 py-2 bg-[#2a2a5a] hover:bg-[#3a3a6a] rounded-lg text-center font-semibold transition-colors"
+                      onClick={() => onNavigate(quiz.createdById === user?.id ? 'EDITOR' : 'SOLO', { id: quiz.id })}
+                      className="flex-1 py-2 bg-[#2a2a5a] hover:bg-[#3a3a6a] rounded-lg text-center font-semibold transition-colors flex items-center justify-center gap-2"
                     >
-                      {quiz.createdById === user?.id ? 'Editar / Hospedar' : 'Detalhes / Hospedar'}
+                      {quiz.createdById === user?.id ? 'Editar / Hospedar' : <><Play size={16} /> Jogar Agora</>}
                     </button>
                     <button 
                       onClick={() => onNavigate('REPORT', { id: quiz.id })}

@@ -114,13 +114,39 @@ class QuizReportService {
       averageAccuracy: Math.round(b.totalAccuracy / b.totalQuestions)
     })).sort((a, b) => a.averageAccuracy - b.averageAccuracy); // Ascending (hardest first)
 
+    // 5. Response Grid (Matriz Aluno x Questão)
+    const questionsOrdered = [...quiz.questions].sort((a, b) => a.order - b.order);
+    const responseGrid = {
+      columns: questionsOrdered.map((q, i) => ({
+        index: i + 1,
+        questionId: q.id,
+        bnccCode: q.bnccCode
+      })),
+      rows: sessions.map(s => {
+        const studentResponses = questionsOrdered.map(q => {
+          const response = s.responses.find(r => r.questionId === q.id);
+          return {
+            questionId: q.id,
+            isCorrect: response ? response.isCorrect : null // null = não respondeu
+          };
+        });
+
+        return {
+          userId: s.userId,
+          userName: s.userName,
+          responses: studentResponses
+        };
+      })
+    };
+
     return {
       quiz: { title: quiz.title, type: quiz.type, id: quiz.id },
       totalParticipants: sessions.length,
       ranking,
       questionStats: questionStats.sort((a, b) => a.accuracy - b.accuracy), // Hardest first
       levelDistribution,
-      bnccStats
+      bnccStats,
+      responseGrid
     };
   }
 }

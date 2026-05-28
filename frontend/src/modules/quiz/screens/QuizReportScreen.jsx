@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Users, Trophy, Target, PieChart } from 'lucide-react';
+import { ArrowLeft, Users, Trophy, Target, PieChart, Check, X, Minus, Grid } from 'lucide-react';
 import QuizService from '../services/QuizService';
 
 export default function QuizReportScreen({ onNavigate, quizId }) {
   const [report, setReport] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [activeTab, setActiveTab] = useState('GERAL');
 
   useEffect(() => {
     loadReport();
@@ -62,10 +63,37 @@ export default function QuizReportScreen({ onNavigate, quizId }) {
             <p className="text-xl">Nenhum participante jogou este quiz ainda.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            
-            {/* Left Column: Ranking */}
-            <div className="lg:col-span-2 space-y-8">
+          <>
+            {/* Tabs Navigation */}
+            <div className="flex border-b border-[#2a2a5a] mb-6">
+              <button
+                onClick={() => setActiveTab('GERAL')}
+                className={`py-3 px-6 font-bold flex items-center gap-2 border-b-2 transition-colors ${
+                  activeTab === 'GERAL' 
+                    ? 'border-[#6c63ff] text-[#6c63ff]' 
+                    : 'border-transparent text-gray-400 hover:text-white'
+                }`}
+              >
+                <PieChart size={20} /> Visão Geral
+              </button>
+              <button
+                onClick={() => setActiveTab('MAPA')}
+                className={`py-3 px-6 font-bold flex items-center gap-2 border-b-2 transition-colors ${
+                  activeTab === 'MAPA' 
+                    ? 'border-[#6c63ff] text-[#6c63ff]' 
+                    : 'border-transparent text-gray-400 hover:text-white'
+                }`}
+              >
+                <Grid size={20} /> Mapa de Habilidades
+              </button>
+            </div>
+
+            {/* TAB: VISÃO GERAL */}
+            {activeTab === 'GERAL' && (
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                
+                {/* Left Column: Ranking */}
+                <div className="lg:col-span-2 space-y-8">
               
               <div className="bg-[#1a1a3a] border border-[#2a2a5a] rounded-2xl p-6">
                 <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
@@ -202,7 +230,72 @@ export default function QuizReportScreen({ onNavigate, quizId }) {
 
               </div>
             )}
-          </div>
+              </div>
+            )}
+
+            {/* TAB: MAPA DE HABILIDADES */}
+            {activeTab === 'MAPA' && (
+              <div className="bg-[#1a1a3a] border border-[#2a2a5a] rounded-2xl p-6 overflow-hidden flex flex-col">
+                <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+                  <Grid className="text-[#6c63ff]" /> Mapa de Respostas (Matriz Aluno x Questão)
+                </h2>
+                
+                <div className="overflow-x-auto pb-4">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr>
+                        <th className="p-4 border-b border-[#2a2a5a] sticky left-0 bg-[#1a1a3a] z-10 w-48 min-w-[200px] shadow-[4px_0_8px_-4px_rgba(0,0,0,0.5)]">
+                          <span className="text-gray-400 font-bold">Participante</span>
+                        </th>
+                        {report.responseGrid.columns.map(col => (
+                          <th key={col.questionId} className="p-4 border-b border-[#2a2a5a] min-w-[100px] text-center border-l border-[#2a2a5a]/30">
+                            <div className="flex flex-col items-center justify-center">
+                              <span className="font-bold text-white mb-1">Q{col.index}</span>
+                              {col.bnccCode ? (
+                                <span className="text-[10px] font-mono text-[#51cf66] bg-[#51cf66]/10 px-2 py-0.5 rounded-full" title={col.bnccCode}>
+                                  {col.bnccCode}
+                                </span>
+                              ) : (
+                                <span className="text-[10px] font-mono text-gray-500">-</span>
+                              )}
+                            </div>
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {report.responseGrid.rows.map((row, rIdx) => (
+                        <tr key={rIdx} className="hover:bg-[#2a2a5a]/30 transition-colors border-b border-[#2a2a5a]/50 group">
+                          <td className="p-4 sticky left-0 bg-[#1a1a3a] group-hover:bg-[#202040] transition-colors z-10 font-bold shadow-[4px_0_8px_-4px_rgba(0,0,0,0.5)]">
+                            {row.userName}
+                          </td>
+                          {row.responses.map(resp => (
+                            <td key={resp.questionId} className="p-4 text-center border-l border-[#2a2a5a]/30">
+                              {resp.isCorrect === true && (
+                                <div className="mx-auto w-8 h-8 rounded-full bg-[#51cf66]/20 flex items-center justify-center text-[#51cf66]" title="Acertou">
+                                  <Check size={18} strokeWidth={3} />
+                                </div>
+                              )}
+                              {resp.isCorrect === false && (
+                                <div className="mx-auto w-8 h-8 rounded-full bg-[#ff4757]/20 flex items-center justify-center text-[#ff4757]" title="Errou">
+                                  <X size={18} strokeWidth={3} />
+                                </div>
+                              )}
+                              {resp.isCorrect === null && (
+                                <div className="mx-auto w-8 h-8 flex items-center justify-center text-gray-600" title="Não respondeu">
+                                  <Minus size={18} />
+                                </div>
+                              )}
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

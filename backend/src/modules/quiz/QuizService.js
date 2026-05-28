@@ -66,13 +66,8 @@ class QuizService {
 
     const { title, description, type, discipline, educStage, yearGrade, timePerQuestion, isPublic, shuffleQuestions, shuffleAnswers, questions } = data;
 
-    // We will do a simple strategy: delete old questions and recreate new ones.
-    // Since QuizQuestion and QuizAnswer cascade, this is safe and simple for editing.
-    await prisma.quizQuestion.deleteMany({
-      where: { quizId: id }
-    });
-
-    return await prisma.quizGame.update({
+    // Atualiza os dados básicos do Quiz
+    const updatedQuiz = await prisma.quizGame.update({
       where: { id },
       data: {
         title,
@@ -85,29 +80,96 @@ class QuizService {
         isPublic: isPublic !== undefined ? isPublic : false,
         shuffleQuestions: shuffleQuestions !== undefined ? shuffleQuestions : true,
         shuffleAnswers: shuffleAnswers !== undefined ? shuffleAnswers : true,
-        questions: {
-          create: questions?.map((q, index) => ({
-            bnccCode: q.bnccCode,
-            bnccSkill: q.bnccSkill,
-            questionText: q.questionText,
-            imageUrl: q.imageUrl,
-            order: index,
-            answers: {
-              create: q.answers?.map((a, aIndex) => ({
-                answerText: a.answerText,
-                isCorrect: a.isCorrect,
-                order: aIndex
-              })) || []
-            }
-          })) || []
-        }
-      },
-      include: {
-        questions: {
-          include: { answers: true }
-        }
       }
     });
+
+    // Lida com as questões (Atualiza existentes, Cria novas)
+    if (questions && Array.isArray(questions)) {
+      const existingQuestions = await prisma.quizQuestion.findMany({ where: { quizId: id }, select: { id: true } });
+      const existingQuestionIds = existingQuestions.map(q => q.id);
+      const incomingQuestionIds = questions.filter(q => q.id).map(q => q.id);
+
+      // Tenta deletar questões removidas (pode falhar se houver respostas, o que é seguro para a integridade)
+      const questionsToDelete = existingQuestionIds.filter(qId => !incomingQuestionIds.includes(qId));
+      if (questionsToDelete.length > 0) {
+        try {
+          await prisma.quizQuestion.deleteMany({ where: { id: { in: questionsToDelete } } });
+        } catch (e) {
+          throw new Error('Não é possível excluir questões que já foram respondidas. Tente apenas editá-las ou criar um novo quiz.');
+        }
+      }
+
+      // Upsert de questões e alternativas
+      for (let index = 0; index < questions.length; index++) {
+        const q = questions[index];
+
+        if (q.id) {
+          // Update
+          await prisma.quizQuestion.update({
+            where: { id: q.id },
+            data: {
+              bnccCode: q.bnccCode,
+              bnccSkill: q.bnccSkill,
+              questionText: q.questionText,
+              imageUrl: q.imageUrl,
+              order: index,
+            }
+          });
+
+          // Atualiza as alternativas dessa questão
+          if (q.answers && Array.isArray(q.answers)) {
+            const existingAnswers = await prisma.quizAnswer.findMany({ where: { questionId: q.id }, select: { id: true } });
+            const existingAnswerIds = existingAnswers.map(a => a.id);
+            const incomingAnswerIds = q.answers.filter(a => a.id).map(a => a.id);
+
+            const answersToDelete = existingAnswerIds.filter(aId => !incomingAnswerIds.includes(aId));
+            if (answersToDelete.length > 0) {
+              try {
+                await prisma.quizAnswer.deleteMany({ where: { id: { in: answersToDelete } } });
+              } catch (e) {
+                throw new Error('Não é possível excluir alternativas que já foram escolhidas por alunos.');
+              }
+            }
+
+            for (let aIndex = 0; aIndex < q.answers.length; aIndex++) {
+              const a = q.answers[aIndex];
+              if (a.id) {
+                await prisma.quizAnswer.update({
+                  where: { id: a.id },
+                  data: { answerText: a.answerText, isCorrect: a.isCorrect, order: aIndex }
+                });
+              } else {
+                await prisma.quizAnswer.create({
+                  data: { answerText: a.answerText, isCorrect: a.isCorrect, order: aIndex, questionId: q.id }
+                });
+              }
+            }
+          }
+
+        } else {
+          // Create
+          await prisma.quizQuestion.create({
+            data: {
+              quizId: id,
+              bnccCode: q.bnccCode,
+              bnccSkill: q.bnccSkill,
+              questionText: q.questionText,
+              imageUrl: q.imageUrl,
+              order: index,
+              answers: {
+                create: q.answers?.map((a, aIndex) => ({
+                  answerText: a.answerText,
+                  isCorrect: a.isCorrect,
+                  order: aIndex
+                })) || []
+              }
+            }
+          });
+        }
+      }
+    }
+
+    return await this.getQuizById(id);
   }
 
   /**

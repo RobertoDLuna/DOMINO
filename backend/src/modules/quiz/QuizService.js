@@ -117,15 +117,13 @@ class QuizService {
     const prisma = getPrisma();
     const conditions = [];
 
-    if (!isAdmin) {
-      if (userId) {
-        conditions.push({
-          OR: [{ isPublic: true }, { createdById: userId }]
-        });
-      } else {
-        conditions.push({ isPublic: true });
-      }
+    // Se NÃO for admin e NÃO estiver logado (visitante), vê apenas os públicos
+    if (!isAdmin && !userId) {
+      conditions.push({ isPublic: true });
     }
+    // Se estiver logado (aluno ou professor), a regra de negócio atual diz que 
+    // "privados apenas os professores e alunos podem visualizar", 
+    // ou seja, vê todos os quizzes (públicos e privados). Não adicionamos restrição.
 
     if (filters.isPublic !== undefined) conditions.push({ isPublic: filters.isPublic === 'true' || filters.isPublic === true });
     if (filters.createdById) conditions.push({ createdById: filters.createdById });

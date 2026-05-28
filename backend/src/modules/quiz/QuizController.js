@@ -42,6 +42,12 @@ class QuizController {
     try {
       const quiz = await QuizService.getQuizById(req.params.id);
       if (!quiz) return res.status(404).json({ error: 'Quiz não encontrado' });
+
+      // Somente usuários logados podem ver quizzes privados
+      if (!quiz.isPublic && !req.user) {
+        return res.status(403).json({ error: 'Este quiz é privado e requer login.' });
+      }
+
       res.json(quiz);
     } catch (error) {
       next(error);

@@ -101,13 +101,31 @@ class QuizSessionService {
       studentLevel = this.calculateStudentLevel(session.correctAnswers, session.totalQuestions);
     }
 
-    return await prisma.quizSession.update({
+    const updatedSession = await prisma.quizSession.update({
       where: { id: sessionId },
       data: {
         completedAt: new Date(),
         studentLevel
       }
     });
+
+    // Calculate ranking relative to all other sessions of this quiz
+    const totalPlayers = await prisma.quizSession.count({
+      where: { quizId: session.quizId, completedAt: { not: null } }
+    });
+
+    const betterScoresCount = await prisma.quizSession.count({
+      where: {
+        quizId: session.quizId,
+        completedAt: { not: null },
+        totalPoints: { gt: updatedSession.totalPoints }
+      }
+    });
+
+    // rank is betterScoresCount + 1 (if 0 people have better scores, you are rank 1)
+    const rank = betterScoresCount + 1;
+
+    return { ...updatedSession, rank, totalPlayers };
   }
 
   /**

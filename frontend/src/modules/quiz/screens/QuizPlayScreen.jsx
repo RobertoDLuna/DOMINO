@@ -368,10 +368,21 @@ export default function QuizPlayScreen({ user, onNavigate, roomCode }) {
             VER RELATÓRIO COMPLETO
           </button>
         ) : (
-          <div className="bg-[#1a1a3a] p-6 rounded-2xl border border-[#2a2a5a] text-center">
-            <p className="text-gray-400 mb-2">Sua pontuação final</p>
-            <p className="text-4xl font-mono text-[#6c63ff] font-black">{myScore}</p>
-            <button onClick={() => onNavigate('HOME')} className="mt-6 px-6 py-2 bg-[#2a2a5a] rounded-lg font-bold">Voltar ao Início</button>
+          <div className="bg-[#1a1a3a] p-6 rounded-2xl border border-[#2a2a5a] text-center w-full max-w-md">
+            <div className="grid grid-cols-2 gap-4 mb-6">
+              <div className="bg-[#0f0f23] p-4 rounded-xl border border-[#2a2a5a]">
+                <p className="text-gray-400 text-sm mb-1">Sua Pontuação</p>
+                <p className="text-3xl font-mono text-[#6c63ff] font-black">{myScore}</p>
+              </div>
+              <div className="bg-[#0f0f23] p-4 rounded-xl border border-[#2a2a5a]">
+                <p className="text-gray-400 text-sm mb-1">Seu Ranking</p>
+                <p className="text-3xl font-mono text-[#51cf66] font-black">
+                  #{leaderboard.findIndex(p => p.name === playerName) + 1}
+                  <span className="text-sm text-gray-500 font-normal ml-1">de {leaderboard.length}</span>
+                </p>
+              </div>
+            </div>
+            <button onClick={() => onNavigate('HOME')} className="w-full px-6 py-4 bg-[#2a2a5a] hover:bg-[#3a3a6a] transition-colors rounded-xl font-bold">Voltar ao Início</button>
           </div>
         )}
       </div>

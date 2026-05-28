@@ -14,6 +14,9 @@ export default function QuizSoloScreen({ user, onNavigate, quizId }) {
   const [myScore, setMyScore] = useState(0);
   const [correctAnswersCount, setCorrectAnswersCount] = useState(0);
 
+  const [sessionId, setSessionId] = useState(null);
+  const [finalStats, setFinalStats] = useState(null);
+
   useEffect(() => {
     loadQuizData();
   }, [quizId]);
@@ -33,6 +36,9 @@ export default function QuizSoloScreen({ user, onNavigate, quizId }) {
     try {
       setPhase('LOADING');
       const data = await QuizService.getQuiz(quizId);
+      const session = await QuizService.createSession(quizId, user?.fullName || 'Visitante');
+      
+      setSessionId(session.id);
       setQuizData(data);
       setCurrentQuestionIndex(0);
       setTimeLeft(data.timePerQuestion || 30);
@@ -43,20 +49,23 @@ export default function QuizSoloScreen({ user, onNavigate, quizId }) {
     }
   };
 
-  const handleSubmitAnswer = (answerId) => {
+  const handleSubmitAnswer = async (answerId) => {
     if (selectedAnswer !== null) return; // already answered
     setSelectedAnswer(answerId);
+    setPhase('FEEDBACK');
     
     const question = quizData.questions[currentQuestionIndex];
-    const correctAns = question.answers.find(a => a.isCorrect);
-    
-    if (answerId === correctAns?.id) {
-      const timeBonus = Math.floor((timeLeft / quizData.timePerQuestion) * 50);
-      setMyScore(prev => prev + 100 + timeBonus);
-      setCorrectAnswersCount(prev => prev + 1);
+    const timeTaken = (quizData.timePerQuestion || 30) - timeLeft;
+
+    try {
+      const result = await QuizService.submitAnswer(sessionId, question.id, answerId, timeTaken);
+      setMyScore(prev => prev + result.pointsEarned);
+      if (result.isCorrect) {
+        setCorrectAnswersCount(prev => prev + 1);
+      }
+    } catch (err) {
+      console.error("Erro ao enviar resposta:", err);
     }
-    
-    setPhase('FEEDBACK');
     
     // Auto proceed to next question after 3 seconds
     setTimeout(() => {
@@ -64,13 +73,19 @@ export default function QuizSoloScreen({ user, onNavigate, quizId }) {
     }, 3000);
   };
 
-  const handleNextQuestion = () => {
+  const handleNextQuestion = async () => {
     if (currentQuestionIndex + 1 < quizData.questions.length) {
       setCurrentQuestionIndex(prev => prev + 1);
       setTimeLeft(quizData.timePerQuestion || 30);
       setSelectedAnswer(null);
       setPhase('QUESTION');
     } else {
+      try {
+        const finalSession = await QuizService.finalizeSession(sessionId);
+        setFinalStats(finalSession);
+      } catch (err) {
+        console.error("Erro ao finalizar sessão:", err);
+      }
       setPhase('FINISH');
     }
   };
@@ -172,7 +187,7 @@ export default function QuizSoloScreen({ user, onNavigate, quizId }) {
         <p className="text-xl text-gray-400 mb-12">Você completou o quiz {quizData.title}!</p>
         
         <div className="bg-[#1a1a3a] p-8 rounded-2xl border border-[#2a2a5a] text-center w-full max-w-md shadow-2xl">
-          <div className="grid grid-cols-2 gap-4 mb-8">
+          <div className="grid grid-cols-2 gap-4 mb-4">
             <div className="bg-[#0f0f23] p-4 rounded-xl border border-[#2a2a5a]">
               <p className="text-gray-400 text-sm mb-1">Pontuação Final</p>
               <p className="text-3xl font-mono text-[#ffd43b] font-black">{myScore}</p>
@@ -182,6 +197,19 @@ export default function QuizSoloScreen({ user, onNavigate, quizId }) {
               <p className="text-3xl font-mono text-[#51cf66] font-black">{correctAnswersCount} / {quizData.questions.length}</p>
             </div>
           </div>
+
+          {finalStats && (
+            <div className="bg-[#0f0f23] p-4 rounded-xl border border-[#2a2a5a] mb-8 flex justify-center items-center gap-4">
+              <Trophy className="text-[#6c63ff]" size={32} />
+              <div className="text-left">
+                <p className="text-gray-400 text-sm">Seu Ranking Global</p>
+                <p className="text-2xl font-bold">
+                  <span className="text-[#6c63ff] font-black">#{finalStats.rank}</span> 
+                  <span className="text-gray-500 text-lg"> de {finalStats.totalPlayers} jogadores</span>
+                </p>
+              </div>
+            </div>
+          )}
           
           <button onClick={() => onNavigate('HOME')} className="w-full py-4 bg-[#6c63ff] hover:bg-[#5a52d5] rounded-xl font-bold text-xl transition-colors">
             Voltar à Biblioteca

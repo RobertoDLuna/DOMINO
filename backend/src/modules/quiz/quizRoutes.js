@@ -11,7 +11,7 @@ router.post('/session/:sessionId/finish', optionalAuth, QuizController.finalizeS
 
 // Protected routes (listing, creating, reports)
 router.get('/', optionalAuth, QuizController.listQuizzes);
-router.get('/:id', authMiddleware, QuizController.getQuiz);
+router.get('/:id', optionalAuth, QuizController.getQuiz);
 router.post('/', authMiddleware, restrictRole(['PROFESSOR', 'ADMIN']), QuizController.createQuiz);
 router.put('/:id', authMiddleware, restrictRole(['PROFESSOR', 'ADMIN']), QuizController.updateQuiz);
 router.delete('/:id', authMiddleware, restrictRole(['PROFESSOR', 'ADMIN']), QuizController.deleteQuiz);

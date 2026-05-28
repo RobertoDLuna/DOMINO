@@ -17,7 +17,7 @@ export default function QuizEditorScreen({ user, onNavigate, quizId }) {
     educStage: '',
     yearGrade: '',
     timePerQuestion: 30,
-    isPublic: false,
+    isPublic: true,
     questions: []
   });
 
@@ -261,6 +261,20 @@ export default function QuizEditorScreen({ user, onNavigate, quizId }) {
                 className="w-full md:w-48 bg-[#0f0f23] border border-[#2a2a5a] rounded-lg p-3 text-white focus:border-[#6c63ff] outline-none disabled:opacity-50"
               />
             </div>
+          </div>
+          
+          <div className="flex items-center gap-3 pt-4 border-t border-[#2a2a5a] mt-4">
+            <input 
+              type="checkbox" 
+              id="isPublic"
+              checked={quizData.isPublic}
+              onChange={e => setQuizData({...quizData, isPublic: e.target.checked})}
+              disabled={!isOwner}
+              className="w-5 h-5 accent-[#6c63ff] cursor-pointer"
+            />
+            <label htmlFor="isPublic" className="text-white font-bold cursor-pointer select-none">
+              Tornar este quiz Público na Biblioteca
+            </label>
           </div>
         </div>
 

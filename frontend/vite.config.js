@@ -25,6 +25,7 @@ export default defineConfig({
     exclude: ['stockfish'],
   },
   build: {
+    minify: false,
     rollupOptions: {
       external: [],
     },

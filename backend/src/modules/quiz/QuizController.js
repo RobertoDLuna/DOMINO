@@ -29,8 +29,9 @@ class QuizController {
 
   async listQuizzes(req, res, next) {
     try {
-      // filters from query
-      const quizzes = await QuizService.listQuizzes(req.query);
+      const userId = req.user ? req.user.id : null;
+      const isAdmin = req.user && req.user.role === 'ADMIN';
+      const quizzes = await QuizService.listQuizzes(req.query, userId, isAdmin);
       res.json(quizzes);
     } catch (error) {
       next(error);

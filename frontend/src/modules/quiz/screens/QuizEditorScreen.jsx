@@ -9,8 +9,6 @@ export default function QuizEditorScreen({ user, onNavigate, quizId }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   
-  const isOwner = isNew || (quizData?.createdById && quizData.createdById === user?.id);
-  
   const [quizData, setQuizData] = useState({
     title: '',
     description: '',
@@ -22,6 +20,8 @@ export default function QuizEditorScreen({ user, onNavigate, quizId }) {
     isPublic: false,
     questions: []
   });
+
+  const isOwner = isNew || (quizData?.createdById && quizData.createdById === user?.id);
 
   useEffect(() => {
     if (!isNew) {

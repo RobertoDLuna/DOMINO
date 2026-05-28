@@ -11,12 +11,8 @@ export default function QuizHomeScreen({ user, onNavigate, onBack }) {
   const isTeacher = user?.role === 'PROFESSOR' || user?.role === 'ADMIN';
 
   useEffect(() => {
-    if (isTeacher) {
-      loadQuizzes();
-    } else {
-      setLoading(false);
-    }
-  }, [isTeacher]);
+    loadQuizzes();
+  }, [user]);
 
   const loadQuizzes = async () => {
     try {
@@ -97,65 +93,69 @@ export default function QuizHomeScreen({ user, onNavigate, onBack }) {
         )}
 
         {/* Teacher Panel */}
-        {isTeacher && (
-          <div className="space-y-6">
-            <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold flex items-center gap-2">
-                <BookOpen className="text-[#6c63ff]" /> 
-                Biblioteca de Quizzes
-              </h2>
+        <div className="space-y-6">
+          <div className="flex justify-between items-center">
+            <h2 className="text-2xl font-bold flex items-center gap-2">
+              <BookOpen className="text-[#6c63ff]" /> 
+              Biblioteca de Quizzes
+            </h2>
+            {isTeacher && (
               <button
                 onClick={handleCreateNew}
                 className="px-4 py-2 bg-[#1a1a3a] border border-[#6c63ff] text-[#6c63ff] rounded-lg font-bold hover:bg-[#6c63ff] hover:text-white transition-colors flex items-center gap-2"
               >
                 <Plus size={20} /> Criar Quiz
               </button>
-            </div>
+            )}
+          </div>
 
-            {loading && <div className="text-center py-10">Carregando quizzes...</div>}
-            
-            {!loading && quizzes.length === 0 && (
-              <div className="text-center py-10 bg-[#1a1a3a] rounded-2xl border border-[#2a2a5a]">
-                <p className="text-gray-400 mb-4">Nenhum quiz encontrado.</p>
+          {loading && <div className="text-center py-10">Carregando quizzes...</div>}
+          
+          {!loading && quizzes.length === 0 && (
+            <div className="text-center py-10 bg-[#1a1a3a] rounded-2xl border border-[#2a2a5a]">
+              <p className="text-gray-400 mb-4">Nenhum quiz encontrado.</p>
+              {isTeacher && (
                 <button onClick={handleCreateNew} className="text-[#6c63ff] hover:underline font-bold">
                   Crie o seu primeiro quiz
                 </button>
-              </div>
-            )}
+              )}
+            </div>
+          )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {quizzes.map((quiz) => (
-                <div key={quiz.id} className="bg-[#1a1a3a] border border-[#2a2a5a] rounded-2xl p-6 flex flex-col hover:border-[#6c63ff] transition-colors group relative overflow-hidden">
-                  
-                  {/* Decorative accent */}
-                  <div className={`absolute top-0 left-0 w-full h-2 ${quiz.type === 'PEDAGOGICO' ? 'bg-[#51cf66]' : 'bg-[#ffd43b]'}`}></div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {quizzes.map((quiz) => (
+              <div key={quiz.id} className="bg-[#1a1a3a] border border-[#2a2a5a] rounded-2xl p-6 flex flex-col hover:border-[#6c63ff] transition-colors group relative overflow-hidden">
+                
+                {/* Decorative accent */}
+                <div className={`absolute top-0 left-0 w-full h-2 ${quiz.type === 'PEDAGOGICO' ? 'bg-[#51cf66]' : 'bg-[#ffd43b]'}`}></div>
 
-                  <div className="mb-4 mt-2 flex justify-between items-start">
-                    <span className={`text-xs font-bold px-2 py-1 rounded-full ${quiz.type === 'PEDAGOGICO' ? 'bg-[#51cf66]/20 text-[#51cf66]' : 'bg-[#ffd43b]/20 text-[#ffd43b]'}`}>
-                      {quiz.type}
-                    </span>
-                    <span className="text-xs text-gray-500">{quiz._count?.questions || 0} questões</span>
-                  </div>
+                <div className="mb-4 mt-2 flex justify-between items-start">
+                  <span className={`text-xs font-bold px-2 py-1 rounded-full ${quiz.type === 'PEDAGOGICO' ? 'bg-[#51cf66]/20 text-[#51cf66]' : 'bg-[#ffd43b]/20 text-[#ffd43b]'}`}>
+                    {quiz.type}
+                  </span>
+                  <span className="text-xs text-gray-500">{quiz._count?.questions || 0} questões</span>
+                </div>
 
-                  <h3 className="text-xl font-bold mb-2 text-white group-hover:text-[#6c63ff] transition-colors line-clamp-2">
-                    {quiz.title}
-                  </h3>
-                  
-                  <p className="text-sm text-gray-400 mb-6 flex-grow line-clamp-2">
-                    {quiz.description || "Sem descrição"}
-                  </p>
+                <h3 className="text-xl font-bold mb-2 text-white group-hover:text-[#6c63ff] transition-colors line-clamp-2">
+                  {quiz.title}
+                </h3>
+                
+                <p className="text-sm text-gray-400 mb-6 flex-grow line-clamp-2">
+                  {quiz.description || "Sem descrição"}
+                </p>
 
-                  <div className="flex items-center justify-between text-sm text-gray-500 mb-6">
-                    <span>{quiz.discipline || 'Geral'} • {quiz.yearGrade || '-'}</span>
-                  </div>
+                <div className="flex items-center justify-between text-sm text-gray-500 mb-6">
+                  <span>{quiz.discipline || 'Geral'} • {quiz.yearGrade || '-'}</span>
+                </div>
 
-                  <div className="flex gap-2 mt-auto">
-                    <button 
-                      onClick={() => onNavigate(quiz.createdById === user?.id ? 'EDITOR' : 'SOLO', { id: quiz.id })}
-                      className="flex-1 py-2 bg-[#2a2a5a] hover:bg-[#3a3a6a] rounded-lg text-center font-semibold transition-colors flex items-center justify-center gap-2"
-                    >
-                      {quiz.createdById === user?.id ? 'Editar / Hospedar' : <><Play size={16} /> Jogar Agora</>}
-                    </button>
+                <div className="flex gap-2 mt-auto">
+                  <button 
+                    onClick={() => onNavigate(quiz.createdById === user?.id ? 'EDITOR' : 'SOLO', { id: quiz.id })}
+                    className="flex-1 py-2 bg-[#2a2a5a] hover:bg-[#3a3a6a] rounded-lg text-center font-semibold transition-colors flex items-center justify-center gap-2"
+                  >
+                    {quiz.createdById === user?.id ? 'Editar / Hospedar' : <><Play size={16} /> Jogar Agora</>}
+                  </button>
+                  {isTeacher && (
                     <button 
                       onClick={() => onNavigate('REPORT', { id: quiz.id })}
                       title="Relatórios"
@@ -163,12 +163,12 @@ export default function QuizHomeScreen({ user, onNavigate, onBack }) {
                     >
                       <BarChart2 size={20} />
                     </button>
-                  </div>
+                  )}
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
-        )}
+        </div>
       </div>
     </div>
   );

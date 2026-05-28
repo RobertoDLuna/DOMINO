@@ -201,9 +201,13 @@ const syncDefaultQuizzes = async () => {
   const prisma = getPrisma();
   
   try {
-    const quizCount = await prisma.quizGame.count();
-    if (quizCount > 0) {
-      console.log(`✅ Banco de Quizzes já contém ${quizCount} quiz(zes). Pulando seed.`);
+    // Verifica se os quizzes padrões já existem (pelo título do primeiro quiz)
+    const existingDefaultQuiz = await prisma.quizGame.findFirst({
+      where: { title: "Banco BNCC - Computação (Ensino Fundamental I)" }
+    });
+    
+    if (existingDefaultQuiz) {
+      console.log(`✅ Banco de Quizzes já contém os quizzes padrão. Pulando seed.`);
       return;
     }
 

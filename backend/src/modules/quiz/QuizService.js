@@ -113,21 +113,35 @@ class QuizService {
   /**
    * List quizzes with filters
    */
-  async listQuizzes(filters = {}) {
+  async listQuizzes(filters = {}, userId = null, isAdmin = false) {
     const prisma = getPrisma();
-    const where = {};
+    const conditions = [];
 
-    if (filters.isPublic !== undefined) where.isPublic = filters.isPublic === 'true' || filters.isPublic === true;
-    if (filters.createdById) where.createdById = filters.createdById;
-    if (filters.type) where.type = filters.type;
-    if (filters.discipline) where.discipline = filters.discipline;
-    if (filters.yearGrade) where.yearGrade = filters.yearGrade;
-    if (filters.search) {
-      where.OR = [
-        { title: { contains: filters.search, mode: 'insensitive' } },
-        { description: { contains: filters.search, mode: 'insensitive' } }
-      ];
+    if (!isAdmin) {
+      if (userId) {
+        conditions.push({
+          OR: [{ isPublic: true }, { createdById: userId }]
+        });
+      } else {
+        conditions.push({ isPublic: true });
+      }
     }
+
+    if (filters.isPublic !== undefined) conditions.push({ isPublic: filters.isPublic === 'true' || filters.isPublic === true });
+    if (filters.createdById) conditions.push({ createdById: filters.createdById });
+    if (filters.type) conditions.push({ type: filters.type });
+    if (filters.discipline) conditions.push({ discipline: filters.discipline });
+    if (filters.yearGrade) conditions.push({ yearGrade: filters.yearGrade });
+    if (filters.search) {
+      conditions.push({
+        OR: [
+          { title: { contains: filters.search, mode: 'insensitive' } },
+          { description: { contains: filters.search, mode: 'insensitive' } }
+        ]
+      });
+    }
+
+    const where = conditions.length > 0 ? { AND: conditions } : {};
 
     return await prisma.quizGame.findMany({
       where,

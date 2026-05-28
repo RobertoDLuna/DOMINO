@@ -154,7 +154,7 @@ export default function QuizHomeScreen({ user, onNavigate, onBack }) {
                       onClick={() => onNavigate('EDITOR', { id: quiz.id })}
                       className="flex-1 py-2 bg-[#2a2a5a] hover:bg-[#3a3a6a] rounded-lg text-center font-semibold transition-colors"
                     >
-                      Editar / Hospedar
+                      {quiz.createdById === user?.id ? 'Editar / Hospedar' : 'Detalhes / Hospedar'}
                     </button>
                     <button 
                       onClick={() => onNavigate('REPORT', { id: quiz.id })}

@@ -54,6 +54,63 @@ class QuizService {
   }
 
   /**
+   * Update an existing Quiz Game
+   */
+  async updateQuiz(id, data, userId) {
+    const prisma = getPrisma();
+    
+    // Check permission
+    const existingQuiz = await prisma.quizGame.findUnique({ where: { id } });
+    if (!existingQuiz) throw new Error('Quiz não encontrado');
+    if (existingQuiz.createdById !== userId) throw new Error('Acesso negado: Somente o criador pode editar este quiz.');
+
+    const { title, description, type, discipline, educStage, yearGrade, timePerQuestion, isPublic, shuffleQuestions, shuffleAnswers, questions } = data;
+
+    // We will do a simple strategy: delete old questions and recreate new ones.
+    // Since QuizQuestion and QuizAnswer cascade, this is safe and simple for editing.
+    await prisma.quizQuestion.deleteMany({
+      where: { quizId: id }
+    });
+
+    return await prisma.quizGame.update({
+      where: { id },
+      data: {
+        title,
+        description,
+        type: type || 'PEDAGOGICO',
+        discipline,
+        educStage,
+        yearGrade,
+        timePerQuestion: parseInt(timePerQuestion) || 30,
+        isPublic: isPublic !== undefined ? isPublic : false,
+        shuffleQuestions: shuffleQuestions !== undefined ? shuffleQuestions : true,
+        shuffleAnswers: shuffleAnswers !== undefined ? shuffleAnswers : true,
+        questions: {
+          create: questions?.map((q, index) => ({
+            bnccCode: q.bnccCode,
+            bnccSkill: q.bnccSkill,
+            questionText: q.questionText,
+            imageUrl: q.imageUrl,
+            order: index,
+            answers: {
+              create: q.answers?.map((a, aIndex) => ({
+                answerText: a.answerText,
+                isCorrect: a.isCorrect,
+                order: aIndex
+              })) || []
+            }
+          })) || []
+        }
+      },
+      include: {
+        questions: {
+          include: { answers: true }
+        }
+      }
+    });
+  }
+
+  /**
    * List quizzes with filters
    */
   async listQuizzes(filters = {}) {

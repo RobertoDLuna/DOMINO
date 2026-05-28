@@ -14,6 +14,19 @@ class QuizController {
     }
   }
 
+  async updateQuiz(req, res, next) {
+    try {
+      const userId = req.user.id;
+      const quiz = await QuizService.updateQuiz(req.params.id, req.body, userId);
+      res.json(quiz);
+    } catch (error) {
+      if (error.message.includes('Acesso negado')) {
+        return res.status(403).json({ error: error.message });
+      }
+      next(error);
+    }
+  }
+
   async listQuizzes(req, res, next) {
     try {
       // filters from query

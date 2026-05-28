@@ -48,7 +48,17 @@ class QuizService {
   }
 
   async createQuiz(data) {
-    return this._fetch('', { method: 'POST', body: JSON.stringify(data) });
+    return this._fetch('', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  }
+
+  async updateQuiz(id, data) {
+    return this._fetch(`/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data)
+    });
   }
 
   async deleteQuiz(id) {

@@ -13,6 +13,7 @@ router.post('/session/:sessionId/finish', optionalAuth, QuizController.finalizeS
 router.get('/', authMiddleware, QuizController.listQuizzes);
 router.get('/:id', authMiddleware, QuizController.getQuiz);
 router.post('/', authMiddleware, restrictRole(['PROFESSOR', 'ADMIN']), QuizController.createQuiz);
+router.put('/:id', authMiddleware, restrictRole(['PROFESSOR', 'ADMIN']), QuizController.updateQuiz);
 router.delete('/:id', authMiddleware, restrictRole(['PROFESSOR', 'ADMIN']), QuizController.deleteQuiz);
 
 router.post('/:id/start', authMiddleware, restrictRole(['PROFESSOR', 'ADMIN']), QuizController.startQuiz);

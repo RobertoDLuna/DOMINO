@@ -3,6 +3,19 @@ const QuizSessionService = require('./QuizSessionService');
 const QuizReportService = require('./QuizReportService');
 
 class QuizController {
+  // --- Upload ---
+  uploadImage(req, res, next) {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: 'Nenhuma imagem foi enviada.' });
+      }
+      const imageUrl = `/uploads/quizzes/${req.file.filename}`;
+      res.status(201).json({ url: imageUrl });
+    } catch (error) {
+      next(error);
+    }
+  }
+
   // --- Quiz Management ---
   async createQuiz(req, res, next) {
     try {

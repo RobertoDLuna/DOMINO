@@ -37,6 +37,23 @@ class QuizService {
 
   // --- HTTP Methods ---
 
+  async uploadImage(file) {
+    const formData = new FormData();
+    formData.append('image', file);
+
+    const response = await fetch(`${this.baseURL}/upload-image`, {
+      method: 'POST',
+      headers: {
+        ...(localStorage.getItem('domino_token') ? { 'Authorization': `Bearer ${localStorage.getItem('domino_token')}` } : {})
+      },
+      body: formData
+    });
+    
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Erro ao fazer upload da imagem');
+    return data;
+  }
+
   async listQuizzes(filters = {}) {
     const params = new URLSearchParams(filters).toString();
     const endpoint = params ? `?${params}` : '';

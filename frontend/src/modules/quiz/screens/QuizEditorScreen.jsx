@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { Save, Plus, Trash2, Image as ImageIcon, ArrowLeft, Settings, Clock, CheckCircle, Play } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Save, Plus, Trash2, Image as ImageIcon, ArrowLeft, Settings, Clock, CheckCircle, Play, Upload, Loader } from 'lucide-react';
 import QuizService from '../services/QuizService';
+import { API_BASE_URL } from '../../../config/api';
 
 export default function QuizEditorScreen({ user, onNavigate, quizId }) {
   const isNew = quizId === 'new';
@@ -8,6 +9,7 @@ export default function QuizEditorScreen({ user, onNavigate, quizId }) {
   const [loading, setLoading] = useState(!isNew);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
+  const [uploadingImageIndex, setUploadingImageIndex] = useState(null);
   
   const [quizData, setQuizData] = useState({
     title: '',
@@ -132,6 +134,25 @@ export default function QuizEditorScreen({ user, onNavigate, quizId }) {
     }
     
     setQuizData({ ...quizData, questions: newQuestions });
+  };
+
+  const handleImageUpload = async (qIndex, event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    setUploadingImageIndex(qIndex);
+    try {
+      const data = await QuizService.uploadImage(file);
+      // data.url contains something like /uploads/quizzes/...
+      // For the preview to work immediately, we need the full URL if we're not using absolute paths in dev
+      // API_BASE_URL handles this correctly
+      const fullUrl = `${API_BASE_URL}${data.url}`;
+      updateQuestion(qIndex, 'imageUrl', fullUrl);
+    } catch (err) {
+      setError(err.message || 'Erro ao fazer upload da imagem.');
+    } finally {
+      setUploadingImageIndex(null);
+    }
   };
 
   if (loading) return <div className="min-h-screen bg-[#0f0f23] text-white p-8">Carregando...</div>;
@@ -337,18 +358,41 @@ export default function QuizEditorScreen({ user, onNavigate, quizId }) {
 
                 <div>
                   <label className="block text-gray-400 text-sm font-bold mb-2 flex items-center gap-2">
-                    <ImageIcon size={16} /> URL da Imagem (Opcional)
+                    <ImageIcon size={16} /> Imagem da Questão (Opcional)
                   </label>
-                  <input
-                    type="text"
-                    value={q.imageUrl || ''}
-                    onChange={e => updateQuestion(qIndex, 'imageUrl', e.target.value)}
-                    placeholder="https://..."
-                    disabled={!isOwner}
-                    className="w-full bg-[#0f0f23] border border-[#2a2a5a] rounded-lg p-3 text-sm text-white focus:border-[#6c63ff] outline-none disabled:opacity-50"
-                  />
+                  
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={q.imageUrl || ''}
+                      onChange={e => updateQuestion(qIndex, 'imageUrl', e.target.value)}
+                      placeholder="https://... ou faça upload"
+                      disabled={!isOwner}
+                      className="flex-1 bg-[#0f0f23] border border-[#2a2a5a] rounded-lg p-3 text-sm text-white focus:border-[#6c63ff] outline-none disabled:opacity-50"
+                    />
+                    
+                    {isOwner && (
+                      <div className="relative flex-shrink-0">
+                        <input 
+                          type="file" 
+                          accept="image/*"
+                          onChange={(e) => handleImageUpload(qIndex, e)}
+                          disabled={uploadingImageIndex === qIndex}
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
+                        />
+                        <button 
+                          type="button"
+                          disabled={uploadingImageIndex === qIndex}
+                          className="h-full px-4 bg-[#2a2a5a] text-white rounded-lg flex items-center justify-center gap-2 hover:bg-[#3a3a6a] transition-colors disabled:opacity-50"
+                        >
+                          {uploadingImageIndex === qIndex ? <Loader className="animate-spin" size={20} /> : <Upload size={20} />}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  
                   {q.imageUrl && (
-                    <img src={q.imageUrl} alt="Preview" className="mt-2 h-24 object-contain rounded border border-[#2a2a5a]" />
+                    <img src={q.imageUrl} alt="Preview" className="mt-2 h-32 object-contain rounded border border-[#2a2a5a] bg-[#0f0f23]" />
                   )}
                 </div>
 

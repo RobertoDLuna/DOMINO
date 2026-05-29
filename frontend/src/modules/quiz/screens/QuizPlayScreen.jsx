@@ -58,6 +58,12 @@ export default function QuizPlayScreen({ user, onNavigate, roomCode }) {
   const setupHostSocket = () => {
     QuizService.hostJoin(roomCode);
     
+    QuizService.on('quiz:roomState', (state) => {
+      if (state && state.players) {
+        setPlayers(state.players);
+      }
+    });
+
     QuizService.on('quiz:playerJoined', (player) => {
       setPlayers(prev => [...prev, player]);
     });

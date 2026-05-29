@@ -102,8 +102,7 @@ class QuizService {
 
   connectSocket() {
     if (!this.socket) {
-      const url = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-      this.socket = io(`${url}/quiz`, {
+      this.socket = io(`${SOCKET_URL}/quiz`, {
         transports: ['websocket'],
         autoConnect: true
       });

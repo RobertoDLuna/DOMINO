@@ -9,18 +9,23 @@ module.exports = (io) => {
     // --- Host Events ---
     socket.on('quiz:hostJoin', ({ roomCode }) => {
       socket.join(roomCode);
-      if (!liveRooms.has(roomCode)) {
-        liveRooms.set(roomCode, {
+      let room = liveRooms.get(roomCode);
+      
+      if (!room) {
+        room = {
           hostId: socket.id,
           players: [],
           currentQuestionIndex: -1,
           isStarted: false
-        });
+        };
+        liveRooms.set(roomCode, room);
       } else {
         // Reconnect host
-        liveRooms.get(roomCode).hostId = socket.id;
+        room.hostId = socket.id;
       }
       console.log(`[Quiz] Host joined room ${roomCode}`);
+      // Enviar estado atual para o host (útil se ele atualizar a página)
+      socket.emit('quiz:roomState', { players: room.players, isStarted: room.isStarted });
     });
 
     socket.on('quiz:start', ({ roomCode }) => {

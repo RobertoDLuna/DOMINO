@@ -79,7 +79,8 @@ export default function QuizPlayScreen({ user, onNavigate, roomCode }) {
 
   const setupPlayerSocket = () => {
     QuizService.on('quiz:started', () => {
-      setPhase('QUESTION');
+      // Apenas um log ou mudança de estado leve. A fase muda de fato no questionStarted
+      console.log('Quiz foi iniciado pelo professor.');
     });
 
     QuizService.on('quiz:questionStarted', ({ questionIndex, durationSecs }) => {
@@ -245,7 +246,17 @@ export default function QuizPlayScreen({ user, onNavigate, roomCode }) {
 
   // --- RENDER QUESTION ---
   if (phase === 'QUESTION') {
-    const question = quizData.questions[currentQuestionIndex];
+    const question = quizData?.questions?.[currentQuestionIndex];
+    
+    // Safety guard contra telas brancas (ex: se o socket mudar o index temporariamente)
+    if (!question) {
+      return (
+        <div className="min-h-screen bg-[#0f0f23] flex items-center justify-center text-white">
+          <div className="animate-pulse text-2xl font-bold text-[#6c63ff]">Preparando questão...</div>
+        </div>
+      );
+    }
+
     const colors = ['bg-[#ff6b6b]', 'bg-[#339af0]', 'bg-[#51cf66]', 'bg-[#ffd43b]'];
 
     return (

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Save, Plus, Trash2, Image as ImageIcon, ArrowLeft, Settings, Clock, CheckCircle, Play, Upload, Loader } from 'lucide-react';
+import { Save, Plus, Trash2, Image as ImageIcon, ArrowLeft, Settings, Clock, CheckCircle, Play, Upload, Loader, X } from 'lucide-react';
 import QuizService from '../services/QuizService';
 import { API_BASE_URL } from '../../../config/api';
 
@@ -155,16 +155,16 @@ export default function QuizEditorScreen({ user, onNavigate, quizId }) {
     }
   };
 
-  if (loading) return <div className="min-h-screen bg-[#0f0f23] text-white p-8">Carregando...</div>;
+  if (loading) return <div className="min-h-screen bg-[#F0FDF4] text-emerald-900 p-8 flex justify-center items-center font-black uppercase tracking-widest text-xl">Carregando...</div>;
 
   return (
-    <div className="min-h-screen bg-[#0f0f23] text-white p-4 md:p-8 font-sans pb-24">
+    <div className="min-h-screen bg-[#F0FDF4] text-[#1A1A1A] p-4 md:p-8 font-sans pb-24">
       <div className="max-w-4xl mx-auto space-y-6">
         
         {/* Header Actions */}
-        <div className="flex items-center justify-between">
-          <button onClick={() => onNavigate('HOME')} className="text-gray-400 hover:text-white flex items-center gap-2 transition-colors">
-            <ArrowLeft size={20} /> Voltar
+        <div className="flex items-center justify-between bg-white p-4 rounded-[2rem] shadow-sm border-2 border-emerald-100 mb-6">
+          <button onClick={() => onNavigate('HOME')} className="text-emerald-900 hover:text-emerald-600 bg-emerald-50 px-4 py-2 rounded-2xl flex items-center gap-2 transition-colors font-black uppercase text-xs">
+            <ArrowLeft size={16} /> Voltar
           </button>
           
           <div className="flex gap-3">
@@ -172,9 +172,9 @@ export default function QuizEditorScreen({ user, onNavigate, quizId }) {
               <button 
                 onClick={handleSave} 
                 disabled={saving}
-                className="px-6 py-2 bg-[#2a2a5a] hover:bg-[#3a3a6a] text-white rounded-lg font-bold flex items-center gap-2 transition-colors disabled:opacity-50"
+                className="px-6 py-3 bg-[#FFCE00] hover:brightness-105 text-[#009660] rounded-[1.5rem] font-black uppercase text-xs tracking-widest flex items-center gap-2 shadow-[0_4px_0_#d1a900] active:translate-y-1 active:shadow-none transition-all disabled:opacity-50"
               >
-                <Save size={20} /> {saving ? 'Salvando...' : 'Salvar Quiz'}
+                <Save size={16} /> {saving ? 'SALVANDO...' : 'SALVAR QUIZ'}
               </button>
             )}
             
@@ -182,62 +182,64 @@ export default function QuizEditorScreen({ user, onNavigate, quizId }) {
               <button 
                 onClick={handleHost} 
                 disabled={saving}
-                className="px-6 py-2 bg-[#51cf66] hover:bg-[#40c057] text-[#0f0f23] rounded-lg font-bold flex items-center gap-2 transition-colors disabled:opacity-50"
+                className="px-6 py-3 bg-[#009660] hover:brightness-110 text-white rounded-[1.5rem] font-black uppercase text-xs tracking-widest flex items-center gap-2 shadow-[0_4px_0_#00764D] active:translate-y-1 active:shadow-none transition-all disabled:opacity-50"
               >
-                <Play size={20} /> Iniciar Quiz
+                <Play size={16} className="fill-current" /> INICIAR QUIZ
               </button>
             )}
           </div>
         </div>
 
-        {error && <div className="bg-[#ff4757] text-white p-4 rounded-xl">{error}</div>}
+        {error && <div className="bg-red-50 border-2 border-red-200 text-red-700 p-4 rounded-2xl font-bold">{error}</div>}
 
         {/* Basic Settings */}
-        <div className="bg-[#1a1a3a] border border-[#2a2a5a] rounded-2xl p-6 md:p-8 space-y-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3 text-[#6c63ff]">
-              <Settings size={24} />
-              <h2 className="text-2xl font-bold text-white">Configurações do Quiz</h2>
+        <div className="bg-white border-2 border-emerald-100 shadow-[0_10px_30px_rgba(0,150,96,0.1)] rounded-[2rem] p-6 md:p-8 space-y-6 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 -mr-16 -mt-16 bg-[#FFCE00] rounded-full opacity-10" />
+          
+          <div className="flex items-center justify-between mb-4 relative z-10">
+            <div className="flex items-center gap-3 text-[#009660]">
+              <Settings size={28} />
+              <h2 className="text-2xl font-black italic uppercase tracking-tighter text-emerald-900">Configurações do Quiz</h2>
             </div>
             {!isOwner && (
-              <span className="bg-[#ffd43b]/20 text-[#ffd43b] px-3 py-1 rounded-full text-sm font-bold border border-[#ffd43b]/50">
-                Modo Leitura (Apenas o criador pode editar)
+              <span className="bg-amber-100 text-amber-700 px-4 py-2 rounded-full text-[10px] uppercase tracking-widest font-black border border-amber-200">
+                Somente Leitura
               </span>
             )}
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-4 relative z-10">
             <div>
-              <label className="block text-gray-400 text-sm font-bold mb-2">Título do Quiz</label>
+              <label className="block text-emerald-900/70 text-[10px] uppercase tracking-widest font-black mb-2">Título do Quiz</label>
               <input
                 type="text"
                 value={quizData.title}
                 onChange={e => setQuizData({...quizData, title: e.target.value})}
-                placeholder="Ex: Revisão de Frações"
+                placeholder="EX: REVISÃO DE FRAÇÕES"
                 disabled={!isOwner}
-                className="w-full bg-[#0f0f23] border border-[#2a2a5a] rounded-lg p-3 text-white focus:border-[#6c63ff] outline-none disabled:opacity-50"
+                className="w-full bg-emerald-50 border-2 border-emerald-100 rounded-2xl p-4 text-emerald-900 font-black focus:border-emerald-400 focus:bg-white outline-none disabled:opacity-50 transition-all uppercase placeholder:text-emerald-200"
               />
             </div>
             
             <div>
-              <label className="block text-gray-400 text-sm font-bold mb-2">Descrição (Opcional)</label>
+              <label className="block text-emerald-900/70 text-[10px] uppercase tracking-widest font-black mb-2">Descrição (Opcional)</label>
               <textarea
                 value={quizData.description}
                 onChange={e => setQuizData({...quizData, description: e.target.value})}
                 rows="2"
                 disabled={!isOwner}
-                className="w-full bg-[#0f0f23] border border-[#2a2a5a] rounded-lg p-3 text-white focus:border-[#6c63ff] outline-none disabled:opacity-50"
+                className="w-full bg-emerald-50 border-2 border-emerald-100 rounded-2xl p-4 text-emerald-900 font-medium focus:border-emerald-400 focus:bg-white outline-none disabled:opacity-50 transition-all placeholder:text-emerald-200"
               />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-gray-400 text-sm font-bold mb-2">Tipo</label>
+                <label className="block text-emerald-900/70 text-[10px] uppercase tracking-widest font-black mb-2">Tipo</label>
                 <select
                   value={quizData.type}
                   onChange={e => setQuizData({...quizData, type: e.target.value})}
                   disabled={!isOwner}
-                  className="w-full bg-[#0f0f23] border border-[#2a2a5a] rounded-lg p-3 text-white focus:border-[#6c63ff] outline-none disabled:opacity-50"
+                  className="w-full bg-emerald-50 border-2 border-emerald-100 rounded-2xl p-4 text-emerald-900 font-black uppercase focus:border-emerald-400 focus:bg-white outline-none disabled:opacity-50 transition-all"
                 >
                   <option value="PEDAGOGICO">Pedagógico (BNCC)</option>
                   <option value="COMEMORATIVO">Comemorativo (Livre)</option>
@@ -245,33 +247,33 @@ export default function QuizEditorScreen({ user, onNavigate, quizId }) {
               </div>
 
               <div>
-                <label className="block text-gray-400 text-sm font-bold mb-2">Disciplina</label>
+                <label className="block text-emerald-900/70 text-[10px] uppercase tracking-widest font-black mb-2">Disciplina</label>
                 <input
                   type="text"
                   value={quizData.discipline}
                   onChange={e => setQuizData({...quizData, discipline: e.target.value})}
-                  placeholder="Ex: Matemática"
+                  placeholder="EX: MATEMÁTICA"
                   disabled={!isOwner}
-                  className="w-full bg-[#0f0f23] border border-[#2a2a5a] rounded-lg p-3 text-white focus:border-[#6c63ff] outline-none disabled:opacity-50"
+                  className="w-full bg-emerald-50 border-2 border-emerald-100 rounded-2xl p-4 text-emerald-900 font-black uppercase focus:border-emerald-400 focus:bg-white outline-none disabled:opacity-50 transition-all placeholder:text-emerald-200"
                 />
               </div>
 
               <div>
-                <label className="block text-gray-400 text-sm font-bold mb-2">Série / Ano</label>
+                <label className="block text-emerald-900/70 text-[10px] uppercase tracking-widest font-black mb-2">Série / Ano</label>
                 <input
                   type="text"
                   value={quizData.yearGrade}
                   onChange={e => setQuizData({...quizData, yearGrade: e.target.value})}
-                  placeholder="Ex: 5º Ano"
+                  placeholder="EX: 5º ANO"
                   disabled={!isOwner}
-                  className="w-full bg-[#0f0f23] border border-[#2a2a5a] rounded-lg p-3 text-white focus:border-[#6c63ff] outline-none disabled:opacity-50"
+                  className="w-full bg-emerald-50 border-2 border-emerald-100 rounded-2xl p-4 text-emerald-900 font-black uppercase focus:border-emerald-400 focus:bg-white outline-none disabled:opacity-50 transition-all placeholder:text-emerald-200"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-gray-400 text-sm font-bold mb-2 flex items-center gap-2">
-                <Clock size={16} /> Tempo por Questão (segundos)
+              <label className="block text-emerald-900/70 text-[10px] uppercase tracking-widest font-black mb-2 flex items-center gap-2">
+                <Clock size={14} /> TEMPO POR QUESTÃO (SEGUNDOS)
               </label>
               <input
                 type="number"
@@ -279,21 +281,21 @@ export default function QuizEditorScreen({ user, onNavigate, quizId }) {
                 onChange={e => setQuizData({...quizData, timePerQuestion: parseInt(e.target.value) || 30})}
                 min="10" max="120"
                 disabled={!isOwner}
-                className="w-full md:w-48 bg-[#0f0f23] border border-[#2a2a5a] rounded-lg p-3 text-white focus:border-[#6c63ff] outline-none disabled:opacity-50"
+                className="w-full md:w-48 bg-emerald-50 border-2 border-emerald-100 rounded-2xl p-4 text-emerald-900 font-black focus:border-emerald-400 focus:bg-white outline-none disabled:opacity-50 transition-all text-center"
               />
             </div>
           </div>
           
-          <div className="flex items-center gap-3 pt-4 border-t border-[#2a2a5a] mt-4">
+          <div className="flex items-center gap-3 pt-6 border-t-2 border-emerald-50 mt-6 relative z-10">
             <input 
               type="checkbox" 
               id="isPublic"
               checked={quizData.isPublic}
               onChange={e => setQuizData({...quizData, isPublic: e.target.checked})}
               disabled={!isOwner}
-              className="w-5 h-5 accent-[#6c63ff] cursor-pointer"
+              className="w-6 h-6 accent-[#009660] cursor-pointer rounded"
             />
-            <label htmlFor="isPublic" className="text-white font-bold cursor-pointer select-none">
+            <label htmlFor="isPublic" className="text-emerald-900 font-black uppercase text-xs tracking-widest cursor-pointer select-none">
               Tornar este quiz Público na Biblioteca
             </label>
           </div>
@@ -301,76 +303,70 @@ export default function QuizEditorScreen({ user, onNavigate, quizId }) {
 
         {/* Questions List */}
         <div className="space-y-6">
-          <h2 className="text-2xl font-bold flex items-center justify-between">
-            Questões ({quizData.questions.length})
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <h2 className="text-2xl font-black italic tracking-tighter uppercase text-emerald-900">
+              Questões ({quizData.questions.length})
+            </h2>
             {isOwner && (
-              <button onClick={addQuestion} className="px-4 py-2 bg-[#1a1a3a] border border-[#2a2a5a] rounded-lg text-sm font-bold hover:border-[#6c63ff] hover:text-[#6c63ff] transition-colors flex items-center gap-2">
-                <Plus size={16} /> Adicionar
+              <button onClick={addQuestion} className="px-5 py-3 bg-[#009660] text-white rounded-[1.5rem] font-black text-[11px] uppercase tracking-widest shadow-[0_4px_0_#00764D] hover:brightness-110 transition-all active:translate-y-1 active:shadow-none flex items-center justify-center gap-2">
+                <Plus size={16} strokeWidth={3} /> ADICIONAR QUESTÃO
               </button>
             )}
-          </h2>
+          </div>
 
           {quizData.questions.map((q, qIndex) => (
-            <div key={qIndex} className="bg-[#1a1a3a] border border-[#2a2a5a] rounded-2xl p-6 relative group">
+            <div key={qIndex} className="bg-white border-2 border-emerald-100 shadow-[0_10px_30px_rgba(0,150,96,0.05)] rounded-[2rem] p-6 relative group transition-all hover:border-emerald-300">
               {isOwner && (
                 <button 
                   onClick={() => removeQuestion(qIndex)}
-                  className="absolute top-4 right-4 text-gray-500 hover:text-[#ff4757] opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="absolute top-6 right-6 w-10 h-10 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center hover:bg-red-500 hover:text-white transition-all opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
+                  title="Remover Questão"
                 >
-                  <Trash2 size={20} />
+                  <Trash2 size={18} />
                 </button>
               )}
 
-              <div className="flex items-center gap-4 mb-4">
-                <div className="bg-[#2a2a5a] w-8 h-8 rounded-full flex items-center justify-center font-bold">
+              <div className="flex items-center gap-4 mb-6">
+                <div className="bg-[#FFCE00] text-[#009660] w-12 h-12 rounded-[1rem] shadow-[0_4px_0_#d1a900] flex items-center justify-center font-black text-xl">
                   {qIndex + 1}
                 </div>
               </div>
 
-              <div className="space-y-4">
+              <div className="space-y-6">
                 {quizData.type === 'PEDAGOGICO' && (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-gray-400 text-xs font-bold mb-1">Código BNCC</label>
+                      <label className="block text-emerald-900/70 text-[10px] uppercase tracking-widest font-black mb-2">Código BNCC</label>
                       <input
                         type="text"
                         value={q.bnccCode || ''}
                         onChange={e => updateQuestion(qIndex, 'bnccCode', e.target.value)}
-                        placeholder="Ex: EF05MA01"
+                        placeholder="EX: EF05MA01"
                         disabled={!isOwner}
-                        className="w-full bg-[#0f0f23] border border-[#2a2a5a] rounded-lg p-2 text-sm text-white focus:border-[#6c63ff] outline-none disabled:opacity-50"
+                        className="w-full bg-emerald-50 border-2 border-emerald-100 rounded-xl p-3 text-sm text-emerald-900 font-black focus:border-emerald-400 focus:bg-white outline-none disabled:opacity-50 uppercase placeholder:text-emerald-200"
                       />
                     </div>
                   </div>
                 )}
 
                 <div>
-                  <label className="block text-gray-400 text-sm font-bold mb-2">Pergunta</label>
+                  <label className="block text-emerald-900/70 text-[10px] uppercase tracking-widest font-black mb-2">Pergunta</label>
                   <textarea
                     value={q.questionText}
                     onChange={e => updateQuestion(qIndex, 'questionText', e.target.value)}
                     rows="2"
-                    placeholder="Digite a pergunta aqui..."
+                    placeholder="DIGITE A PERGUNTA AQUI..."
                     disabled={!isOwner}
-                    className="w-full bg-[#0f0f23] border border-[#2a2a5a] rounded-lg p-3 text-white focus:border-[#6c63ff] outline-none disabled:opacity-50"
+                    className="w-full bg-emerald-50 border-2 border-emerald-100 rounded-2xl p-4 text-emerald-900 font-black focus:border-emerald-400 focus:bg-white outline-none disabled:opacity-50 uppercase placeholder:text-emerald-200 transition-all text-lg"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-gray-400 text-sm font-bold mb-2 flex items-center gap-2">
-                    <ImageIcon size={16} /> Imagem da Questão (Opcional)
+                  <label className="block text-emerald-900/70 text-[10px] uppercase tracking-widest font-black mb-2 flex items-center gap-2">
+                    <ImageIcon size={14} /> Imagem da Questão (Opcional)
                   </label>
                   
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={q.imageUrl || ''}
-                      onChange={e => updateQuestion(qIndex, 'imageUrl', e.target.value)}
-                      placeholder="https://... ou faça upload"
-                      disabled={!isOwner}
-                      className="flex-1 bg-[#0f0f23] border border-[#2a2a5a] rounded-lg p-3 text-sm text-white focus:border-[#6c63ff] outline-none disabled:opacity-50"
-                    />
-                    
+                  <div className="flex flex-col sm:flex-row gap-3 items-center">
                     {isOwner && (
                       <div className="relative flex-shrink-0">
                         <input 
@@ -383,39 +379,62 @@ export default function QuizEditorScreen({ user, onNavigate, quizId }) {
                         <button 
                           type="button"
                           disabled={uploadingImageIndex === qIndex}
-                          className="h-full px-4 bg-[#2a2a5a] text-white rounded-lg flex items-center justify-center gap-2 hover:bg-[#3a3a6a] transition-colors disabled:opacity-50"
+                          className="h-full w-full sm:w-auto px-6 py-3 bg-[#009660] text-white rounded-xl font-black uppercase text-[10px] tracking-widest shadow-[0_4px_0_#00764D] active:translate-y-1 active:shadow-none transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                         >
-                          {uploadingImageIndex === qIndex ? <Loader className="animate-spin" size={20} /> : <Upload size={20} />}
+                          {uploadingImageIndex === qIndex ? <Loader className="animate-spin" size={16} /> : <><Upload size={16} /> FAZER UPLOAD DA IMAGEM</>}
                         </button>
                       </div>
+                    )}
+                    
+                    {!isOwner && !q.imageUrl && (
+                       <span className="text-xs text-gray-400 font-bold">Nenhuma imagem enviada</span>
                     )}
                   </div>
                   
                   {q.imageUrl && (
-                    <img src={q.imageUrl} alt="Preview" className="mt-2 h-32 object-contain rounded border border-[#2a2a5a] bg-[#0f0f23]" />
+                    <div className="mt-4 p-2 bg-emerald-50 border-2 border-emerald-100 rounded-2xl inline-block relative group">
+                      <img 
+                        src={q.imageUrl} 
+                        alt="Preview" 
+                        className="h-32 object-contain rounded-xl"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = 'https://via.placeholder.com/300x150?text=Erro+ao+carregar+imagem';
+                        }}
+                      />
+                      {isOwner && (
+                        <button
+                          onClick={() => updateQuestion(qIndex, 'imageUrl', '')}
+                          className="absolute -top-2 -right-2 bg-red-500 text-white p-1 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
+                          title="Remover Imagem"
+                        >
+                          <X size={14} />
+                        </button>
+                      )}
+                    </div>
                   )}
                 </div>
 
                 {/* Answers Grid */}
-                <div className="mt-6">
-                  <label className="block text-gray-400 text-sm font-bold mb-3">Alternativas (Marque a correta)</label>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="mt-6 p-6 bg-emerald-50/50 rounded-2xl border-2 border-emerald-50">
+                  <label className="block text-emerald-900/70 text-[10px] uppercase tracking-widest font-black mb-4">Alternativas (Marque a correta)</label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {q.answers.map((ans, aIndex) => (
-                      <div key={aIndex} className={`flex items-center gap-2 p-2 rounded-lg border ${ans.isCorrect ? 'border-[#51cf66] bg-[#51cf66]/10' : 'border-[#2a2a5a] bg-[#0f0f23]'}`}>
+                      <div key={aIndex} className={`flex items-center gap-3 p-3 rounded-2xl border-2 transition-all ${ans.isCorrect ? 'border-[#009660] bg-[#009660]/10 shadow-[0_4px_0_#009660]' : 'border-emerald-100 bg-white hover:border-emerald-300'}`}>
                         <button
                           onClick={() => isOwner && updateAnswer(qIndex, aIndex, 'isCorrect', true)}
                           disabled={!isOwner}
-                          className={`w-6 h-6 rounded-full flex items-center justify-center border-2 flex-shrink-0 ${ans.isCorrect ? 'border-[#51cf66] bg-[#51cf66] text-[#0f0f23]' : 'border-gray-500'} ${!isOwner ? 'cursor-default opacity-70' : ''}`}
+                          className={`w-8 h-8 rounded-xl flex items-center justify-center border-2 flex-shrink-0 transition-all ${ans.isCorrect ? 'border-[#009660] bg-[#009660] text-white' : 'border-emerald-200 bg-emerald-50 text-emerald-200'} ${!isOwner ? 'cursor-default opacity-70' : 'hover:scale-110'}`}
                         >
-                          {ans.isCorrect && <CheckCircle size={14} />}
+                          {ans.isCorrect && <CheckCircle size={16} strokeWidth={3} />}
                         </button>
                         <input
                           type="text"
                           value={ans.answerText}
                           onChange={e => updateAnswer(qIndex, aIndex, 'answerText', e.target.value)}
-                          placeholder={`Alternativa ${aIndex + 1}`}
+                          placeholder={`ALTERNATIVA ${aIndex + 1}`}
                           disabled={!isOwner}
-                          className="w-full bg-transparent border-none outline-none text-white text-sm disabled:opacity-70"
+                          className="w-full bg-transparent border-none outline-none text-emerald-900 font-black uppercase text-sm disabled:opacity-70 placeholder:text-emerald-200"
                         />
                       </div>
                     ))}
@@ -427,7 +446,8 @@ export default function QuizEditorScreen({ user, onNavigate, quizId }) {
           ))}
 
           {quizData.questions.length === 0 && (
-            <div className="text-center p-12 border-2 border-dashed border-[#2a2a5a] rounded-2xl text-gray-500">
+            <div className="text-center py-20 bg-white border-2 border-dashed border-emerald-200 rounded-[2rem] text-emerald-900/40 font-black uppercase tracking-widest">
+              <div className="text-4xl mb-4 opacity-50">📝</div>
               Nenhuma questão adicionada ainda.
             </div>
           )}

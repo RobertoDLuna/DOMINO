@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Clock, Trophy, Play, CheckCircle, XCircle } from 'lucide-react';
+import { Users, Clock, Trophy, Play, CheckCircle, XCircle, LogOut } from 'lucide-react';
 import QuizService from '../services/QuizService';
 
 export default function QuizPlayScreen({ user, onNavigate, roomCode }) {
@@ -173,6 +173,34 @@ export default function QuizPlayScreen({ user, onNavigate, roomCode }) {
     await QuizService.finishQuiz(quizData.id);
   };
 
+  const handleExit = async () => {
+    if (isHost) {
+      if (window.confirm("Tem certeza que deseja encerrar o Quiz para todos? O jogo será finalizado imediatamente.")) {
+        await hostFinishQuiz();
+        onNavigate('HOME');
+      }
+    } else {
+      if (window.confirm("Tem certeza que deseja abandonar o jogo?")) {
+        onNavigate('HOME');
+      }
+    }
+  };
+
+  const renderExitButton = () => {
+    // Não mostra o botão de sair na tela final, pois lá já tem o botão de Voltar.
+    if (phase === 'FINISH') return null;
+    
+    return (
+      <button 
+        onClick={handleExit}
+        className="fixed top-4 left-4 z-50 flex items-center gap-2 px-4 py-2 bg-[#ff4757]/20 border border-[#ff4757] hover:bg-[#ff4757] text-[#ff4757] hover:text-white rounded-xl font-bold transition-all shadow-lg"
+      >
+        <LogOut size={20} />
+        <span className="hidden md:inline">{isHost ? 'Encerrar Quiz' : 'Sair do Jogo'}</span>
+      </button>
+    );
+  };
+
   if (error) {
     return (
       <div className="min-h-screen bg-[#0f0f23] flex items-center justify-center text-white p-4">
@@ -192,6 +220,7 @@ export default function QuizPlayScreen({ user, onNavigate, roomCode }) {
   if (phase === 'LOBBY') {
     return (
       <div className="min-h-screen bg-[#0f0f23] flex flex-col items-center justify-center text-white p-4">
+        {renderExitButton()}
         <div className="bg-[#1a1a3a] p-8 rounded-3xl shadow-2xl border border-[#2a2a5a] max-w-2xl w-full text-center">
           <h1 className="text-3xl font-bold mb-2">{quizData.title}</h1>
           <div className="inline-block bg-[#6c63ff]/20 text-[#6c63ff] font-mono text-5xl font-black px-8 py-4 rounded-2xl mb-8 tracking-widest border border-[#6c63ff]/50">
@@ -261,7 +290,9 @@ export default function QuizPlayScreen({ user, onNavigate, roomCode }) {
 
     return (
       <div className="min-h-screen bg-[#0f0f23] flex flex-col text-white p-4 md:p-8">
-        <div className="flex justify-between items-center mb-8">
+        {renderExitButton()}
+        
+        <div className="flex justify-between items-center mb-8 pl-16">
           <span className="text-gray-400 font-bold">Questão {currentQuestionIndex + 1} de {quizData.questions.length}</span>
           <div className={`flex items-center gap-2 text-2xl font-black ${timeLeft <= 5 ? 'text-[#ff6b6b] animate-ping' : 'text-white'}`}>
             <Clock /> {timeLeft}
@@ -308,6 +339,7 @@ export default function QuizPlayScreen({ user, onNavigate, roomCode }) {
   if (phase === 'SCOREBOARD') {
     return (
       <div className="min-h-screen bg-[#0f0f23] flex flex-col items-center justify-center text-white p-4">
+        {renderExitButton()}
         <h2 className="text-4xl font-black mb-10 text-[#ffd43b] flex items-center gap-3">
           <Trophy size={40} /> Placar Parcial
         </h2>

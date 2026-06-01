@@ -92,55 +92,75 @@ export default function QuizSoloScreen({ user, onNavigate, quizId }) {
 
   if (phase === 'ERROR') {
     return (
-      <div className="min-h-screen bg-[#0f0f23] flex items-center justify-center text-white p-4">
-        <div className="bg-[#1a1a3a] p-8 rounded-2xl border border-[#ff4757] text-center max-w-md w-full">
-          <XCircle className="mx-auto text-[#ff4757] mb-4" size={48} />
-          <h2 className="text-2xl font-bold mb-4">Ops!</h2>
-          <p className="text-gray-300 mb-6">{error}</p>
-          <button onClick={() => onNavigate('HOME')} className="px-6 py-2 bg-[#ff4757] rounded-lg font-bold">Voltar</button>
+      <div className="min-h-screen bg-[#F0FDF4] flex items-center justify-center p-4">
+        <div className="bg-white p-8 rounded-[2rem] border-2 border-emerald-100 text-center max-w-md w-full shadow-lg">
+          <XCircle className="mx-auto text-red-500 mb-4" size={48} />
+          <h2 className="text-3xl font-black italic uppercase tracking-tighter text-emerald-900 mb-4">Ops!</h2>
+          <p className="text-emerald-900/70 font-medium mb-8">{error}</p>
+          <button onClick={() => onNavigate('HOME')} className="w-full px-6 py-4 bg-red-500 text-white rounded-[1.5rem] font-black uppercase tracking-widest text-xs shadow-[0_4px_0_#b91c1c] hover:brightness-110 active:translate-y-1 active:shadow-none transition-all">VOLTAR</button>
         </div>
       </div>
     );
   }
 
   if (phase === 'LOADING' || !quizData) {
-    return <div className="min-h-screen bg-[#0f0f23] flex items-center justify-center text-white">Carregando...</div>;
+    return <div className="min-h-screen bg-[#F0FDF4] flex items-center justify-center font-black uppercase tracking-widest text-xl text-emerald-900">Carregando...</div>;
   }
 
   // --- RENDER QUESTION & FEEDBACK ---
   if (phase === 'QUESTION' || phase === 'FEEDBACK') {
     const question = quizData.questions[currentQuestionIndex];
-    const colors = ['bg-[#ff6b6b]', 'bg-[#339af0]', 'bg-[#51cf66]', 'bg-[#ffd43b]'];
+    const colors = [
+      'bg-[#FFCE00] text-[#009660] shadow-[0_6px_0_#d1a900]', 
+      'bg-[#009660] text-white shadow-[0_6px_0_#00764D]', 
+      'bg-[#FF6B6B] text-white shadow-[0_6px_0_#c92a2a]', 
+      'bg-[#339AF0] text-white shadow-[0_6px_0_#1864ab]'
+    ];
 
     return (
-      <div className="min-h-screen bg-[#0f0f23] flex flex-col text-white p-4 md:p-8">
-        <div className="flex justify-between items-center mb-8">
-          <span className="text-gray-400 font-bold">Questão {currentQuestionIndex + 1} de {quizData.questions.length}</span>
-          <div className={`flex items-center gap-2 text-2xl font-black ${timeLeft <= 5 ? 'text-[#ff6b6b] animate-ping' : 'text-white'}`}>
-            <Clock /> {phase === 'FEEDBACK' ? 0 : timeLeft}
+      <div className="min-h-screen bg-[#F0FDF4] flex flex-col p-4 md:p-8 relative">
+        <div className="fixed top-4 left-4 z-50">
+          <button onClick={() => onNavigate('HOME')} className="flex items-center gap-2 px-4 py-3 bg-red-50 border-2 border-red-100 hover:bg-red-500 text-red-500 hover:text-white rounded-[1.5rem] font-black uppercase text-[10px] tracking-widest transition-all shadow-sm hover:shadow-md">
+            <XCircle size={16} />
+            <span className="hidden md:inline">SAIR DO QUIZ</span>
+          </button>
+        </div>
+
+        <div className="flex justify-between items-center mb-8 mt-16 md:mt-0 md:pl-40">
+          <span className="text-emerald-900/50 font-black uppercase text-xs tracking-widest">
+            QUESTÃO {currentQuestionIndex + 1} DE {quizData.questions.length}
+          </span>
+          <div className={`flex items-center gap-2 text-3xl font-black ${timeLeft <= 5 && phase !== 'FEEDBACK' ? 'text-red-500 animate-ping' : 'text-emerald-900'}`}>
+            <Clock size={32} /> {phase === 'FEEDBACK' ? 0 : timeLeft}
           </div>
-          <span className="bg-[#2a2a5a] px-4 py-2 rounded-lg font-bold text-[#ffd43b]">
-            Score: {myScore}
+          <span className="bg-white border-2 border-emerald-100 px-4 py-2 rounded-2xl font-black uppercase text-xs text-emerald-900 tracking-widest shadow-sm">
+            SCORE: {myScore}
           </span>
         </div>
 
-        <div className="flex-1 flex flex-col items-center justify-center max-w-4xl mx-auto w-full">
-          <h2 className="text-3xl md:text-5xl font-bold text-center mb-12 leading-tight">
-            {question.questionText}
-          </h2>
+        <div className="flex-1 flex flex-col items-center justify-center max-w-5xl mx-auto w-full">
+          <div className="bg-white border-2 border-emerald-100 rounded-[3rem] shadow-sm p-8 md:p-12 w-full mb-8 relative">
+            <h2 className="text-3xl md:text-5xl font-black italic uppercase tracking-tighter text-center leading-tight text-emerald-900">
+              {question.questionText}
+            </h2>
+            {question.imageUrl && (
+              <img src={question.imageUrl} alt="Imagem da questão" className="mt-8 mx-auto h-48 object-contain rounded-2xl border-2 border-emerald-50" />
+            )}
+          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 w-full">
             {question.answers.map((ans, idx) => {
               let isSelected = selectedAnswer === ans.id;
-              let btnClass = colors[idx % 4];
+              let baseClass = colors[idx % 4];
+              let activeClass = '';
               
               if (phase === 'FEEDBACK') {
                 if (ans.isCorrect) {
-                  btnClass = 'bg-[#51cf66] ring-4 ring-white scale-105 z-10'; // Correct answer highlights
+                  activeClass = 'ring-8 ring-emerald-400/50 scale-[1.02] z-10'; // Correct answer highlights
                 } else if (isSelected && !ans.isCorrect) {
-                  btnClass = 'bg-[#ff6b6b] opacity-50'; // Wrong answer selected dims
+                  activeClass = 'opacity-50 grayscale-[50%]'; // Wrong answer selected dims
                 } else {
-                  btnClass = `${colors[idx % 4]} opacity-30`; // Others dim
+                  activeClass = 'opacity-30'; // Others dim
                 }
               }
 
@@ -149,24 +169,24 @@ export default function QuizSoloScreen({ user, onNavigate, quizId }) {
                   key={ans.id}
                   onClick={() => phase === 'QUESTION' && handleSubmitAnswer(ans.id)}
                   disabled={phase !== 'QUESTION'}
-                  className={`${btnClass} text-white text-xl md:text-2xl font-bold p-8 rounded-2xl shadow-lg transform transition-all ${phase === 'QUESTION' ? 'hover:scale-[1.02] active:scale-95' : ''} disabled:cursor-default relative overflow-hidden flex items-center justify-center min-h-[120px]`}
+                  className={`${baseClass} ${activeClass} text-xl md:text-2xl font-black uppercase p-8 rounded-[2rem] transform transition-all ${phase === 'QUESTION' ? 'active:translate-y-1 active:shadow-none hover:scale-[1.02]' : ''} disabled:cursor-default relative overflow-hidden flex items-center justify-center min-h-[120px]`}
                 >
                   {isSelected && phase === 'QUESTION' && (
-                    <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
-                      <CheckCircle size={48} className="text-white opacity-50" />
+                    <div className="absolute inset-0 bg-black/10 flex items-center justify-center backdrop-blur-[1px]">
+                      <CheckCircle size={56} className="text-white opacity-80" strokeWidth={3} />
                     </div>
                   )}
                   {phase === 'FEEDBACK' && ans.isCorrect && (
-                    <div className="absolute top-2 right-2">
-                      <CheckCircle size={32} className="text-white" />
+                    <div className="absolute top-4 right-4 bg-white/20 rounded-full p-1 backdrop-blur-sm">
+                      <CheckCircle size={32} className="text-white drop-shadow-md" strokeWidth={3} />
                     </div>
                   )}
                   {phase === 'FEEDBACK' && isSelected && !ans.isCorrect && (
-                    <div className="absolute top-2 right-2">
-                      <XCircle size={32} className="text-white" />
+                    <div className="absolute top-4 right-4 bg-white/20 rounded-full p-1 backdrop-blur-sm">
+                      <XCircle size={32} className="text-white drop-shadow-md" strokeWidth={3} />
                     </div>
                   )}
-                  <span className="relative z-10">{ans.answerText}</span>
+                  <span className="relative z-10 tracking-wide text-center">{ans.answerText}</span>
                 </button>
               );
             })}
@@ -179,40 +199,40 @@ export default function QuizSoloScreen({ user, onNavigate, quizId }) {
   // --- RENDER FINISH ---
   if (phase === 'FINISH') {
     return (
-      <div className="min-h-screen bg-[#0f0f23] flex flex-col items-center justify-center text-white p-4">
-        <Trophy size={80} className="text-[#ffd43b] mb-6" />
-        <h1 className="text-5xl font-black mb-2 text-transparent bg-clip-text bg-gradient-to-r from-[#ffd43b] to-[#f59f00]">
-          FIM DE JOGO
+      <div className="min-h-screen bg-[#F0FDF4] flex flex-col items-center justify-center p-4">
+        <Trophy size={100} className="text-[#FFCE00] mb-6 drop-shadow-xl animate-bounce-slow" />
+        <h1 className="text-5xl md:text-7xl font-black italic uppercase tracking-tighter mb-2 text-[#009660]">
+          FIM DE JOGO!
         </h1>
-        <p className="text-xl text-gray-400 mb-12">Você completou o quiz {quizData.title}!</p>
+        <p className="text-sm font-black uppercase tracking-widest text-emerald-900/50 mb-12">Você completou o quiz {quizData.title}</p>
         
-        <div className="bg-[#1a1a3a] p-8 rounded-2xl border border-[#2a2a5a] text-center w-full max-w-md shadow-2xl">
-          <div className="grid grid-cols-2 gap-4 mb-4">
-            <div className="bg-[#0f0f23] p-4 rounded-xl border border-[#2a2a5a]">
-              <p className="text-gray-400 text-sm mb-1">Pontuação Final</p>
-              <p className="text-3xl font-mono text-[#ffd43b] font-black">{myScore}</p>
+        <div className="bg-white p-8 md:p-10 rounded-[3rem] border-2 border-emerald-100 text-center w-full max-w-md shadow-sm mb-8">
+          <div className="grid grid-cols-2 gap-4 mb-6">
+            <div className="bg-emerald-50 p-4 rounded-[2rem] border-2 border-emerald-100">
+              <p className="text-emerald-900/50 text-[10px] font-black uppercase tracking-widest mb-1">Pontuação Final</p>
+              <p className="text-3xl text-[#FFCE00] font-black">{myScore}</p>
             </div>
-            <div className="bg-[#0f0f23] p-4 rounded-xl border border-[#2a2a5a]">
-              <p className="text-gray-400 text-sm mb-1">Acertos</p>
-              <p className="text-3xl font-mono text-[#51cf66] font-black">{correctAnswersCount} / {quizData.questions.length}</p>
+            <div className="bg-emerald-50 p-4 rounded-[2rem] border-2 border-emerald-100">
+              <p className="text-emerald-900/50 text-[10px] font-black uppercase tracking-widest mb-1">Acertos</p>
+              <p className="text-3xl text-[#009660] font-black">{correctAnswersCount} / {quizData.questions.length}</p>
             </div>
           </div>
 
           {finalStats && (
-            <div className="bg-[#0f0f23] p-4 rounded-xl border border-[#2a2a5a] mb-8 flex justify-center items-center gap-4">
-              <Trophy className="text-[#6c63ff]" size={32} />
+            <div className="bg-amber-50 p-6 rounded-[2rem] border-2 border-amber-200 mb-8 flex justify-center items-center gap-4">
+              <Trophy className="text-amber-500" size={40} />
               <div className="text-left">
-                <p className="text-gray-400 text-sm">Seu Ranking Global</p>
-                <p className="text-2xl font-bold">
-                  <span className="text-[#6c63ff] font-black">#{finalStats.rank}</span> 
-                  <span className="text-gray-500 text-lg"> de {finalStats.totalPlayers} jogadores</span>
+                <p className="text-amber-700/60 text-[10px] font-black uppercase tracking-widest">Seu Ranking Global</p>
+                <p className="text-2xl font-black text-amber-700">
+                  #{finalStats.rank}
+                  <span className="text-amber-700/50 text-sm ml-2">de {finalStats.totalPlayers}</span>
                 </p>
               </div>
             </div>
           )}
           
-          <button onClick={() => onNavigate('HOME')} className="w-full py-4 bg-[#6c63ff] hover:bg-[#5a52d5] rounded-xl font-bold text-xl transition-colors">
-            Voltar à Biblioteca
+          <button onClick={() => onNavigate('HOME')} className="w-full py-5 bg-[#009660] text-white rounded-[2rem] font-black uppercase text-sm tracking-widest shadow-[0_6px_0_#00764D] hover:brightness-110 active:translate-y-1 active:shadow-none transition-all">
+            VOLTAR À BIBLIOTECA
           </button>
         </div>
       </div>

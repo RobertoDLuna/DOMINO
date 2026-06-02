@@ -12,6 +12,7 @@ import logoCampina from '../../../assets/logo-campina.png';
 import AuthService from '../../../services/AuthService';
 import ChessRankingBoard from '../components/ChessRankingBoard';
 import '../components/chess.css';
+import ChessReportScreen from './ChessReportScreen';
 
 const AI_LEVELS = [
   { value: 1, label: 'Iniciante', description: 'Ideal para aprender as regras básicas' },
@@ -32,6 +33,7 @@ export default function ChessHomeScreen({ user, onBack }) {
   const { emit, on, connected } = useChessSocket();
 
   // Estados principais
+  const [currentScreen, setCurrentScreen] = useState('LOBBY'); // 'LOBBY' | 'REPORT'
   const [gameType, setGameType] = useState(null); // null (Todos) | 'classic' | 'velha' | 'peao'
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [isChildSessionActive, setIsChildSessionActive] = useState(false);
@@ -188,9 +190,18 @@ export default function ChessHomeScreen({ user, onBack }) {
           myId={gameSession.myId}
           boardTheme="wood"
           onBack={handleBackClassic}
+          onShowReport={() => {
+            handleBackClassic(); // Limpa a sessão
+            setCurrentScreen('REPORT'); // Navega para o relatório
+          }}
         />
       );
     }
+  }
+
+  // ── RENDERIZAÇÃO DA TELA DE ESTATÍSTICAS ─────────────────────────────────
+  if (currentScreen === 'REPORT') {
+    return <ChessReportScreen user={user} onNavigate={() => setCurrentScreen('LOBBY')} />;
   }
 
   // ── RENDERIZAÇÃO DO LOBBY GERAL + BARRA LATERAL ───────────────────────────
@@ -470,10 +481,10 @@ export default function ChessHomeScreen({ user, onBack }) {
 
               <div className="flex items-center gap-3">
                 <button 
-                  onClick={() => setShowRanking(true)}
-                  className="bg-amber-400 text-amber-950 px-5 py-3 rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-[0_5px_0_#d97706] hover:brightness-105 transition-all active:translate-y-1 active:shadow-none flex items-center gap-2"
+                  onClick={() => setCurrentScreen('REPORT')}
+                  className="bg-[#FFCE00] text-[#009660] px-5 py-3 rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-[0_4px_0_#d1a900] hover:brightness-105 transition-all active:translate-y-1 active:shadow-none flex items-center gap-2"
                 >
-                  <span>🏆</span> Ranking
+                  <span>📊</span> Estatísticas
                 </button>
                 <div className="flex items-center gap-2 bg-emerald-100/50 px-4 py-2 rounded-full border border-emerald-100">
                   <div className={`w-2.5 h-2.5 rounded-full ${connected ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />

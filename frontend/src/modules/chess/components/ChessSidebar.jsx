@@ -134,6 +134,7 @@ export default function ChessSidebar({
   roomCode,
   whiteTime,
   blackTime,
+  onShowReport,
 }) {
   const isWhiteActive = status === 'playing' && ((myColor === 'white' && isMyTurn) || (myColor === 'black' && !isMyTurn));
   const isBlackActive = status === 'playing' && ((myColor === 'black' && isMyTurn) || (myColor === 'white' && !isMyTurn));
@@ -206,6 +207,12 @@ export default function ChessSidebar({
               disabled={rematchRequested}
             >
               {rematchRequested ? '⏳ Aguardando...' : (opponentWantsRematch ? '🤝 Aceitar Revanche' : '🔄 Jogar Novamente')}
+            </button>
+            <button
+              className="chess-btn bg-[#FFCE00] text-amber-950 border-none shadow-[0_4px_0_#d1a900] active:translate-y-1 active:shadow-none hover:brightness-105"
+              onClick={onShowReport}
+            >
+              📊 Ver Meu Relatório
             </button>
             {opponentWantsRematch && !rematchRequested && (
               <div className="text-[10px] text-green-600 font-bold uppercase text-center animate-pulse">

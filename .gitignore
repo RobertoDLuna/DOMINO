@@ -33,3 +33,7 @@ Thumbs.db
 # Testing
 coverage/
 .nyc_output/
+
+# Data / Planilhas
+*.csv
+*.xlsx

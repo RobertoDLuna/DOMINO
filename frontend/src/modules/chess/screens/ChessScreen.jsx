@@ -34,6 +34,7 @@ export default function ChessScreen({
   myId,          // ID do jogador nesta sessão
   boardTheme,
   onBack,
+  onShowReport,
 }) {
   const { emit, on } = useChessSocket();
 
@@ -581,6 +582,7 @@ export default function ChessScreen({
             roomCode={roomCode}
             whiteTime={whiteTime}
             blackTime={blackTime}
+            onShowReport={onShowReport}
           />
         </div>
       </div>

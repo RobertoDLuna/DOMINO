@@ -210,13 +210,13 @@ export default function QuizReportScreen({ onNavigate, quizId }) {
                 </div>
 
                 {/* BNCC Need help */}
-                {report.bnccStats.length > 0 && (
+                {report.bnccStats.filter(b => b.averageAccuracy < 50).length > 0 && (
                   <div className="bg-red-50 border-2 border-red-100 rounded-[2rem] p-6 shadow-sm">
                     <h3 className="text-xl font-black italic uppercase tracking-tighter mb-2 text-red-600">Alerta BNCC</h3>
                     <p className="text-xs font-bold text-red-500/70 mb-6 uppercase tracking-widest">Habilidades com menor acerto</p>
                     
                     <div className="space-y-3">
-                      {report.bnccStats.slice(0, 5).map((b, i) => (
+                      {report.bnccStats.filter(b => b.averageAccuracy < 50).slice(0, 5).map((b, i) => (
                         <div key={i} className="flex justify-between items-center p-3 bg-white rounded-xl border border-red-100 shadow-sm">
                           <span className="font-black text-red-600 uppercase tracking-widest text-xs">{b.code}</span>
                           <span className={`font-black text-sm ${b.averageAccuracy < 50 ? 'text-red-500' : 'text-emerald-900'}`}>

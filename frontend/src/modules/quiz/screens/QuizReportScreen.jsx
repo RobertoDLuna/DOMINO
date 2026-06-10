@@ -209,6 +209,39 @@ export default function QuizReportScreen({ onNavigate, quizId }) {
                   </div>
                 </div>
 
+                {/* BNCC Accuracy per Skill */}
+                {report.bnccStats.length > 0 && (
+                  <div className="bg-white border-2 border-emerald-100 rounded-[2rem] p-6 shadow-sm">
+                    <h3 className="text-xl font-black italic uppercase tracking-tighter mb-2 text-emerald-900">
+                      Acertos por Habilidade
+                    </h3>
+                    <p className="text-xs font-bold text-emerald-900/50 mb-6 uppercase tracking-widest">
+                      Porcentagem de acertos por habilidade da BNCC
+                    </p>
+                    
+                    <div className="space-y-4">
+                      {report.bnccStats.map((b, i) => (
+                        <div key={i} className="space-y-2">
+                          <div className="flex justify-between items-center text-xs">
+                            <span className="font-black text-[#009660] uppercase tracking-widest bg-emerald-50 border border-emerald-100 px-2.5 py-1 rounded-lg">
+                              {b.code}
+                            </span>
+                            <span className="font-black text-emerald-900">
+                              {b.averageAccuracy}%
+                            </span>
+                          </div>
+                          <div className="w-full bg-gray-100 h-2.5 rounded-full overflow-hidden">
+                            <div 
+                              className={`h-full ${b.averageAccuracy > 70 ? 'bg-[#009660]' : b.averageAccuracy > 40 ? 'bg-[#FFCE00]' : 'bg-red-500'}`} 
+                              style={{ width: `${b.averageAccuracy}%` }}
+                            ></div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* BNCC Need help */}
                 {report.bnccStats.filter(b => b.averageAccuracy < 50).length > 0 && (
                   <div className="bg-red-50 border-2 border-red-100 rounded-[2rem] p-6 shadow-sm">

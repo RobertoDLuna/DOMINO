@@ -37,3 +37,5 @@ coverage/
 # Data / Planilhas
 *.csv
 *.xlsx
+!BNCC_Base_Atividades.xlsx - Arte.csv
+!BNCC_Computacao_CG_Atividades.xlsx - BNCC COMPUTAÇÃO.csv

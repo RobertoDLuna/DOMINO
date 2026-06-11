@@ -307,6 +307,26 @@ class QuizService {
       }
     });
   }
+
+  /**
+   * List BNCC skills with optional search filter
+   */
+  async listBnccSkills(search) {
+    const prisma = getPrisma();
+    const where = search ? {
+      OR: [
+        { code: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } },
+        { topic: { contains: search, mode: 'insensitive' } }
+      ]
+    } : {};
+
+    return await prisma.bnccSkill.findMany({
+      where,
+      orderBy: { code: 'asc' },
+      take: 100 // Limit results for performance
+    });
+  }
 }
 
 module.exports = new QuizService();

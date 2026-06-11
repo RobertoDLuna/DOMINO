@@ -94,6 +94,11 @@ class QuizService {
     return this._fetch(`/${id}/report`);
   }
 
+  async searchBnccSkills(search) {
+    const params = search ? `?search=${encodeURIComponent(search)}` : '';
+    return this._fetch(`/bncc-skills${params}`);
+  }
+
   // --- Player Methods ---
 
   async getQuizByRoomCode(code) {

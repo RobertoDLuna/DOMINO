@@ -25,6 +25,7 @@ const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
 router.post('/upload-image', authMiddleware, restrictRole(['PROFESSOR', 'ADMIN']), upload.single('image'), QuizController.uploadImage);
 
 // Public routes (joining/playing)
+router.get('/bncc-skills', optionalAuth, QuizController.listBnccSkills);
 router.get('/room/:code', optionalAuth, QuizController.getQuizByRoomCode);
 router.post('/:id/session', optionalAuth, QuizController.createSession);
 router.post('/session/:sessionId/answer', optionalAuth, QuizController.submitAnswer);

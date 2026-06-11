@@ -12,6 +12,11 @@ export default function QuizEditorScreen({ user, onNavigate, quizId }) {
   const [uploadingImageIndex, setUploadingImageIndex] = useState(null);
   const [uploadingAnswerIndex, setUploadingAnswerIndex] = useState(null); // formato: "qIndex-aIndex"
   
+  // BNCC Search States
+  const [bnccSuggestions, setBnccSuggestions] = useState([]);
+  const [activeBnccQIndex, setActiveBnccQIndex] = useState(null);
+  const [bnccSearchLoading, setBnccSearchLoading] = useState(false);
+  
   const [quizData, setQuizData] = useState({
     title: '',
     description: '',
@@ -31,6 +36,18 @@ export default function QuizEditorScreen({ user, onNavigate, quizId }) {
       loadQuiz();
     }
   }, [quizId]);
+
+  // Fechar dropdown de sugestões BNCC quando clicar fora
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (!e.target.closest('.bncc-container-search')) {
+        setActiveBnccQIndex(null);
+        setBnccSuggestions([]);
+      }
+    };
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
+  }, []);
 
   const loadQuiz = async () => {
     try {
@@ -168,6 +185,28 @@ export default function QuizEditorScreen({ user, onNavigate, quizId }) {
     } finally {
       setUploadingAnswerIndex(null);
     }
+  };
+
+  const handleBnccSearch = async (qIndex, text) => {
+    updateQuestion(qIndex, 'bnccCode', text);
+    setActiveBnccQIndex(qIndex);
+    setBnccSearchLoading(true);
+    try {
+      const queryText = text.trim();
+      const skills = await QuizService.searchBnccSkills(queryText);
+      setBnccSuggestions(skills);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setBnccSearchLoading(false);
+    }
+  };
+
+  const selectBnccSkill = (qIndex, skill) => {
+    updateQuestion(qIndex, 'bnccCode', skill.code);
+    updateQuestion(qIndex, 'bnccSkill', skill.description);
+    setActiveBnccQIndex(null);
+    setBnccSuggestions([]);
   };
 
   if (loading) return <div className="min-h-screen bg-[#F0FDF4] text-emerald-900 p-8 flex justify-center items-center font-black uppercase tracking-widest text-xl">Carregando...</div>;
@@ -349,18 +388,56 @@ export default function QuizEditorScreen({ user, onNavigate, quizId }) {
 
               <div className="space-y-6">
                 {quizData.type === 'PEDAGOGICO' && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-emerald-900/70 text-[10px] uppercase tracking-widest font-black mb-2">Código BNCC</label>
-                      <input
-                        type="text"
-                        value={q.bnccCode || ''}
-                        onChange={e => updateQuestion(qIndex, 'bnccCode', e.target.value)}
-                        placeholder="EX: EF05MA01"
-                        disabled={!isOwner}
-                        className="w-full bg-emerald-50 border-2 border-emerald-100 rounded-xl p-3 text-sm text-emerald-900 font-black focus:border-emerald-400 focus:bg-white outline-none disabled:opacity-50 uppercase placeholder:text-emerald-200"
-                      />
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative">
+                      <div className="relative bncc-container-search">
+                        <label className="block text-emerald-900/70 text-[10px] uppercase tracking-widest font-black mb-2">Código BNCC</label>
+                        <input
+                          type="text"
+                          value={q.bnccCode || ''}
+                          onChange={e => handleBnccSearch(qIndex, e.target.value)}
+                          onFocus={e => handleBnccSearch(qIndex, e.target.value)}
+                          placeholder="DIGITE O CÓDIGO OU EIXO (EX: EF05CO01)"
+                          disabled={!isOwner}
+                          className="w-full bg-emerald-50 border-2 border-emerald-100 rounded-xl p-3 text-sm text-emerald-900 font-black focus:border-emerald-400 focus:bg-white outline-none disabled:opacity-50 uppercase placeholder:text-emerald-200"
+                        />
+                        
+                        {/* Dropdown de sugestões */}
+                        {activeBnccQIndex === qIndex && (
+                          <div className="absolute z-30 left-0 right-0 mt-1 bg-white border-2 border-emerald-100 rounded-2xl shadow-xl max-h-60 overflow-y-auto no-scrollbar">
+                            {bnccSearchLoading ? (
+                              <div className="p-4 text-xs font-bold text-emerald-600 flex items-center gap-2">
+                                <Loader className="animate-spin" size={14} /> Buscando habilidades...
+                              </div>
+                            ) : bnccSuggestions.length === 0 ? (
+                              <div className="p-4 text-xs font-bold text-emerald-400">
+                                Nenhuma habilidade encontrada. Tente digitar outro termo.
+                              </div>
+                            ) : (
+                              bnccSuggestions.map((skill) => (
+                                <button
+                                  key={skill.id}
+                                  type="button"
+                                  onClick={() => selectBnccSkill(qIndex, skill)}
+                                  className="w-full text-left p-4 hover:bg-emerald-50 border-b border-emerald-50 last:border-b-0 transition-colors flex flex-col gap-1 cursor-pointer"
+                                >
+                                  <span className="font-black text-xs text-[#009660]">{skill.code} - {skill.stage} {skill.component ? `(${skill.component})` : ''}</span>
+                                  <span className="text-xs text-emerald-900 font-bold line-clamp-2">{skill.description}</span>
+                                </button>
+                              ))
+                            )}
+                          </div>
+                        )}
+                      </div>
                     </div>
+
+                    {/* Resumo da descrição da habilidade */}
+                    {q.bnccSkill && (
+                      <div className="bg-emerald-50 border border-emerald-100 p-4 rounded-xl text-xs text-emerald-900 font-bold leading-relaxed">
+                        <span className="font-black uppercase text-[10px] text-[#009660] tracking-widest block mb-1">Descrição da Habilidade</span>
+                        {q.bnccSkill}
+                      </div>
+                    )}
                   </div>
                 )}
 

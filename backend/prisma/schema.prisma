@@ -464,3 +464,18 @@ model QuizResponse {
 
   @@map("quiz_responses")
 }
+
+model BnccSkill {
+  id          String   @id @default(uuid())
+  code        String   @unique @db.VarChar(30) @map("code")
+  stage       String   @db.VarChar(100) @map("stage")       // Etapa/Ano
+  component   String?  @db.VarChar(100) @map("component")   // Componente Curricular (ex: Computação, Arte)
+  axis        String?  @db.VarChar(100) @map("axis")        // Eixo ou Unidade Temática
+  topic       String   @db.Text @map("topic")               // Objeto de Conhecimento
+  description String   @db.Text @map("description")         // Habilidade (BNCC)
+  pedagogical String?  @db.Text @map("pedagogical")         // Explicação Pedagógica
+  activity    String?  @db.Text @map("activity")            // Atividade Proposta
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@map("bncc_skills")
+}

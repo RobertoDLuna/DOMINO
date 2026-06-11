@@ -151,6 +151,17 @@ class QuizController {
       next(error);
     }
   }
+
+  // --- BNCC Skills ---
+  async listBnccSkills(req, res, next) {
+    try {
+      const { search } = req.query;
+      const skills = await QuizService.listBnccSkills(search);
+      res.json(skills);
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 module.exports = new QuizController();

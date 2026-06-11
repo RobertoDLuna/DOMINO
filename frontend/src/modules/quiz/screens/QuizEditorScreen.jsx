@@ -412,6 +412,7 @@ export default function QuizEditorScreen({ user, onNavigate, quizId }) {
                         src={q.imageUrl} 
                         alt="Preview" 
                         className="h-32 object-contain rounded-xl"
+                        crossOrigin="anonymous"
                         onError={(e) => {
                           e.target.onerror = null;
                           e.target.src = 'https://via.placeholder.com/300x150?text=Erro+ao+carregar+imagem';
@@ -454,7 +455,7 @@ export default function QuizEditorScreen({ user, onNavigate, quizId }) {
                           />
                           {ans.imageUrl ? (
                             <div className="relative inline-block self-start mt-1 group">
-                              <img src={ans.imageUrl} className="h-16 object-contain rounded-lg border border-emerald-100 bg-white" />
+                              <img src={ans.imageUrl} className="h-16 object-contain rounded-lg border border-emerald-100 bg-white" crossOrigin="anonymous" />
                               {isOwner && (
                                 <button
                                   type="button"

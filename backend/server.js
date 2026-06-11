@@ -74,8 +74,12 @@ console.log(`🌐 Servindo frontend de: ${frontendPath}`);
 console.log(`📄 index.html encontrado? ${require('fs').existsSync(indexPath) ? '✅ SIM' : '❌ NÃO'}`);
 app.use(express.static(frontendPath));
 
-// Servindo Uploads de Temas Customizados
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+// Servindo Uploads de Temas Customizados e Imagens com header CORP liberado
+app.use("/uploads", express.static(path.join(__dirname, "uploads"), {
+  setHeaders: (res) => {
+    res.set("Cross-Origin-Resource-Policy", "cross-origin");
+  }
+}));
 
 const server = http.createServer(app);
 const io = setupSocket(server);

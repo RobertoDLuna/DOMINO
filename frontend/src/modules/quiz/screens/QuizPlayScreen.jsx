@@ -320,7 +320,7 @@ export default function QuizPlayScreen({ user, onNavigate, roomCode }) {
               {question.questionText}
             </h2>
             {question.imageUrl && (
-              <img src={question.imageUrl} alt="Imagem da questão" className="mt-8 mx-auto h-48 object-contain rounded-2xl border-2 border-emerald-50" />
+              <img src={question.imageUrl} alt="Imagem da questão" className="mt-8 mx-auto h-48 object-contain rounded-2xl border-2 border-emerald-50" crossOrigin="anonymous" />
             )}
           </div>
 
@@ -338,7 +338,7 @@ export default function QuizPlayScreen({ user, onNavigate, roomCode }) {
                   </div>
                 )}
                 {ans.imageUrl && (
-                  <img src={ans.imageUrl} alt={ans.answerText} className="h-24 md:h-28 object-contain rounded-xl bg-white/20 p-1.5 border border-white/10" />
+                  <img src={ans.imageUrl} alt={ans.answerText} className="h-24 md:h-28 object-contain rounded-xl bg-white/20 p-1.5 border border-white/10" crossOrigin="anonymous" />
                 )}
                 <span className="relative z-10 tracking-wide text-center text-base md:text-lg">{ans.answerText}</span>
               </button>

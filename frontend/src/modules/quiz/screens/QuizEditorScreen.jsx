@@ -473,7 +473,7 @@ export default function QuizEditorScreen({ user, onNavigate, quizId }) {
                                   accept="image/*"
                                   onChange={(e) => handleAnswerImageUpload(qIndex, aIndex, e)}
                                   disabled={uploadingAnswerIndex === `${qIndex}-${aIndex}`}
-                                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
+                                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer file:cursor-pointer disabled:cursor-not-allowed"
                                 />
                                 <button type="button" className="text-[10px] font-bold text-[#009660] hover:underline flex items-center gap-1 cursor-pointer">
                                   {uploadingAnswerIndex === `${qIndex}-${aIndex}` ? (

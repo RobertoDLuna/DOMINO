@@ -17,8 +17,8 @@ RUN cd backend && npm install
 
 # Copy backend source (includes prisma/schema.prisma)
 COPY backend/ ./backend/
-COPY BNCC_Base_Atividades.xlsx\ -\ Arte.csv ./
-COPY BNCC_Computacao_CG_Atividades.xlsx\ -\ BNCC\ COMPUTAÇÃO.csv ./
+COPY ["BNCC_Base_Atividades.xlsx - Arte.csv", "./"]
+COPY ["BNCC_Computacao_CG_Atividades.xlsx - BNCC COMPUTAÇÃO.csv", "./"]
 
 # Generate Prisma Client from schema
 RUN cd backend && npx prisma generate

@@ -169,24 +169,27 @@ export default function QuizSoloScreen({ user, onNavigate, quizId }) {
                   key={ans.id}
                   onClick={() => phase === 'QUESTION' && handleSubmitAnswer(ans.id)}
                   disabled={phase !== 'QUESTION'}
-                  className={`${baseClass} ${activeClass} text-xl md:text-2xl font-black uppercase p-8 rounded-[2rem] transform transition-all ${phase === 'QUESTION' ? 'active:translate-y-1 active:shadow-none hover:scale-[1.02]' : ''} disabled:cursor-default relative overflow-hidden flex items-center justify-center min-h-[120px]`}
+                  className={`${baseClass} ${activeClass} text-xl md:text-2xl font-black uppercase p-4 md:p-6 rounded-[2rem] transform transition-all ${phase === 'QUESTION' ? 'active:translate-y-1 active:shadow-none hover:scale-[1.02]' : ''} disabled:cursor-default relative overflow-hidden flex flex-col items-center justify-center gap-3 min-h-[160px]`}
                 >
                   {isSelected && phase === 'QUESTION' && (
-                    <div className="absolute inset-0 bg-black/10 flex items-center justify-center backdrop-blur-[1px]">
+                    <div className="absolute inset-0 bg-black/10 flex items-center justify-center backdrop-blur-[1px] z-20">
                       <CheckCircle size={56} className="text-white opacity-80" strokeWidth={3} />
                     </div>
                   )}
                   {phase === 'FEEDBACK' && ans.isCorrect && (
-                    <div className="absolute top-4 right-4 bg-white/20 rounded-full p-1 backdrop-blur-sm">
+                    <div className="absolute top-4 right-4 bg-white/20 rounded-full p-1 backdrop-blur-sm z-20">
                       <CheckCircle size={32} className="text-white drop-shadow-md" strokeWidth={3} />
                     </div>
                   )}
                   {phase === 'FEEDBACK' && isSelected && !ans.isCorrect && (
-                    <div className="absolute top-4 right-4 bg-white/20 rounded-full p-1 backdrop-blur-sm">
+                    <div className="absolute top-4 right-4 bg-white/20 rounded-full p-1 backdrop-blur-sm z-20">
                       <XCircle size={32} className="text-white drop-shadow-md" strokeWidth={3} />
                     </div>
                   )}
-                  <span className="relative z-10 tracking-wide text-center">{ans.answerText}</span>
+                  {ans.imageUrl && (
+                    <img src={ans.imageUrl} alt={ans.answerText} className="h-24 md:h-28 object-contain rounded-xl bg-white/20 p-1.5 border border-white/10" />
+                  )}
+                  <span className="relative z-10 tracking-wide text-center text-base md:text-lg">{ans.answerText}</span>
                 </button>
               );
             })}

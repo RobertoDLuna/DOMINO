@@ -39,6 +39,7 @@ class QuizService {
               create: q.answers?.map((a, aIndex) => ({
                 answerText: a.answerText,
                 isCorrect: a.isCorrect,
+                imageUrl: a.imageUrl,
                 order: aIndex
               })) || []
             }
@@ -136,11 +137,11 @@ class QuizService {
               if (a.id) {
                 await prisma.quizAnswer.update({
                   where: { id: a.id },
-                  data: { answerText: a.answerText, isCorrect: a.isCorrect, order: aIndex }
+                  data: { answerText: a.answerText, isCorrect: a.isCorrect, imageUrl: a.imageUrl, order: aIndex }
                 });
               } else {
                 await prisma.quizAnswer.create({
-                  data: { answerText: a.answerText, isCorrect: a.isCorrect, order: aIndex, questionId: q.id }
+                  data: { answerText: a.answerText, isCorrect: a.isCorrect, imageUrl: a.imageUrl, order: aIndex, questionId: q.id }
                 });
               }
             }
@@ -160,6 +161,7 @@ class QuizService {
                 create: q.answers?.map((a, aIndex) => ({
                   answerText: a.answerText,
                   isCorrect: a.isCorrect,
+                  imageUrl: a.imageUrl,
                   order: aIndex
                 })) || []
               }
@@ -298,7 +300,7 @@ class QuizService {
           orderBy: { order: 'asc' },
           include: {
             answers: {
-              select: { id: true, answerText: true, order: true } // Do NOT expose isCorrect
+              select: { id: true, answerText: true, imageUrl: true, order: true } // Do NOT expose isCorrect
             }
           }
         }

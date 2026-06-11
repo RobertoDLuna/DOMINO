@@ -409,6 +409,7 @@ model QuizAnswer {
 
   answerText    String       @db.Text @map("answer_text")
   isCorrect     Boolean      @default(false) @map("is_correct")
+  imageUrl      String?      @db.VarChar(500) @map("image_url")
   order         Int          @default(0)
 
   responses     QuizResponse[]

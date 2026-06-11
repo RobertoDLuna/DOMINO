@@ -10,6 +10,7 @@ export default function QuizEditorScreen({ user, onNavigate, quizId }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const [uploadingImageIndex, setUploadingImageIndex] = useState(null);
+  const [uploadingAnswerIndex, setUploadingAnswerIndex] = useState(null); // formato: "qIndex-aIndex"
   
   const [quizData, setQuizData] = useState({
     title: '',
@@ -100,10 +101,10 @@ export default function QuizEditorScreen({ user, onNavigate, quizId }) {
           bnccCode: '',
           bnccSkill: '',
           answers: [
-            { answerText: '', isCorrect: true },
-            { answerText: '', isCorrect: false },
-            { answerText: '', isCorrect: false },
-            { answerText: '', isCorrect: false },
+            { answerText: '', isCorrect: true, imageUrl: '' },
+            { answerText: '', isCorrect: false, imageUrl: '' },
+            { answerText: '', isCorrect: false, imageUrl: '' },
+            { answerText: '', isCorrect: false, imageUrl: '' },
           ]
         }
       ]
@@ -143,15 +144,29 @@ export default function QuizEditorScreen({ user, onNavigate, quizId }) {
     setUploadingImageIndex(qIndex);
     try {
       const data = await QuizService.uploadImage(file);
-      // data.url contains something like /uploads/quizzes/...
-      // For the preview to work immediately, we need the full URL if we're not using absolute paths in dev
-      // API_BASE_URL handles this correctly
       const fullUrl = `${API_BASE_URL}${data.url}`;
       updateQuestion(qIndex, 'imageUrl', fullUrl);
     } catch (err) {
       setError(err.message || 'Erro ao fazer upload da imagem.');
     } finally {
       setUploadingImageIndex(null);
+    }
+  };
+
+  const handleAnswerImageUpload = async (qIndex, aIndex, event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const key = `${qIndex}-${aIndex}`;
+    setUploadingAnswerIndex(key);
+    try {
+      const data = await QuizService.uploadImage(file);
+      const fullUrl = `${API_BASE_URL}${data.url}`;
+      updateAnswer(qIndex, aIndex, 'imageUrl', fullUrl);
+    } catch (err) {
+      setError(err.message || 'Erro ao fazer upload da imagem da alternativa.');
+    } finally {
+      setUploadingAnswerIndex(null);
     }
   };
 
@@ -428,14 +443,51 @@ export default function QuizEditorScreen({ user, onNavigate, quizId }) {
                         >
                           {ans.isCorrect && <CheckCircle size={16} strokeWidth={3} />}
                         </button>
-                        <input
-                          type="text"
-                          value={ans.answerText}
-                          onChange={e => updateAnswer(qIndex, aIndex, 'answerText', e.target.value)}
-                          placeholder={`ALTERNATIVA ${aIndex + 1}`}
-                          disabled={!isOwner}
-                          className="w-full bg-transparent border-none outline-none text-emerald-900 font-black uppercase text-sm disabled:opacity-70 placeholder:text-emerald-200"
-                        />
+                        <div className="flex flex-col w-full gap-2">
+                          <input
+                            type="text"
+                            value={ans.answerText}
+                            onChange={e => updateAnswer(qIndex, aIndex, 'answerText', e.target.value)}
+                            placeholder={`ALTERNATIVA ${aIndex + 1}`}
+                            disabled={!isOwner}
+                            className="w-full bg-transparent border-none outline-none text-emerald-900 font-black uppercase text-sm disabled:opacity-70 placeholder:text-emerald-200"
+                          />
+                          {ans.imageUrl ? (
+                            <div className="relative inline-block self-start mt-1 group">
+                              <img src={ans.imageUrl} className="h-16 object-contain rounded-lg border border-emerald-100 bg-white" />
+                              {isOwner && (
+                                <button
+                                  type="button"
+                                  onClick={() => updateAnswer(qIndex, aIndex, 'imageUrl', '')}
+                                  className="absolute -top-1.5 -right-1.5 bg-red-500 text-white p-0.5 rounded-full shadow-md hover:bg-red-600 transition-colors"
+                                >
+                                  <X size={10} />
+                                </button>
+                              )}
+                            </div>
+                          ) : (
+                            isOwner && (
+                              <div className="relative self-start mt-1 cursor-pointer">
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  onChange={(e) => handleAnswerImageUpload(qIndex, aIndex, e)}
+                                  disabled={uploadingAnswerIndex === `${qIndex}-${aIndex}`}
+                                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
+                                />
+                                <button type="button" className="text-[10px] font-bold text-[#009660] hover:underline flex items-center gap-1 cursor-pointer">
+                                  {uploadingAnswerIndex === `${qIndex}-${aIndex}` ? (
+                                    <Loader className="animate-spin" size={10} />
+                                  ) : (
+                                    <>
+                                      <Upload size={10} /> ADICIONAR IMAGEM
+                                    </>
+                                  )}
+                                </button>
+                              </div>
+                            )
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>

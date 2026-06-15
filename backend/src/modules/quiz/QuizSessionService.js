@@ -46,11 +46,11 @@ class QuizSessionService {
       }
     }
 
-    // Calculate points (e.g. 1000 base points for correct, minus time penalty)
+    // Calcular pontuação (1000 pontos base por acerto, com penalidade por tempo)
     if (isCorrect) {
       basePoints = 1000;
-      // Simple time penalty: lose 10 points for every second taken, min 500 points
-      const timePenalty = timeTakenSecs * 10;
+      // Garante que a penalidade máxima nunca reduza a pontuação abaixo de 500
+      const timePenalty = Math.max(0, timeTakenSecs) * 10;
       basePoints = Math.max(500, basePoints - timePenalty);
     }
 

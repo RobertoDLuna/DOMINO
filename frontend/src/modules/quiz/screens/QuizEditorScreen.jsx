@@ -99,7 +99,7 @@ export default function QuizEditorScreen({ user, onNavigate, quizId }) {
     try {
       setSaving(true);
       const data = await QuizService.startQuiz(quizId, 'LIVE');
-      onNavigate('PLAY', { roomCode: data.roomCode });
+      onNavigate('PLAY', { roomCode: data.roomCode, isHostRoom: true });
     } catch (err) {
       setError('Erro ao iniciar o quiz.');
     } finally {

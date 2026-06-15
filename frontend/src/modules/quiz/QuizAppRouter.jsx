@@ -28,7 +28,7 @@ export default function QuizAppRouter({ user, onBack }) {
     case 'EDITOR':
       return <QuizEditorScreen user={user} onNavigate={navigate} quizId={screenProps.id} />;
     case 'PLAY':
-      return <QuizPlayScreen user={user} onNavigate={navigate} roomCode={screenProps.roomCode} />;
+      return <QuizPlayScreen user={user} onNavigate={navigate} roomCode={screenProps.roomCode} isHostRoom={screenProps.isHostRoom} />;
     case 'SOLO':
       return <QuizSoloScreen user={user} onNavigate={navigate} quizId={screenProps.id} />;
     case 'REPORT':

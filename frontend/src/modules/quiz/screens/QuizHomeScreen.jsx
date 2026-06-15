@@ -34,7 +34,7 @@ export default function QuizHomeScreen({ user, onNavigate, onBack }) {
     try {
       setLoading(true);
       await QuizService.getQuizByRoomCode(roomCode.toUpperCase());
-      onNavigate('PLAY', { roomCode: roomCode.toUpperCase() });
+      onNavigate('PLAY', { roomCode: roomCode.toUpperCase(), isHostRoom: false });
     } catch (err) {
       setError(err.message || 'Código de sala inválido ou quiz não iniciado.');
     } finally {

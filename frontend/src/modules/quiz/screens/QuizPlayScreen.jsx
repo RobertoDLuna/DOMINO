@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Users, Clock, Trophy, Play, CheckCircle, XCircle, LogOut } from 'lucide-react';
 import QuizService from '../services/QuizService';
 
-export default function QuizPlayScreen({ user, onNavigate, roomCode }) {
+export default function QuizPlayScreen({ user, onNavigate, roomCode, isHostRoom }) {
   
   const [phase, setPhase] = useState('LOBBY'); // LOBBY, QUESTION, SCOREBOARD, FINISH
   const [quizData, setQuizData] = useState(null);
@@ -25,7 +25,7 @@ export default function QuizPlayScreen({ user, onNavigate, roomCode }) {
   const [leaderboard, setLeaderboard] = useState([]);
   const [myScore, setMyScore] = useState(0);
   
-  const isHost = user?.role === 'PROFESSOR' || user?.role === 'ADMIN'; // Simplify for now. Actually, should check if user is the creator, but anyone can host public ones.
+  const isHost = !!isHostRoom && (user?.role === 'PROFESSOR' || user?.role === 'ADMIN');
 
   useEffect(() => {
     loadQuizData();

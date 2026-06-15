@@ -65,6 +65,13 @@ class QuizSessionService {
       }
     });
 
+    // Encontrar o ID da resposta correta para essa pergunta
+    const correctAnswer = await prisma.quizAnswer.findFirst({
+      where: { questionId, isCorrect: true },
+      select: { id: true }
+    });
+    const correctAnswerId = correctAnswer ? correctAnswer.id : null;
+
     // Update session aggregates
     await prisma.quizSession.update({
       where: { id: sessionId },
@@ -78,6 +85,7 @@ class QuizSessionService {
 
     return {
       isCorrect,
+      correctAnswerId,
       pointsEarned: basePoints,
       response
     };

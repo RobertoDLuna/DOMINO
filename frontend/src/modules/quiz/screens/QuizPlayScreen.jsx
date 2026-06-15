@@ -136,6 +136,7 @@ export default function QuizPlayScreen({ user, onNavigate, roomCode, isHostRoom 
     try {
       const result = await QuizService.submitAnswer(sessionId, quizData.questions[currentQuestionIndex].id, answerId, timeTaken);
       setMyScore(prev => prev + result.pointsEarned);
+      setCorrectAnswerId(result.correctAnswerId);
       QuizService.playerSubmitAnswer(roomCode, result.isCorrect, result.pointsEarned);
     } catch (err) {
       console.error(err);
@@ -340,24 +341,68 @@ export default function QuizPlayScreen({ user, onNavigate, roomCode, isHostRoom 
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 w-full">
-            {question.answers.map((ans, idx) => (
-              <button
-                key={ans.id}
-                onClick={() => !isHost && handleSubmitAnswer(ans.id)}
-                disabled={isHost || selectedAnswer !== null}
-                className={`${colors[idx % 4]} text-xl md:text-2xl font-black uppercase p-4 md:p-6 rounded-[2rem] transform transition-all active:translate-y-1 active:shadow-none disabled:opacity-90 disabled:cursor-default disabled:active:translate-y-0 relative overflow-hidden flex flex-col items-center justify-center gap-3 min-h-[160px]`}
-              >
-                {selectedAnswer === ans.id && (
-                  <div className="absolute inset-0 bg-black/10 flex items-center justify-center backdrop-blur-[1px] z-20">
-                    <CheckCircle size={56} className="text-white opacity-80" strokeWidth={3} />
-                  </div>
-                )}
-                {ans.imageUrl && (
-                  <img src={ans.imageUrl} alt={ans.answerText} className="h-24 md:h-28 object-contain rounded-xl bg-white/20 p-1.5 border border-white/10" crossOrigin="anonymous" />
-                )}
-                <span className="relative z-10 tracking-wide text-center text-base md:text-lg">{ans.answerText}</span>
-              </button>
-            ))}
+            {question.answers.map((ans, idx) => {
+              const defaultColor = colors[idx % 4];
+              
+              let dynamicStyle = {};
+              let buttonStateClasses = "transform transition-all active:translate-y-1 active:shadow-none hover:scale-[1.02]";
+              
+              if (selectedAnswer !== null) {
+                buttonStateClasses = "cursor-default shadow-none";
+                
+                if (correctAnswerId !== null) {
+                  if (ans.id === correctAnswerId) {
+                    buttonStateClasses += " scale-[1.02] z-10";
+                    dynamicStyle = { border: '8px solid #10B981', boxShadow: 'none' };
+                  } else if (selectedAnswer === ans.id) {
+                    buttonStateClasses += " scale-[0.98]";
+                    dynamicStyle = { border: '8px solid #EF4444', boxShadow: 'none' };
+                  } else {
+                    buttonStateClasses += " opacity-40";
+                  }
+                } else {
+                  if (selectedAnswer === ans.id) {
+                    buttonStateClasses += " scale-[0.98]";
+                  } else {
+                    buttonStateClasses += " opacity-40";
+                  }
+                }
+              }
+
+              return (
+                <button
+                  key={ans.id}
+                  onClick={() => !isHost && selectedAnswer === null && handleSubmitAnswer(ans.id)}
+                  className={`${defaultColor} text-xl md:text-2xl font-black uppercase p-4 md:p-6 rounded-[2rem] relative overflow-hidden flex flex-col items-center justify-center gap-3 min-h-[160px] ${buttonStateClasses}`}
+                  style={dynamicStyle}
+                >
+                  {/* Feedback visual imediato após resposta */}
+                  {selectedAnswer !== null && correctAnswerId !== null && ans.id === correctAnswerId && (
+                    <div className="absolute inset-0 bg-emerald-500/10 flex items-center justify-center backdrop-blur-[1px] z-20 animate-in fade-in duration-300">
+                      <CheckCircle size={56} className="text-emerald-500 bg-white rounded-full p-1 shadow-md opacity-90" strokeWidth={3} />
+                    </div>
+                  )}
+
+                  {selectedAnswer !== null && correctAnswerId !== null && selectedAnswer === ans.id && ans.id !== correctAnswerId && (
+                    <div className="absolute inset-0 bg-red-500/10 flex items-center justify-center backdrop-blur-[1px] z-20 animate-in fade-in duration-300">
+                      <XCircle size={56} className="text-red-500 bg-white rounded-full p-1 shadow-md opacity-90" strokeWidth={3} />
+                    </div>
+                  )}
+
+                  {/* Feedback de carregamento/seleção antes do backend responder */}
+                  {selectedAnswer === ans.id && correctAnswerId === null && (
+                    <div className="absolute inset-0 bg-black/10 flex items-center justify-center backdrop-blur-[1px] z-20">
+                      <div className="animate-spin rounded-full h-10 w-10 border-4 border-white border-t-transparent" />
+                    </div>
+                  )}
+
+                  {ans.imageUrl && (
+                    <img src={ans.imageUrl} alt={ans.answerText} className="h-24 md:h-28 object-contain rounded-xl bg-white/20 p-1.5 border border-white/10" crossOrigin="anonymous" />
+                  )}
+                  <span className="relative z-10 tracking-wide text-center text-base md:text-lg">{ans.answerText}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
         

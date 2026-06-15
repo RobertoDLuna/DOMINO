@@ -68,11 +68,17 @@ export default function QuizPlayScreen({ user, onNavigate, roomCode, isHostRoom 
     });
 
     QuizService.on('quiz:playerJoined', (player) => {
-      setPlayers(prev => [...prev, player]);
+      setPlayers(prev => {
+        const exists = prev.some(p => p.name.toUpperCase() === player.name.toUpperCase());
+        if (exists) {
+          return prev.map(p => p.name.toUpperCase() === player.name.toUpperCase() ? { ...player, offline: false } : p);
+        }
+        return [...prev, { ...player, offline: false }];
+      });
     });
     
     QuizService.on('quiz:playerLeft', (player) => {
-      setPlayers(prev => prev.filter(p => p.socketId !== player.socketId));
+      setPlayers(prev => prev.map(p => p.socketId === player.socketId ? { ...p, offline: true } : p));
     });
 
     QuizService.on('quiz:playerAnswered', (playerUpdate) => {
@@ -253,8 +259,8 @@ export default function QuizPlayScreen({ user, onNavigate, roomCode, isHostRoom 
               </div>
               <div className="flex flex-wrap justify-center gap-3 mb-10 min-h-[100px]">
                 {players.map((p, i) => (
-                  <span key={i} className="bg-emerald-50 border-2 border-emerald-100 text-emerald-900 px-5 py-2 rounded-[1.5rem] font-black uppercase text-xs shadow-sm">
-                    {p.name}
+                  <span key={i} className={`bg-emerald-50 border-2 border-emerald-100 text-emerald-900 px-5 py-2 rounded-[1.5rem] font-black uppercase text-xs shadow-sm transition-opacity ${p.offline ? 'opacity-40' : 'opacity-100'}`}>
+                    {p.name} {p.offline && '🔌'}
                   </span>
                 ))}
               </div>

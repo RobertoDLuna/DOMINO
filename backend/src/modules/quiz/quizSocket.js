@@ -69,11 +69,21 @@ module.exports = (io) => {
       socket.join(roomCode);
       const room = liveRooms.get(roomCode);
       if (room) {
-        const newPlayer = { socketId: socket.id, name: playerName, score: 0 };
-        room.players.push(newPlayer);
-        // Notify host
-        quizNamespace.to(room.hostId).emit('quiz:playerJoined', newPlayer);
-        console.log(`[Quiz] Player ${playerName} joined room ${roomCode}`);
+        // Verifica se o jogador com este nome já existia na sala (reconexão)
+        const existingPlayer = room.players.find(p => p.name.toUpperCase() === playerName.toUpperCase());
+        
+        if (existingPlayer) {
+          existingPlayer.socketId = socket.id; // Atualiza com o novo socket.id da reconexão
+          // Notifica o host sobre a reconexão mantendo a pontuação
+          quizNamespace.to(room.hostId).emit('quiz:playerJoined', existingPlayer);
+          console.log(`[Quiz] Player ${playerName} reconnected to room ${roomCode} with score ${existingPlayer.score}`);
+        } else {
+          const newPlayer = { socketId: socket.id, name: playerName, score: 0 };
+          room.players.push(newPlayer);
+          // Notify host
+          quizNamespace.to(room.hostId).emit('quiz:playerJoined', newPlayer);
+          console.log(`[Quiz] Player ${playerName} joined room ${roomCode}`);
+        }
       } else {
         socket.emit('quiz:error', 'Sala não encontrada ou não está ao vivo');
       }
@@ -106,14 +116,13 @@ module.exports = (io) => {
 
     // --- Disconnect ---
     socket.on('disconnect', () => {
-      // Find which room the player was in
+      // Procura em qual sala o participante ou host desconectado estava
       for (const [roomCode, room] of liveRooms.entries()) {
-        const playerIndex = room.players.findIndex(p => p.socketId === socket.id);
-        if (playerIndex !== -1) {
-          const pName = room.players[playerIndex].name;
-          room.players.splice(playerIndex, 1);
-          quizNamespace.to(room.hostId).emit('quiz:playerLeft', { socketId: socket.id, name: pName });
-          console.log(`[Quiz] Player left room ${roomCode}`);
+        const player = room.players.find(p => p.socketId === socket.id);
+        if (player) {
+          // Notifica o host sobre a perda temporária de conexão, mas NÃO remove o jogador do array
+          quizNamespace.to(room.hostId).emit('quiz:playerLeft', { socketId: socket.id, name: player.name });
+          console.log(`[Quiz] Player ${player.name} disconnected temporarily from room ${roomCode}`);
           break;
         }
       }

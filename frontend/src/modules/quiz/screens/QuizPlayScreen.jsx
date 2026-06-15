@@ -16,6 +16,9 @@ export default function QuizPlayScreen({ user, onNavigate, roomCode }) {
   // Game state
   const [players, setPlayers] = useState([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(-1);
+  const currentIndexRef = React.useRef(-1);
+  currentIndexRef.current = currentQuestionIndex;
+  
   const [timeLeft, setTimeLeft] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [correctAnswerId, setCorrectAnswerId] = useState(null);
@@ -74,6 +77,12 @@ export default function QuizPlayScreen({ user, onNavigate, roomCode }) {
 
     QuizService.on('quiz:playerAnswered', (playerUpdate) => {
       setPlayers(prev => prev.map(p => p.socketId === playerUpdate.socketId ? { ...p, score: playerUpdate.score } : p));
+    });
+
+    QuizService.on('quiz:allAnswered', () => {
+      console.log('[Host] Todos os jogadores responderam! Avançando imediatamente...');
+      // Acessa o índice atualizado via referência para evitar closure desatualizada
+      hostEndQuestion(currentIndexRef.current);
     });
   };
 
@@ -139,30 +148,36 @@ export default function QuizPlayScreen({ user, onNavigate, roomCode }) {
     hostNextQuestion(0);
   };
 
+  // Utilizar referências para gerenciar o timer ativo de fechamento de questão
+  const questionTimerRef = React.useRef(null);
+
   const hostNextQuestion = (index) => {
     setCurrentQuestionIndex(index);
     setTimeLeft(quizData.timePerQuestion);
     setPhase('QUESTION');
     QuizService.hostNextQuestion(roomCode, index, quizData.timePerQuestion);
     
-    // Auto-end question when time is up
-    setTimeout(() => {
+    // Limpa qualquer temporizador anterior pendente
+    if (questionTimerRef.current) clearTimeout(questionTimerRef.current);
+
+    // Auto-end question quando o tempo expirar
+    questionTimerRef.current = setTimeout(() => {
       hostEndQuestion(index);
     }, quizData.timePerQuestion * 1000);
   };
 
   const hostEndQuestion = (index) => {
-    // In real app, we need to fetch the correct answer id for this question
-    // For now, let's assume the host has the full quiz data with isCorrect
-    // We didn't send `isCorrect` to the player via getQuizByRoomCode, but we need it here for the host.
-    // Assuming we fetch full details if host. Let's just use a dummy logic for now to show the flow.
-    
-    // Calculate leaderboard
+    if (questionTimerRef.current) {
+      clearTimeout(questionTimerRef.current);
+      questionTimerRef.current = null;
+    }
+
+    // Calcula placar ordenando
     const sortedPlayers = [...players].sort((a, b) => b.score - a.score).slice(0, 5);
     setLeaderboard(sortedPlayers);
     setPhase('SCOREBOARD');
     
-    // We emit null for correct answer id if we don't have it easily here, but we should fix it in a complete version.
+    // Emitir o encerramento da questão
     QuizService.hostEndQuestion(roomCode, null, sortedPlayers);
   };
 

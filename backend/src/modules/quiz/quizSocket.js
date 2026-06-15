@@ -41,6 +41,8 @@ module.exports = (io) => {
       const room = liveRooms.get(roomCode);
       if (room && room.hostId === socket.id) {
         room.currentQuestionIndex = questionIndex;
+        // Iniciar ou redefinir a contagem de respostas dadas nesta questão
+        room.answersCount = 0;
         // Broadcast the question start so clients start their timers
         quizNamespace.to(roomCode).emit('quiz:questionStarted', { questionIndex, durationSecs });
       }
@@ -90,6 +92,14 @@ module.exports = (io) => {
             score: player.score,
             isCorrect
           });
+
+          // Incrementar contagem de respostas dadas
+          room.answersCount = (room.answersCount || 0) + 1;
+
+          // Se todos os participantes conectados responderam, avisa o host para encerrar o tempo
+          if (room.answersCount >= room.players.length) {
+            quizNamespace.to(room.hostId).emit('quiz:allAnswered');
+          }
         }
       }
     });

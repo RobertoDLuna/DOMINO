@@ -46,6 +46,7 @@ const errorMiddleware = require("./src/shared/middleware/errorMiddleware");
 const app = express();
 const allowedOrigins = [
   process.env.FRONTEND_URL || "http://localhost:5173",
+  "https://games.portaleducampina.com.br",
   "http://localhost:5174",
   "http://localhost:5175"
 ];
@@ -54,7 +55,8 @@ app.use(cors({
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
-      callback(new Error('Bloqueado pelo CORS'));
+      // Retornar false em vez de lançar um Error evita que o Express estoure status 500
+      callback(null, false);
     }
   },
   credentials: true

@@ -212,36 +212,14 @@ export default function QuizEditorScreen({ user, onNavigate, quizId }) {
   if (loading) return <div className="min-h-screen bg-[#F0FDF4] text-emerald-900 p-8 flex justify-center items-center font-black uppercase tracking-widest text-xl">Carregando...</div>;
 
   return (
-    <div className="min-h-screen bg-[#F0FDF4] text-[#1A1A1A] p-4 md:p-8 font-sans pb-24">
+    <div className="min-h-screen bg-[#F0FDF4] text-[#1A1A1A] p-4 md:p-8 font-sans pb-44">
       <div className="max-w-4xl mx-auto space-y-6">
         
         {/* Header Actions */}
-        <div className="flex items-center justify-between bg-white p-4 rounded-[2rem] shadow-sm border-2 border-emerald-100 mb-6">
+        <div className="flex items-center bg-white p-4 rounded-[2rem] shadow-sm border-2 border-emerald-100 mb-6">
           <button onClick={() => onNavigate('HOME')} className="text-emerald-900 hover:text-emerald-600 bg-emerald-50 px-4 py-2 rounded-2xl flex items-center gap-2 transition-colors font-black uppercase text-xs">
-            <ArrowLeft size={16} /> Voltar
+            <ArrowLeft size={16} /> Voltar para Biblioteca
           </button>
-          
-          <div className="flex gap-3">
-            {isOwner && (
-              <button 
-                onClick={handleSave} 
-                disabled={saving}
-                className="px-6 py-3 bg-[#FFCE00] hover:brightness-105 text-[#009660] rounded-[1.5rem] font-black uppercase text-xs tracking-widest flex items-center gap-2 shadow-[0_4px_0_#d1a900] active:translate-y-1 active:shadow-none transition-all disabled:opacity-50"
-              >
-                <Save size={16} /> {saving ? 'SALVANDO...' : 'SALVAR QUIZ'}
-              </button>
-            )}
-            
-            {!isNew && (
-              <button 
-                onClick={handleHost} 
-                disabled={saving}
-                className="px-6 py-3 bg-[#009660] hover:brightness-110 text-white rounded-[1.5rem] font-black uppercase text-xs tracking-widest flex items-center gap-2 shadow-[0_4px_0_#00764D] active:translate-y-1 active:shadow-none transition-all disabled:opacity-50"
-              >
-                <Play size={16} className="fill-current" /> INICIAR QUIZ
-              </button>
-            )}
-          </div>
         </div>
 
         {error && <div className="bg-red-50 border-2 border-red-200 text-red-700 p-4 rounded-2xl font-bold">{error}</div>}
@@ -581,6 +559,40 @@ export default function QuizEditorScreen({ user, onNavigate, quizId }) {
               Nenhuma questão adicionada ainda.
             </div>
           )}
+        </div>
+      </div>
+
+      {/* Espaçador físico para evitar que o conteúdo suma atrás da barra fixa de rodapé */}
+      <div className="h-28" />
+
+      {/* Barra de Ações Fixa Inferior */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-md border-t-2 border-emerald-100 p-4 shadow-[0_-10px_30px_rgba(0,150,96,0.08)] z-40 flex justify-center items-center">
+        <div className="max-w-4xl w-full flex items-center justify-between gap-4">
+          <button onClick={() => onNavigate('HOME')} className="text-emerald-900 hover:text-emerald-600 bg-emerald-50 px-4 py-3 rounded-2xl flex items-center gap-2 transition-colors font-black uppercase text-xs">
+            <ArrowLeft size={16} /> Sair
+          </button>
+          
+          <div className="flex gap-3">
+            {isOwner && (
+              <button 
+                onClick={handleSave} 
+                disabled={saving}
+                className="px-6 py-4 bg-[#FFCE00] hover:brightness-105 text-[#009660] rounded-[1.5rem] font-black uppercase text-xs tracking-widest flex items-center gap-2 shadow-[0_4px_0_#d1a900] active:translate-y-1 active:shadow-none transition-all disabled:opacity-50 min-h-[48px]"
+              >
+                <Save size={16} /> {saving ? 'SALVANDO...' : 'SALVAR QUIZ'}
+              </button>
+            )}
+            
+            {!isNew && (
+              <button 
+                onClick={handleHost} 
+                disabled={saving}
+                className="px-6 py-4 bg-[#009660] hover:brightness-110 text-white rounded-[1.5rem] font-black uppercase text-xs tracking-widest flex items-center gap-2 shadow-[0_4px_0_#00764D] active:translate-y-1 active:shadow-none transition-all disabled:opacity-50 min-h-[48px]"
+              >
+                <Play size={16} className="fill-current" /> INICIAR QUIZ
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>

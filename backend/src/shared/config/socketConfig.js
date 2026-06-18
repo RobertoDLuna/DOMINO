@@ -5,6 +5,7 @@ const RedisService = require("../utils/RedisService");
 const setupSocket = (server) => {
   const allowedOrigins = [
     process.env.FRONTEND_URL || "http://localhost:5173", 
+    "https://games.portaleducampina.com.br",
     "http://localhost:5174",
     "http://localhost:5175"
   ];
@@ -15,7 +16,8 @@ const setupSocket = (server) => {
         if (!origin || allowedOrigins.includes(origin)) {
           callback(null, true);
         } else {
-          callback(new Error('Bloqueado pelo CORS'));
+          // Retornar false em vez de lançar um Error evita resposta 400 no Socket.io
+          callback(null, false);
         }
       },
       methods: ["GET", "POST"],

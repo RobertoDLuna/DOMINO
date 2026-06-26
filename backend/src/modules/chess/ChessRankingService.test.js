@@ -42,7 +42,7 @@ describe('ChessRankingService', () => {
         update: expect.objectContaining({ points: { increment: 3 }, wins: { increment: 1 } })
       }));
 
-      // Verifica Negras (Perdedor)
+      // Verifica Pretas (Perdedor)
       expect(prismaMock.chessRanking.upsert).toHaveBeenCalledWith(expect.objectContaining({
         where: { userId: blackId },
         update: expect.objectContaining({ points: { increment: 0 }, losses: { increment: 1 } })
@@ -69,7 +69,7 @@ describe('ChessRankingService', () => {
         update: expect.objectContaining({ points: { increment: 1 }, draws: { increment: 1 } })
       }));
     });
-    it('deve atribuir 3 pontos para as Negras (BLACK_WIN)', async () => {
+    it('deve atribuir 3 pontos para as Pretas (BLACK_WIN)', async () => {
       const whiteId = 'white-1';
       const blackId = 'black-1';
       

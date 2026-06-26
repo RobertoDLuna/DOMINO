@@ -7,7 +7,7 @@ import React from 'react';
 
 const RESULT_LABELS = {
   WHITE_WIN: '⬜ Brancas venceram',
-  BLACK_WIN: '⬛ Negras venceram',
+  BLACK_WIN: '⬛ Pretas venceram',
   DRAW: '🤝 Empate',
 };
 
@@ -238,7 +238,7 @@ export default function PeaoSidebar({
             return (
               <div key={i} className={`peao-sidebar-log-item ${isWhite ? 'peao-sidebar-log-item--white' : 'peao-sidebar-log-item--black'}`}>
                 <div className="peao-sidebar-log-header">
-                  <span>{turnNum}. {isWhite ? 'Brancas' : 'Negras'}</span>
+                  <span>{turnNum}. {isWhite ? 'Brancas' : 'Pretas'}</span>
                   <span className="peao-sidebar-log-san">{describeMove(move)}</span>
                 </div>
                 <div className="peao-sidebar-log-text">
@@ -281,7 +281,7 @@ function PlayerBadge({ name, color, active }) {
         {color === 'white' ? '♔' : '♚'}
       </div>
       <div className="peao-sidebar-player-info">
-        <span className="peao-sidebar-player-color">{color === 'white' ? 'Brancas' : 'Negras'}</span>
+        <span className="peao-sidebar-player-color">{color === 'white' ? 'Brancas' : 'Pretas'}</span>
         <span className="peao-sidebar-player-name">{name}</span>
       </div>
       {active && <div className="peao-sidebar-player-pulse" />}

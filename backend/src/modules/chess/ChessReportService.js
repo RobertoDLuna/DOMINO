@@ -56,7 +56,7 @@ class ChessReportService {
       const processedGames = recentGames.map(game => {
         const isWhite = game.whiteId === userId;
         const opponentName = isWhite ? (game.blackName || 'Computador') : (game.whiteName || 'Computador');
-        const color = isWhite ? 'Brancas' : 'Negras';
+        const color = isWhite ? 'Brancas' : 'Pretas';
         const numMoves = game.moves ? game.moves.length : 0;
         
         let outcome = 'DRAW'; // WIN, LOSS, DRAW

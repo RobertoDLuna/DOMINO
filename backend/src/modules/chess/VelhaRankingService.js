@@ -57,7 +57,7 @@ class VelhaRankingService {
         }
       });
 
-      // Atualizar ou Criar ranking para as Negras
+      // Atualizar ou Criar ranking para as Pretas
       await prisma.velhaRanking.upsert({
         where: { userId: blackId },
         update: {

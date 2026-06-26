@@ -171,7 +171,7 @@ model ChessGame {
   whiteId     String?          @map("white_id")
   whiteName   String?          @map("white_name") @db.VarChar(255)
 
-  // Negras
+  // Pretas
   blackId     String?          @map("black_id")
   blackName   String?          @map("black_name") @db.VarChar(255)
 

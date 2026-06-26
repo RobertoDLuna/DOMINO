@@ -274,7 +274,7 @@ export default function XadrezVelhaScreen({ user, onBack, onSessionActive }) {
           <div className="w-16 h-16 bg-emerald-50 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-6">🔗</div>
           <h2 className="text-xl font-black text-emerald-950 uppercase italic tracking-tight mb-4">Entrar em Sala</h2>
           <p className="text-emerald-900/60 text-sm font-medium mb-8">
-            Você jogará de <strong className="text-emerald-950">Negras</strong>. Digite abaixo o código da sala criada pelo seu amigo.
+            Você jogará de <strong className="text-emerald-950">Pretas</strong>. Digite abaixo o código da sala criada pelo seu amigo.
           </p>
           <input
             type="text"

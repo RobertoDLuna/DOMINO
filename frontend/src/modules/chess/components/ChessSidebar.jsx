@@ -31,7 +31,7 @@ function describeMove(move) {
 
 const RESULT_LABELS = {
   WHITE_WIN: '⬜ Brancas venceram',
-  BLACK_WIN: '⬛ Negras venceram',
+  BLACK_WIN: '⬛ Pretas venceram',
   DRAW: '🤝 Empate',
 };
 
@@ -254,7 +254,7 @@ export default function ChessSidebar({
             return (
               <div key={i} className={`chess-log-item ${isWhite ? 'chess-log-item--white' : 'chess-log-item--black'}`}>
                 <div className="chess-log-header">
-                  <span>{turnNum}. {isWhite ? 'Brancas' : 'Negras'}</span>
+                  <span>{turnNum}. {isWhite ? 'Brancas' : 'Pretas'}</span>
                   <span className="chess-log-san">{typeof move === 'string' ? move : describeMove(move)}</span>
                 </div>
                 <div className="chess-log-text">
@@ -295,7 +295,7 @@ function PlayerBadge({ name, color, active }) {
         {color === 'white' ? '♔' : '♚'}
       </div>
       <div className="chess-player-info">
-        <span className="chess-player-color">{color === 'white' ? 'Brancas' : 'Negras'}</span>
+        <span className="chess-player-color">{color === 'white' ? 'Brancas' : 'Pretas'}</span>
         <span className="chess-player-name">{name}</span>
       </div>
       {active && <div className="chess-player-pulse" />}

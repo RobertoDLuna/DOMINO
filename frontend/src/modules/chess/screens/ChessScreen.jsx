@@ -146,7 +146,7 @@ export default function ChessScreen({
     }, 100);
 
     return () => clearInterval(interval);
-  }, [status, gameOver, timeLimit]);
+  }, [status, gameOver, timeLimit, moves.length]);
 
   const handleTimeout = useCallback((lostColor) => {
     if (gameOver) return;

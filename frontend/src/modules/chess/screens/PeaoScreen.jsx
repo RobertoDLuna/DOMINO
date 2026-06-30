@@ -26,7 +26,7 @@ export default function PeaoScreen({ user, onBack, onSessionActive }) {
   const [showRanking, setShowRanking] = useState(false);
   const [gameSession, setGameSession] = useState(null);
 
-  const myId   = user?.id || `guest_${Date.now().toString().slice(-6)}`;
+  const myId   = React.useMemo(() => user?.id || `guest_${Math.random().toString(36).substring(2, 8).toUpperCase()}`, [user?.id]);
   const myName = user?.fullName || 'Convidado';
 
   const [aiChoiceFeedback, setAiChoiceFeedback] = useState(null);

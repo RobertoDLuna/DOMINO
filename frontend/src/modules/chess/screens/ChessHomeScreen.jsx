@@ -52,7 +52,7 @@ export default function ChessHomeScreen({ user, onBack }) {
   const [gameSession, setGameSession] = useState(null);
 
   // Identidade do usuário
-  const myId = user?.id || `guest_${Date.now().toString().slice(-6)}`;
+  const myId = React.useMemo(() => user?.id || `guest_${Math.random().toString(36).substring(2, 8).toUpperCase()}`, [user?.id]);
   const myName = user?.fullName || 'Convidado';
 
   // Sincronização do estado de sessão ativa

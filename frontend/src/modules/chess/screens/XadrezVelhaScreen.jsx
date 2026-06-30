@@ -28,7 +28,7 @@ export default function XadrezVelhaScreen({ user, onBack, onSessionActive }) {
   const [gameSession, setGameSession] = useState(null);
 
   // Identidade do usuário para esta sessão
-  const myId = user?.id || `guest_${Date.now().toString().slice(-6)}`;
+  const myId = React.useMemo(() => user?.id || `guest_${Math.random().toString(36).substring(2, 8).toUpperCase()}`, [user?.id]);
   const myName = user?.fullName || 'Convidado';
 
   useEffect(() => {

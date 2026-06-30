@@ -214,9 +214,11 @@ module.exports = function chessSocket(io) {
         return;
       }
 
+      const isFirstMove = room.chess.history().length === 0;
+
       // Check for timeout BEFORE processing the move (Lazy Timestamp Evaluation)
       const turn = room.chess.turn(); // 'w' or 'b'
-      if (room.timeLimit && room.lastMoveTimestamp) {
+      if (room.timeLimit && room.lastMoveTimestamp && !isFirstMove) {
         const elapsed = Date.now() - room.lastMoveTimestamp;
         if (turn === 'w') {
           if (room.whiteTimeRemaining - elapsed <= 0) {
@@ -260,14 +262,19 @@ module.exports = function chessSocket(io) {
       room.drawOfferedBy = null;
 
       // Update timestamps
-      if (room.timeLimit && room.lastMoveTimestamp) {
-         const elapsed = Date.now() - room.lastMoveTimestamp;
-         if (turn === 'w') {
-            room.whiteTimeRemaining -= elapsed;
-         } else {
-            room.blackTimeRemaining -= elapsed;
+      if (room.timeLimit) {
+         if (isFirstMove) {
+            // Se for o primeiro movimento (das brancas), apenas inicia o marcador temporal para o próximo turno
+            room.lastMoveTimestamp = Date.now();
+         } else if (room.lastMoveTimestamp) {
+            const elapsed = Date.now() - room.lastMoveTimestamp;
+            if (turn === 'w') {
+               room.whiteTimeRemaining -= elapsed;
+            } else {
+               room.blackTimeRemaining -= elapsed;
+            }
+            room.lastMoveTimestamp = Date.now();
          }
-         room.lastMoveTimestamp = Date.now();
       }
 
       const payload = {
@@ -307,6 +314,7 @@ module.exports = function chessSocket(io) {
     socket.on('chess-claim-timeout', ({ roomCode }) => {
       const room = rooms.get(roomCode);
       if (!room || !room.timeLimit || !room.lastMoveTimestamp || room.chess.isGameOver()) return;
+      if (room.chess.history().length === 0) return; // O tempo não corre antes do primeiro lance
 
       const elapsed = Date.now() - room.lastMoveTimestamp;
       const turn = room.chess.turn();

@@ -125,6 +125,7 @@ export default function ChessScreen({
   // ── Timer Logic (Visual Mock) ──────────────────────────────────────────
   useEffect(() => {
     if (status !== 'playing' || gameOver || timeLimit === null) return;
+    if (moves.length === 0) return; // Não inicia o cronômetro antes da primeira jogada (movimento das brancas)
 
     const interval = setInterval(() => {
       const turn = chessRef.current.turn();

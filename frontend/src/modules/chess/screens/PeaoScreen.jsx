@@ -6,27 +6,27 @@ import '../components/peao.css';
 import '../components/xadrez-velha.css';
 
 const AI_LEVELS = [
-  { value: 1, label: 'Iniciante',    description: 'Movimentos básicos' },
-  { value: 2, label: 'Fácil',        description: 'Pensa 1 jogada à frente' },
-  { value: 3, label: 'Médio',        description: 'Equilíbrio ideal' },
-  { value: 4, label: 'Difícil',      description: 'Estratégia avançada' },
-  { value: 5, label: 'Mestre',       description: 'Praticamente invencível' },
+  { value: 1, label: 'Iniciante', description: 'Movimentos básicos' },
+  { value: 2, label: 'Fácil', description: 'Pensa 1 jogada à frente' },
+  { value: 3, label: 'Médio', description: 'Equilíbrio ideal' },
+  { value: 4, label: 'Difícil', description: 'Estratégia avançada' },
+  { value: 5, label: 'Mestre', description: 'Praticamente invencível' },
 ];
 
 export default function PeaoScreen({ user, onBack, onSessionActive }) {
   const { emit, on, isConnected } = usePeaoSocket();
 
-  const [mode,        setMode]        = useState(null);    // null | 'PVP' | 'PVC'
-  const [subMode,     setSubMode]     = useState(null);    // 'create' | 'join'
-  const [aiLevel,     setAiLevel]     = useState(3);
-  const [timeLimit,   setTimeLimit]   = useState(300);     // 300s = 5 min, 600s = 10 min
-  const [joinCode,    setJoinCode]    = useState('');
-  const [error,       setError]       = useState('');
-  const [loading,     setLoading]     = useState(false);
+  const [mode, setMode] = useState(null);    // null | 'PVP' | 'PVC'
+  const [subMode, setSubMode] = useState(null);    // 'create' | 'join'
+  const [aiLevel, setAiLevel] = useState(3);
+  const [timeLimit, setTimeLimit] = useState(300);     // 300s = 5 min, 600s = 10 min
+  const [joinCode, setJoinCode] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const [showRanking, setShowRanking] = useState(false);
   const [gameSession, setGameSession] = useState(null);
 
-  const myId   = React.useMemo(() => user?.id || `guest_${Math.random().toString(36).substring(2, 8).toUpperCase()}`, [user?.id]);
+  const myId = React.useMemo(() => user?.id || `guest_${Math.random().toString(36).substring(2, 8).toUpperCase()}`, [user?.id]);
   const myName = user?.fullName || 'Convidado';
 
   const [aiChoiceFeedback, setAiChoiceFeedback] = useState(null);
@@ -36,12 +36,12 @@ export default function PeaoScreen({ user, onBack, onSessionActive }) {
       on('peao-room-created', ({ roomCode, color, timeLimit: serverTime }) => {
         setLoading(false);
         if (mode === 'PVC') {
-          setGameSession({ 
-            roomCode, 
-            color: 'white', 
-            mode: 'PVC', 
-            aiLevel, 
-            myId, 
+          setGameSession({
+            roomCode,
+            color: 'white',
+            mode: 'PVC',
+            aiLevel,
+            myId,
             timeLimit: serverTime || timeLimit,
             phase: 'DRAWING'
           });
@@ -126,7 +126,7 @@ export default function PeaoScreen({ user, onBack, onSessionActive }) {
 
   function handleCreatePVC() {
     setLoading(true); setError('');
-    
+
     const sessionData = {
       roomCode: `ai_${Date.now()}`,
       mode: 'PVC',
@@ -138,7 +138,7 @@ export default function PeaoScreen({ user, onBack, onSessionActive }) {
     };
 
     const isHumanWinner = Math.random() > 0.5;
-    
+
     if (isHumanWinner) {
       setGameSession({
         ...sessionData,
@@ -154,11 +154,11 @@ export default function PeaoScreen({ user, onBack, onSessionActive }) {
         drawWinnerName: 'Computador',
         phase: 'DRAWING'
       });
-      
+
       setTimeout(() => {
         const aiChoice = Math.random() > 0.5 ? 'white' : 'black';
         setAiChoiceFeedback(aiChoice);
-        
+
         setTimeout(() => {
           setGameSession(prev => ({
             ...prev,
@@ -182,7 +182,7 @@ export default function PeaoScreen({ user, onBack, onSessionActive }) {
 
   function handlePickColor(color) {
     if (!gameSession?.roomCode) return;
-    
+
     if (gameSession.mode === 'PVC') {
       setGameSession(prev => ({
         ...prev,
@@ -209,14 +209,14 @@ export default function PeaoScreen({ user, onBack, onSessionActive }) {
       <PeaoGame
         user={user}
         roomData={{
-          roomCode:    gameSession.roomCode,
+          roomCode: gameSession.roomCode,
           color,
-          mode:        gameSession.mode,
-          aiLevel:     gameSession.aiLevel,
-          whiteName:   gameSession.whiteName || (color === 'white' ? myName : gameSession.opponentName || '...'),
-          blackName:   gameSession.blackName || (color === 'black' ? myName : gameSession.opponentName || 'Computador'),
+          mode: gameSession.mode,
+          aiLevel: gameSession.aiLevel,
+          whiteName: gameSession.whiteName || (color === 'white' ? myName : gameSession.opponentName || '...'),
+          blackName: gameSession.blackName || (color === 'black' ? myName : gameSession.opponentName || 'Computador'),
           myId,
-          timeLimit:   gameSession.timeLimit || 300,
+          timeLimit: gameSession.timeLimit || 300,
         }}
         onExit={handleBack}
       />
@@ -322,7 +322,7 @@ export default function PeaoScreen({ user, onBack, onSessionActive }) {
       {/* Header */}
       <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
         <div className="flex items-center gap-4">
-          <button 
+          <button
             onClick={() => {
               if (subMode) setSubMode(null);
               else if (mode) setMode(null);
@@ -340,7 +340,7 @@ export default function PeaoScreen({ user, onBack, onSessionActive }) {
         </div>
 
         <div className="flex items-center gap-3">
-          <button 
+          <button
             onClick={() => setShowRanking(true)}
             className="bg-amber-400 text-amber-950 px-5 py-3 rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-[0_5px_0_#d97706] hover:brightness-105 transition-all active:translate-y-1 active:shadow-none flex items-center gap-2"
           >
@@ -427,7 +427,7 @@ export default function PeaoScreen({ user, onBack, onSessionActive }) {
         <section className="max-w-md mx-auto w-full animate-in fade-in slide-in-from-bottom-4 duration-300 mt-12 bg-white rounded-[2rem] border-2 border-emerald-100 p-8 text-center">
           <div className="w-16 h-16 bg-emerald-50 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-6">➕</div>
           <h2 className="text-xl font-black text-emerald-950 uppercase italic tracking-tight mb-4">Criar Sala Privada</h2>
-          
+
           <div className="text-left mb-6">
             <label className="block text-xs font-black text-emerald-900/70 uppercase tracking-widest mb-3">
               ⏱️ Tempo de Partida
@@ -454,9 +454,9 @@ export default function PeaoScreen({ user, onBack, onSessionActive }) {
             Você compartilhará o código gerado com seu amigo para que ele possa entrar.
           </p>
           {error && <div className="bg-red-50 text-red-600 text-sm font-bold p-4 rounded-xl mb-6">{error}</div>}
-          <button 
+          <button
             className="w-full bg-emerald-600 text-white font-black text-sm uppercase tracking-widest py-4 rounded-2xl shadow-[0_5px_0_#047857] hover:brightness-110 active:translate-y-1 active:shadow-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-            onClick={handleCreatePVP} 
+            onClick={handleCreatePVP}
             disabled={loading}
           >
             {loading ? '⏳ Criando...' : '🎮 Criar Sala Agora'}
@@ -481,9 +481,9 @@ export default function PeaoScreen({ user, onBack, onSessionActive }) {
             maxLength={8}
           />
           {error && <div className="bg-red-50 text-red-600 text-sm font-bold p-4 rounded-xl mb-6">{error}</div>}
-          <button 
+          <button
             className="w-full bg-emerald-600 text-white font-black text-sm uppercase tracking-widest py-4 rounded-2xl shadow-[0_5px_0_#047857] hover:brightness-110 active:translate-y-1 active:shadow-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-            onClick={handleJoin} 
+            onClick={handleJoin}
             disabled={loading || !joinCode}
           >
             {loading ? '⏳ Conectando...' : '🔗 Entrar na Sala'}
@@ -499,20 +499,19 @@ export default function PeaoScreen({ user, onBack, onSessionActive }) {
             <h2 className="text-xl font-black text-emerald-950 uppercase italic tracking-tight mb-2">Opções da Partida</h2>
             <p className="text-emerald-900/60 text-sm font-medium">Configure a dificuldade e o tempo.</p>
           </div>
-          
+
           <div className="mb-6">
             <label className="block text-xs font-black text-emerald-900/70 uppercase tracking-widest mb-3">
               🤖 Nível da IA
             </label>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {AI_LEVELS.map(lvl => (
-                <button 
-                  key={lvl.value} 
-                  className={`flex flex-col text-left p-4 rounded-2xl border-2 transition-all ${
-                    aiLevel === lvl.value 
-                      ? 'border-emerald-500 bg-emerald-50' 
+                <button
+                  key={lvl.value}
+                  className={`flex flex-col text-left p-4 rounded-2xl border-2 transition-all ${aiLevel === lvl.value
+                      ? 'border-emerald-500 bg-emerald-50'
                       : 'border-emerald-50 bg-white hover:border-emerald-200'
-                  }`}
+                    }`}
                   onClick={() => setAiLevel(lvl.value)}
                 >
                   <strong className={`text-sm font-black uppercase tracking-tight mb-1 ${aiLevel === lvl.value ? 'text-emerald-700' : 'text-emerald-950'}`}>
@@ -550,7 +549,7 @@ export default function PeaoScreen({ user, onBack, onSessionActive }) {
 
           {error && <div className="bg-red-50 text-red-600 text-sm font-bold p-4 rounded-xl mb-6">{error}</div>}
 
-          <button 
+          <button
             className="w-full bg-emerald-600 text-white font-black text-sm uppercase tracking-widest py-4 rounded-2xl shadow-[0_5px_0_#047857] hover:brightness-110 active:translate-y-1 active:shadow-none transition-all"
             onClick={handleCreatePVC}
             disabled={loading}

@@ -51,9 +51,9 @@ export default function ChessScreen({
   const [rematchRequested, setRematchRequested] = useState(false);
   const [opponentWantsRematch, setOpponentWantsRematch] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  
+
   // Timers (em segundos)
-  const [whiteTime, setWhiteTime] = useState(timeLimit === undefined ? 600 : timeLimit); 
+  const [whiteTime, setWhiteTime] = useState(timeLimit === undefined ? 600 : timeLimit);
   const [blackTime, setBlackTime] = useState(timeLimit === undefined ? 600 : timeLimit);
 
   const chessRef = useRef(new Chess());
@@ -62,7 +62,7 @@ export default function ChessScreen({
   const myColor = assignedColors ? (assignedColors.white.userId === myId ? 'white' : 'black') : 'white';
   const whiteName = assignedColors?.white?.userName || 'Aguardando...';
   const blackName = assignedColors?.black?.userName || 'Aguardando...';
-  
+
   const isMyTurn = assignedColors && chessRef.current.turn() === (myColor === 'white' ? 'w' : 'b');
 
   // Compute status
@@ -108,7 +108,7 @@ export default function ChessScreen({
 
   function _applyAiMove(uciMove) {
     const from = uciMove.slice(0, 2);
-    const to   = uciMove.slice(2, 4);
+    const to = uciMove.slice(2, 4);
     const promo = uciMove.length === 5 ? uciMove[4] : 'q';
 
     let result;
@@ -129,7 +129,7 @@ export default function ChessScreen({
 
     const interval = setInterval(() => {
       const turn = chessRef.current.turn();
-      
+
       if (turn === 'w') {
         setWhiteTime(prev => {
           const next = Math.max(0, prev - 0.1);
@@ -150,7 +150,7 @@ export default function ChessScreen({
 
   const handleTimeout = useCallback((lostColor) => {
     if (gameOver) return;
-    
+
     if (mode === 'PVP') {
       // Option C: Validação Tardia (Lazy Timestamp Evaluation)
       // Delegamos ao backend a autoridade de confirmar o fim do jogo
@@ -247,7 +247,7 @@ export default function ChessScreen({
       const timer = setTimeout(() => {
         const aiChoice = Math.random() > 0.5 ? 'white' : 'black';
         setAiChoiceFeedback(aiChoice);
-        
+
         // Pequeno delay para o player ver a escolha antes de iniciar
         setTimeout(() => {
           const white = aiChoice === 'white' ? { userId: 'AI', userName: 'Computador' } : { userId: myId, userName: user?.fullName || 'Você' };
@@ -292,7 +292,7 @@ export default function ChessScreen({
         return; // Invalid move
       }
     }
-    
+
     // For PVC, updating FEN will trigger Stockfish useEffect
     setFen(chessRef.current.fen());
     setMoves(chessRef.current.history({ verbose: true }));
@@ -356,18 +356,18 @@ export default function ChessScreen({
       <div className="velha-container flex flex-col items-center justify-center min-h-[60vh]">
         <div className="text-center p-8 bg-white rounded-2xl shadow-xl w-full max-w-sm">
           <div className="w-16 h-16 border-4 border-t-[#769656] border-gray-200 rounded-full animate-spin mx-auto mb-6"></div>
-          
+
           <h2 className="text-2xl font-black mb-2 uppercase text-gray-800">Aguardando Oponente</h2>
           <p className="text-gray-500 mb-8 font-medium">Compartilhe o código abaixo com seu adversário:</p>
-          
+
           <div className="bg-gray-50 p-6 rounded-2xl border-2 border-dashed border-gray-200 mb-8">
             <span className="text-4xl font-black tracking-[0.2em] text-[#769656]">{roomCode}</span>
           </div>
 
           <p className="text-xs text-gray-400 mb-6 italic">O sorteio começará automaticamente assim que alguém entrar.</p>
-          
-          <button 
-            onClick={onBack} 
+
+          <button
+            onClick={onBack}
             className="w-full py-3 text-sm text-red-500 font-bold hover:bg-red-50 rounded-xl transition-colors border border-transparent hover:border-red-100"
           >
             Cancelar e Sair
@@ -408,7 +408,7 @@ export default function ChessScreen({
               <h2 className="text-2xl font-black mb-2 uppercase text-gray-800">Você Venceu!</h2>
               <p className="text-gray-500 mb-8 font-medium">Escolha sua cor para começar:</p>
               <div className="flex gap-4">
-                <button 
+                <button
                   onClick={() => handlePickColor('white')}
                   className="flex-1 p-6 rounded-2xl border-2 border-gray-200 hover:border-[#769656] transition-all group"
                 >
@@ -416,7 +416,7 @@ export default function ChessScreen({
                   <strong className="block text-sm uppercase">Brancas</strong>
                   <span className="text-[10px] text-gray-400">Começa o Jogo</span>
                 </button>
-                <button 
+                <button
                   onClick={() => handlePickColor('black')}
                   className="flex-1 p-6 rounded-2xl border-2 border-gray-200 hover:border-[#769656] transition-all group"
                 >
@@ -430,8 +430,8 @@ export default function ChessScreen({
             <>
               <h2 className="text-2xl font-black mb-2 uppercase text-gray-800">{drawWinner.userName} Venceu</h2>
               <p className="text-gray-500 mb-8 font-medium">
-                {aiChoiceFeedback 
-                  ? `O Computador escolheu as ${aiChoiceFeedback === 'white' ? 'BRANCAS' : 'PRETAS'}!` 
+                {aiChoiceFeedback
+                  ? `O Computador escolheu as ${aiChoiceFeedback === 'white' ? 'BRANCAS' : 'PRETAS'}!`
                   : 'Aguardando escolha da cor...'}
               </p>
               {aiChoiceFeedback ? (
@@ -451,7 +451,7 @@ export default function ChessScreen({
   const opponentColor = myColor === 'white' ? 'black' : 'white';
   const opponentName = myColor === 'white' ? (blackName || (mode === 'PVC' ? `IA Nível ${aiLevel}` : 'Aguardando...')) : (whiteName || 'Aguardando...');
   const playerName = myColor === 'white' ? (whiteName || 'Você') : (blackName || 'Você');
-  
+
   const MobileHUD = ({ playerColor, name, playerTime, isActive, isTop }) => (
     <div className={`chess-mobile-hud ${isTop ? 'top-hud' : 'bottom-hud'} md:hidden`}>
       <div className="chess-hud-player">
@@ -465,7 +465,7 @@ export default function ChessScreen({
           {status === 'playing' && <ChessTimer seconds={playerTime} active={isActive} />}
         </div>
         {!isTop && (
-          <button 
+          <button
             className="chess-menu-btn"
             onClick={() => setIsMobileMenuOpen(true)}
           >
@@ -493,10 +493,10 @@ export default function ChessScreen({
       </div>
 
       {/* Top Mobile HUD (Opponent) */}
-      <MobileHUD 
-        playerColor={opponentColor} 
-        name={opponentName} 
-        playerTime={opponentColor === 'white' ? whiteTime : blackTime} 
+      <MobileHUD
+        playerColor={opponentColor}
+        name={opponentName}
+        playerTime={opponentColor === 'white' ? whiteTime : blackTime}
         isActive={status === 'playing' && !isMyTurn}
         isTop={true}
       />
@@ -522,23 +522,23 @@ export default function ChessScreen({
         </div>
 
         {/* Mobile HUD Bottom (You) */}
-        <MobileHUD 
-          playerColor={myColor} 
-          name={playerName} 
-          playerTime={myColor === 'white' ? whiteTime : blackTime} 
+        <MobileHUD
+          playerColor={myColor}
+          name={playerName}
+          playerTime={myColor === 'white' ? whiteTime : blackTime}
           isActive={status === 'playing' && isMyTurn}
           isTop={false}
         />
 
         {/* Backdrop for Mobile Menu */}
-        <div 
+        <div
           className={`chess-menu-backdrop md:hidden ${isMobileMenuOpen ? 'open' : ''}`}
           onClick={() => setIsMobileMenuOpen(false)}
         />
 
         {/* Sidebar container para sincronização de altura */}
         <div className={`chess-sidebar-container ${isMobileMenuOpen ? 'open' : ''}`}>
-          
+
           {/* Header Mobile com Theme Switcher e Fechar */}
           <div className="flex md:hidden justify-between items-center mb-4 pb-4 border-b-2 border-gray-100">
             <div className="flex gap-2">
@@ -552,7 +552,7 @@ export default function ChessScreen({
                 </button>
               ))}
             </div>
-            <button 
+            <button
               onClick={() => setIsMobileMenuOpen(false)}
               className="w-8 h-8 flex items-center justify-center bg-gray-100 rounded-full text-gray-500 hover:bg-gray-200"
             >

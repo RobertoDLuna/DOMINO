@@ -35,6 +35,9 @@ model User {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
+  tournamentsCreated Tournament[] @relation("TournamentCreator")
+  tournamentsJoined  TournamentParticipant[] @relation("TournamentParticipant")
+
   @@map("users")
 }
 
@@ -478,4 +481,115 @@ model BnccSkill {
   createdAt   DateTime @default(now()) @map("created_at")
 
   @@map("bncc_skills")
+}
+
+// ─── CAMPEONATOS ─────────────────────────────────────────────────────────
+
+enum TournamentStatus {
+  OPEN         // inscrições abertas
+  IN_PROGRESS  // campeonato em andamento
+  FINISHED     // campeonato encerrado
+  CANCELLED    // cancelado
+}
+
+enum TournamentFormat {
+  ELIMINATION   // eliminatórias (bracket)
+  ROUND_ROBIN   // todos contra todos
+}
+
+enum TournamentGameType {
+  CHESS          // Xadrez Real
+  DOMINO         // Dominó
+  QUIZ           // Mestre do Quiz
+  PEAO           // Batalha dos Peões
+  VELHA          // Xadrez da Velha
+}
+
+model Tournament {
+  id            String              @id @default(uuid())
+  name          String              @db.VarChar(255)
+  description   String?             @db.Text
+  gameType      TournamentGameType  @map("game_type")
+  format        TournamentFormat    @default(ELIMINATION)
+  status        TournamentStatus    @default(OPEN)
+  maxPlayers    Int                 @map("max_players")
+  
+  createdById   String              @map("created_by_id")
+  createdBy     User                @relation("TournamentCreator", fields: [createdById], references: [id])
+  
+  startsAt      DateTime            @map("starts_at")
+  endsAt        DateTime            @map("ends_at")
+  
+  participants  TournamentParticipant[]
+  matches       TournamentMatch[]
+  
+  createdAt     DateTime            @default(now()) @map("created_at")
+  updatedAt     DateTime            @updatedAt @map("updated_at")
+
+  @@map("tournaments")
+}
+
+model TournamentParticipant {
+  id            String     @id @default(uuid())
+  tournament    Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  tournamentId  String     @map("tournament_id")
+  
+  userId        String     @map("user_id")
+  user          User       @relation("TournamentParticipant", fields: [userId], references: [id])
+  userName      String     @map("user_name") @db.VarChar(255)
+  schoolName    String?    @map("school_name") @db.VarChar(255)
+  
+  seed          Int?       // posição no chaveamento
+  finalPosition Int?       @map("final_position") // colocação final (1º, 2º, 3º...)
+  points        Int        @default(0)  // pontos acumulados no campeonato
+  
+  createdAt     DateTime   @default(now()) @map("created_at")
+
+  @@unique([tournamentId, userId])
+  @@map("tournament_participants")
+}
+
+model TournamentMatch {
+  id            String     @id @default(uuid())
+  tournament    Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  tournamentId  String     @map("tournament_id")
+  
+  round         Int        // rodada (1=quartas, 2=semi, 3=final, etc.)
+  position      Int        // posição dentro da rodada
+  
+  player1Id     String?    @map("player1_id")
+  player1Name   String?    @map("player1_name") @db.VarChar(255)
+  player2Id     String?    @map("player2_id")
+  player2Name   String?    @map("player2_name") @db.VarChar(255)
+  
+  winnerId      String?    @map("winner_id")
+  score1        Int?       // resultado jogador 1
+  score2        Int?       // resultado jogador 2
+  
+  gameRoomCode  String?    @map("game_room_code") @db.VarChar(20)
+  
+  status        String     @default("PENDING") @db.VarChar(20) // PENDING, IN_PROGRESS, FINISHED
+  
+  createdAt     DateTime   @default(now()) @map("created_at")
+  updatedAt     DateTime   @updatedAt @map("updated_at")
+
+  @@map("tournament_matches")
+}
+
+model TournamentRanking {
+  id         String   @id @default(uuid())
+  userId     String   @unique @map("user_id")
+  userName   String   @map("user_name") @db.VarChar(255)
+  schoolId   Int?     @map("school_id")
+  schoolName String?  @map("school_name") @db.VarChar(255)
+  
+  championships Int   @default(0)   // 1º lugares
+  podiums       Int   @default(0)   // top 3
+  totalPoints   Int   @default(0)   // pontuação acumulada
+  participated  Int   @default(0)   // total de campeonatos
+  
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@map("tournament_ranking")
 }

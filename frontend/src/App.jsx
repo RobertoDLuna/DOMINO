@@ -8,6 +8,7 @@ import DominoHomeScreen from "./modules/domino/screens/DominoHomeScreen";
 import GameHub from "./core/hub/GameHub";
 import ChessHomeScreen from "./modules/chess/screens/ChessHomeScreen";
 import QuizAppRouter from "./modules/quiz/QuizAppRouter";
+import TournamentAppRouter from "./modules/tournament/TournamentAppRouter";
 import AuthService from "./services/AuthService";
 import { useGameContext } from "./context/GameContext";
 import ConfirmModal from "./shared/ui/ConfirmModal";
@@ -35,8 +36,13 @@ function App() {
 
   useEffect(() => {
     const openAdmin = () => toggleAdminPanel(true);
+    const openTournaments = () => setActiveGame('tournaments');
     window.addEventListener('openAdminPanel', openAdmin);
-    return () => window.removeEventListener('openAdminPanel', openAdmin);
+    window.addEventListener('openTournaments', openTournaments);
+    return () => {
+      window.removeEventListener('openAdminPanel', openAdmin);
+      window.removeEventListener('openTournaments', openTournaments);
+    }
   }, []);
 
   // Força o scroll para o topo ao transicionar de telas (evita que a tela permaneça scrollada ao logar)
@@ -67,9 +73,9 @@ function App() {
 
   if (!user && !guestMode && !isInRoomSession) {
     return (
-      <AuthScreen 
-        onAuthSuccess={handleAuthSuccess} 
-        onGuestStart={() => setGuestMode(true)} 
+      <AuthScreen
+        onAuthSuccess={handleAuthSuccess}
+        onGuestStart={() => setGuestMode(true)}
         onJoinRoom={() => setManualJoin(true)}
       />
     );
@@ -98,21 +104,21 @@ function App() {
   return (
     <>
       {(selectedTheme || isInRoomSession) ? (
-        <GameContainer 
-          user={user} 
-          isGuest={guestMode || (isInRoomSession && !user)} 
+        <GameContainer
+          user={user}
+          isGuest={guestMode || (isInRoomSession && !user)}
           initialTheme={selectedTheme}
-          onBack={() => { 
-              setSelectedTheme(null); 
-              setManualJoin(false);
-              leaveRoom(); 
-              if (!user) setGuestMode(false); 
+          onBack={() => {
+            setSelectedTheme(null);
+            setManualJoin(false);
+            leaveRoom();
+            if (!user) setGuestMode(false);
           }}
         />
       ) : activeGame === 'domino' ? (
-        <DominoHomeScreen 
-          user={user} 
-          onSelectTheme={setSelectedTheme} 
+        <DominoHomeScreen
+          user={user}
+          onSelectTheme={setSelectedTheme}
           onJoinRoom={() => setManualJoin(true)}
           onBack={() => setActiveGame(null)}
         />
@@ -123,20 +129,22 @@ function App() {
         />
       ) : activeGame === 'quiz' ? (
         <QuizAppRouter user={user} onBack={() => setActiveGame(null)} />
+      ) : activeGame === 'tournaments' ? (
+        <TournamentAppRouter user={user} onBack={() => setActiveGame(null)} />
       ) : (
-        <GameHub 
-          user={user} 
+        <GameHub
+          user={user}
           onSelectGame={(gameId) => setActiveGame(gameId)}
           onLogout={requestLogout}
         />
       )}
 
-      
+
       {showAdminPanel && user?.role === 'ADMIN' && (
         <AdminDashboard onBack={() => toggleAdminPanel(false)} />
       )}
 
-      <ConfirmModal 
+      <ConfirmModal
         isOpen={showLogoutConfirm}
         title="Sair do Jogo"
         message="Deseja realmente sair da sua conta?"

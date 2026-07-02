@@ -77,6 +77,14 @@ export const Sidebar = ({ user, onLogout }) => {
           <span className="hidden lg:block">Início</span>
         </button>
 
+        <button 
+          onClick={() => window.dispatchEvent(new CustomEvent('openTournaments'))}
+          className="w-full flex items-center gap-4 p-4 rounded-2xl text-emerald-900/60 hover:bg-emerald-50 hover:text-[#009660] font-black text-xs uppercase tracking-widest transition-all group"
+        >
+          <span className="text-xl group-hover:scale-110 transition-transform">🏆</span>
+          <span className="hidden lg:block">Campeonatos</span>
+        </button>
+
         {user?.role === 'ADMIN' && (
           <button 
             onClick={() => window.dispatchEvent(new CustomEvent('openAdminPanel'))}
@@ -146,6 +154,15 @@ const GameHub = ({ user, onSelectGame, onLogout }) => {
       color: '#d97706',
       playersOnline: 89,
       badge: 'Novo'
+    },
+    {
+      id: 'tournaments',
+      title: 'Campeonatos',
+      description: 'Participe de competições oficiais e conquiste o ranking geral.',
+      icon: '🏆',
+      color: '#FFCE00',
+      playersOnline: 35,
+      badge: 'Oficial'
     },
     {
       id: 'memoria',
@@ -235,7 +252,7 @@ const GameHub = ({ user, onSelectGame, onLogout }) => {
                   key={game.id}
                   {...game}
                   onClick={() => {
-                    if (game.id === 'domino' || game.id === 'xadrez' || game.id === 'quiz') {
+                    if (game.id === 'domino' || game.id === 'xadrez' || game.id === 'quiz' || game.id === 'tournaments') {
                       onSelectGame(game.id);
                     }
                   }}

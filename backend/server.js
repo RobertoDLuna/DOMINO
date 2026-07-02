@@ -12,6 +12,7 @@ const rankingRoutes = require("./src/modules/domino/rankingRoutes");
 const chessRankingRoutes = require("./src/modules/chess/chessRoutes");
 const chessReportRoutes = require("./src/modules/chess/chessReportRoutes");
 const quizRoutes = require("./src/modules/quiz/quizRoutes");
+const tournamentRoutes = require("./src/modules/tournament/tournamentRoutes");
 
 // Global error handlers for Docker troubleshooting
 process.on("uncaughtException", (err) => {
@@ -78,6 +79,7 @@ app.use("/api/ranking", rankingRoutes);
 app.use("/api/chess/ranking", chessRankingRoutes);
 app.use("/api/chess/reports", chessReportRoutes);
 app.use("/api/quiz", quizRoutes);
+app.use("/api/tournaments", tournamentRoutes);
 
 // Serving Static Frontend Files (Production)
 const frontendPath = path.join(__dirname, "../frontend/dist");

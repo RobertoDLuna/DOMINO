@@ -7,11 +7,12 @@ import { API_URL } from '../../config/api';
 
 import { Podium } from '../hub/RankingBoard';
 
-const PreviewPanel = ({ previews, chessPreviews }) => {
-  const [game, setGame] = useState('DOMINO'); // DOMINO, CHESS
+const PreviewPanel = ({ previews, chessPreviews, tournamentPreviews }) => {
+  const [game, setGame] = useState('DOMINO'); // DOMINO, CHESS, TOURNAMENTS
   const [tab, setTab] = useState('GERAL');
 
   const getPodiumData = () => {
+    if (game === 'TOURNAMENTS') return tournamentPreviews;
     const activeData = game === 'DOMINO' ? previews : chessPreviews;
     switch (tab) {
       case 'GERAL': return activeData?.topPlayers;
@@ -31,9 +32,10 @@ const PreviewPanel = ({ previews, chessPreviews }) => {
   return (
     <div className="flex flex-col mt-8 w-full relative z-10">
       {/* Game Selector */}
-      <div className="flex bg-black/20 p-1 rounded-xl gap-1 mb-6 self-start border border-white/5">
+      <div className="flex bg-black/20 p-1 rounded-xl gap-1 mb-6 self-start border border-white/5 flex-wrap">
         <button onClick={() => { setGame('DOMINO'); setTab('GERAL'); }} className={`px-4 py-1.5 text-[10px] font-black rounded-lg transition-all ${game === 'DOMINO' ? 'bg-white/20 text-white' : 'text-white/70 hover:text-white/60'}`}>🀄 DOMINÓ</button>
         <button onClick={() => { setGame('CHESS'); setTab('GERAL'); }} className={`px-4 py-1.5 text-[10px] font-black rounded-lg transition-all ${game === 'CHESS' ? 'bg-white/20 text-white' : 'text-white/70 hover:text-white/60'}`}>♟️ XADREZ</button>
+        <button onClick={() => { setGame('TOURNAMENTS'); setTab('GERAL'); }} className={`px-4 py-1.5 text-[10px] font-black rounded-lg transition-all ${game === 'TOURNAMENTS' ? 'bg-white/20 text-white' : 'text-white/70 hover:text-white/60'}`}>🏆 CAMPEONATOS</button>
       </div>
 
       <div className="flex flex-wrap bg-black/15 p-2 rounded-2xl shadow-inner backdrop-blur-md self-start max-w-full border border-white/10 gap-2">
@@ -92,6 +94,7 @@ const AuthScreen = ({ onAuthSuccess, onGuestStart, onJoinRoom }) => {
 
   const [previews, setPreviews] = useState({ topPlayers: [], topCreators: [], topSchools: [], topCategories: [] });
   const [chessPreviews, setChessPreviews] = useState({ topPlayers: [], topSchools: [] });
+  const [tournamentPreviews, setTournamentPreviews] = useState([]);
   const [showDrawer, setShowDrawer] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -116,6 +119,22 @@ const AuthScreen = ({ onAuthSuccess, onGuestStart, onJoinRoom }) => {
     fetch(`${API_URL}/chess/ranking/preview`)
       .then(res => res.ok ? res.json() : null)
       .then(data => data && setChessPreviews(data))
+      .catch(console.error);
+      
+    // Tournament Previews
+    fetch(`${API_URL}/tournaments/ranking`)
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+         if (data) {
+           const formatted = data.slice(0, 3).map(t => ({
+             id: t.userId,
+             name: t.userName,
+             school: t.schoolName,
+             points: t.totalPoints
+           }));
+           setTournamentPreviews(formatted);
+         }
+      })
       .catch(console.error);
   }, []);
 
@@ -176,7 +195,7 @@ const AuthScreen = ({ onAuthSuccess, onGuestStart, onJoinRoom }) => {
           <button onClick={() => setShowDrawer(false)} className="text-white bg-black/20 w-8 h-8 rounded-full flex items-center justify-center">✕</button>
         </div>
         <p className="text-emerald-100/80 text-sm font-medium mb-6 relative z-10">Plataforma educacional para aprendizado lúdico através do dominó.</p>
-        <PreviewPanel previews={previews} chessPreviews={chessPreviews} />
+        <PreviewPanel previews={previews} chessPreviews={chessPreviews} tournamentPreviews={tournamentPreviews} />
       </div>
       {/* Overlay Escuro Mobile */}
       {showDrawer && <div className="fixed inset-0 bg-slate-900/40 z-40 lg:hidden backdrop-blur-sm" onClick={() => setShowDrawer(false)}></div>}
@@ -195,7 +214,9 @@ const AuthScreen = ({ onAuthSuccess, onGuestStart, onJoinRoom }) => {
             Plataforma unificada para educadores e alunos. Aprendizado e diversão nas mesas virtuais de dominó.
           </p>
 
-          <PreviewPanel previews={previews} chessPreviews={chessPreviews} />
+            <div className="flex-1 w-full flex flex-col justify-center items-start lg:pl-12 lg:pr-16 z-20">
+              <PreviewPanel previews={previews} chessPreviews={chessPreviews} tournamentPreviews={tournamentPreviews} />
+            </div>
         </div>
       </div>
 

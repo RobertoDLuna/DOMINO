@@ -13,6 +13,7 @@ const chessRankingRoutes = require("./src/modules/chess/chessRoutes");
 const chessReportRoutes = require("./src/modules/chess/chessReportRoutes");
 const quizRoutes = require("./src/modules/quiz/quizRoutes");
 const tournamentRoutes = require("./src/modules/tournament/tournamentRoutes");
+require("./src/modules/tournament/tournamentCron"); // Inicializa os cron jobs de torneio
 
 // Global error handlers for Docker troubleshooting
 process.on("uncaughtException", (err) => {

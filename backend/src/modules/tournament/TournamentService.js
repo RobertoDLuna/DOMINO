@@ -49,6 +49,13 @@ class TournamentService {
       throw new Error("O número de participantes deve ser um número par.");
     }
 
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const startDate = new Date(data.startsAt);
+    if (startDate < today) {
+      throw new Error("A data de início do campeonato não pode ser no passado.");
+    }
+
     return await prisma.tournament.create({
       data: {
         name: data.name,
@@ -88,6 +95,15 @@ class TournamentService {
     if (data.startsAt && data.endsAt) {
       if (new Date(data.startsAt) > new Date(data.endsAt)) {
         throw new Error("A data de encerramento não pode ser anterior à data de início.");
+      }
+    }
+
+    if (data.startsAt) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const startDate = new Date(data.startsAt);
+      if (startDate < today) {
+        throw new Error("A data de início do campeonato não pode ser no passado.");
       }
     }
 

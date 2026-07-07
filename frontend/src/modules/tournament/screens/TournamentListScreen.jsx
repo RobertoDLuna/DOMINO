@@ -57,6 +57,7 @@ export const TournamentListScreen = ({ user, onBack, onSelectTournament }) => {
     if (status === 'OPEN') return <span className="bg-[#009660] text-white px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm whitespace-nowrap text-center">Inscrições Abertas</span>;
     if (status === 'IN_PROGRESS') return <span className="bg-[#FFCE00] text-emerald-900 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm whitespace-nowrap text-center">Em Andamento</span>;
     if (status === 'FINISHED') return <span className="bg-slate-200 text-slate-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm whitespace-nowrap text-center">Encerrado</span>;
+    if (status === 'CANCELLED') return <span className="bg-red-100 text-red-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm whitespace-nowrap text-center">Cancelado</span>;
     return null;
   };
 
@@ -192,7 +193,9 @@ export const TournamentListScreen = ({ user, onBack, onSelectTournament }) => {
                   className={`w-full py-3 rounded-2xl font-black uppercase tracking-widest text-xs transition-colors active:scale-95 ${
                     t.status === 'OPEN' 
                       ? 'bg-[#FFCE00] text-emerald-900 hover:bg-[#e6ba00]' 
-                      : 'bg-emerald-50 text-[#009660] hover:bg-emerald-100'
+                      : t.status === 'CANCELLED' 
+                        ? 'bg-red-50 text-red-600 hover:bg-red-100'
+                        : 'bg-emerald-50 text-[#009660] hover:bg-emerald-100'
                   }`}
                 >
                   {t.status === 'OPEN' ? 'Inscrever-se' : 'Ver Detalhes'}

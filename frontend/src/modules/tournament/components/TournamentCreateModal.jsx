@@ -26,6 +26,20 @@ const TournamentCreateModal = ({ onClose, onSuccess }) => {
       return;
     }
 
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const startDate = new Date(formData.startsAt + 'T00:00:00'); // Garante que a data local seja parseada corretamente
+    
+    if (startDate < today) {
+      setError('A data de início não pode ser no passado.');
+      return;
+    }
+
+    if (new Date(formData.startsAt) > new Date(formData.endsAt)) {
+      setError('A data de término não pode ser anterior à data de início.');
+      return;
+    }
+
     try {
       setLoading(true);
       await TournamentService.createTournament({

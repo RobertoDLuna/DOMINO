@@ -102,10 +102,12 @@ export const TournamentDetailScreen = ({ tournamentId, user, onBack }) => {
                 <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest whitespace-nowrap ${
                   tournament.status === 'OPEN' ? 'bg-white text-[#009660]' : 
                   tournament.status === 'IN_PROGRESS' ? 'bg-[#FFCE00] text-emerald-900' : 
+                  tournament.status === 'CANCELLED' ? 'bg-red-100 text-red-600' :
                   'bg-white/20 text-white'
                 }`}>
                   {tournament.status === 'OPEN' ? 'Inscrições Abertas' : 
-                   tournament.status === 'IN_PROGRESS' ? 'Em Andamento' : 'Encerrado'}
+                   tournament.status === 'IN_PROGRESS' ? 'Em Andamento' : 
+                   tournament.status === 'CANCELLED' ? 'Cancelado' : 'Encerrado'}
                 </span>
               </div>
               <h1 className="text-3xl md:text-4xl font-black uppercase italic tracking-tighter mb-2">
@@ -114,6 +116,13 @@ export const TournamentDetailScreen = ({ tournamentId, user, onBack }) => {
               <p className="text-white/80 font-medium text-sm md:text-base max-w-2xl">
                 {tournament.description || 'Nenhuma descrição fornecida.'}
               </p>
+
+              {tournament.status === 'CANCELLED' && (
+                <div className="mt-4 bg-red-500/20 text-red-100 px-4 py-3 rounded-xl border border-red-500/30 font-medium text-sm inline-block">
+                  <span className="font-bold uppercase tracking-widest block mb-1">Atenção</span>
+                  Cancelado: o campeonato não foi iniciado dentro da data programada.
+                </div>
+              )}
             </div>
           </div>
 

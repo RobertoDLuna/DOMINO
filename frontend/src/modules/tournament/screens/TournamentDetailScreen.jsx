@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import TournamentService from '../services/TournamentService';
 import TournamentBracket from '../components/TournamentBracket';
 import TournamentRoundRobin from '../components/TournamentRoundRobin';
+import TournamentEditModal from '../components/TournamentEditModal';
 
 export const TournamentDetailScreen = ({ tournamentId, user, onBack }) => {
   const [tournament, setTournament] = useState(null);
@@ -9,6 +10,7 @@ export const TournamentDetailScreen = ({ tournamentId, user, onBack }) => {
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState('INFO'); // INFO, PARTICIPANTS, MATCHES
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   useEffect(() => {
     loadTournament();
@@ -91,13 +93,13 @@ export const TournamentDetailScreen = ({ tournamentId, user, onBack }) => {
             </button>
             <div>
               <div className="flex flex-wrap gap-2 mb-3">
-                <span className="bg-[#FFCE00] text-emerald-900 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm">
+                <span className="bg-[#FFCE00] text-emerald-900 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm whitespace-nowrap">
                   {tournament.gameType}
                 </span>
-                <span className="bg-white/20 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">
+                <span className="bg-white/20 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest whitespace-nowrap">
                   {tournament.format === 'ELIMINATION' ? 'Eliminatórias' : 'Todos contra Todos'}
                 </span>
-                <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
+                <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest whitespace-nowrap ${
                   tournament.status === 'OPEN' ? 'bg-white text-[#009660]' : 
                   tournament.status === 'IN_PROGRESS' ? 'bg-[#FFCE00] text-emerald-900' : 
                   'bg-white/20 text-white'
@@ -174,6 +176,16 @@ export const TournamentDetailScreen = ({ tournamentId, user, onBack }) => {
                 className="flex-1 sm:flex-none bg-white text-[#009660] px-8 py-3 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-emerald-50 transition-colors shadow-lg active:scale-95 disabled:opacity-50"
               >
                 Iniciar Campeonato
+              </button>
+            )}
+
+            {isCreator && tournament.status === 'OPEN' && (
+              <button 
+                onClick={() => setIsEditModalOpen(true)}
+                disabled={isSubmitting}
+                className="flex-1 sm:flex-none bg-[#FFCE00] text-emerald-900 px-8 py-3 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-[#e6ba00] transition-colors shadow-lg active:scale-95 disabled:opacity-50"
+              >
+                Editar
               </button>
             )}
           </div>
@@ -267,6 +279,17 @@ export const TournamentDetailScreen = ({ tournamentId, user, onBack }) => {
         )}
 
       </div>
+
+      {isEditModalOpen && (
+        <TournamentEditModal
+          tournament={tournament}
+          onClose={() => setIsEditModalOpen(false)}
+          onSuccess={() => {
+            setIsEditModalOpen(false);
+            loadTournament();
+          }}
+        />
+      )}
     </div>
   );
 };

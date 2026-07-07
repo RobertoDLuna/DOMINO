@@ -1,12 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import TournamentService from '../services/TournamentService';
 import TournamentCreateModal from '../components/TournamentCreateModal';
+import TournamentEditModal from '../components/TournamentEditModal';
 
 export const TournamentListScreen = ({ user, onBack, onSelectTournament }) => {
   const [tournaments, setTournaments] = useState([]);
   const [filter, setFilter] = useState('OPEN'); // OPEN, IN_PROGRESS, FINISHED
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [tournamentToEdit, setTournamentToEdit] = useState(null);
+  const [activeMenuId, setActiveMenuId] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const handleClickOutside = () => setActiveMenuId(null);
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, []);
 
   useEffect(() => {
     loadTournaments();
@@ -24,6 +33,18 @@ export const TournamentListScreen = ({ user, onBack, onSelectTournament }) => {
     }
   };
 
+  const handleDelete = async (id) => {
+    if (!window.confirm('Tem certeza que deseja excluir este campeonato? Esta ação não pode ser desfeita.')) return;
+    try {
+      setLoading(true);
+      await TournamentService.deleteTournament(id);
+      await loadTournaments();
+    } catch (error) {
+      alert(error.response?.data?.error || error.message || 'Erro ao excluir campeonato');
+      setLoading(false);
+    }
+  };
+
   const gameIcons = {
     CHESS: '♟️',
     DOMINO: '🀄',
@@ -33,9 +54,9 @@ export const TournamentListScreen = ({ user, onBack, onSelectTournament }) => {
   };
 
   const getStatusBadge = (status) => {
-    if (status === 'OPEN') return <span className="bg-[#009660] text-white px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm">Inscrições Abertas</span>;
-    if (status === 'IN_PROGRESS') return <span className="bg-[#FFCE00] text-emerald-900 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm">Em Andamento</span>;
-    if (status === 'FINISHED') return <span className="bg-slate-200 text-slate-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm">Encerrado</span>;
+    if (status === 'OPEN') return <span className="bg-[#009660] text-white px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm whitespace-nowrap text-center">Inscrições Abertas</span>;
+    if (status === 'IN_PROGRESS') return <span className="bg-[#FFCE00] text-emerald-900 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm whitespace-nowrap text-center">Em Andamento</span>;
+    if (status === 'FINISHED') return <span className="bg-slate-200 text-slate-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm whitespace-nowrap text-center">Encerrado</span>;
     return null;
   };
 
@@ -101,7 +122,49 @@ export const TournamentListScreen = ({ user, onBack, onSelectTournament }) => {
                 <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center text-2xl">
                   {gameIcons[t.gameType] || '🎮'}
                 </div>
-                {getStatusBadge(t.status)}
+                <div className="flex gap-2 items-center relative">
+                  {getStatusBadge(t.status)}
+                  {(user?.role === 'ADMIN' || (user?.role === 'PROFESSOR' && t.createdById === user?.id)) && (
+                    <div className="relative">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setActiveMenuId(activeMenuId === t.id ? null : t.id);
+                        }}
+                        className="w-8 h-8 flex items-center justify-center text-emerald-900/40 hover:text-emerald-900 hover:bg-emerald-50 rounded-xl transition-colors font-bold text-lg"
+                      >
+                        ⋮
+                      </button>
+                      
+                      {activeMenuId === t.id && (
+                        <div className="absolute right-0 top-full mt-1 w-32 bg-white rounded-2xl shadow-xl border border-emerald-50 overflow-hidden z-20">
+                          {t.status === 'OPEN' && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setActiveMenuId(null);
+                                setTournamentToEdit(t);
+                              }}
+                              className="w-full text-left px-4 py-3 text-[10px] font-black uppercase tracking-widest text-emerald-900 hover:bg-emerald-50 transition-colors"
+                            >
+                              Editar
+                            </button>
+                          )}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setActiveMenuId(null);
+                              handleDelete(t.id);
+                            }}
+                            className="w-full text-left px-4 py-3 text-[10px] font-black uppercase tracking-widest text-red-600 hover:bg-red-50 transition-colors"
+                          >
+                            Excluir
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
               
               <h3 className="text-xl font-black text-emerald-900 uppercase italic tracking-tighter mb-2 line-clamp-2">
@@ -145,6 +208,17 @@ export const TournamentListScreen = ({ user, onBack, onSelectTournament }) => {
           onClose={() => setShowCreateModal(false)}
           onSuccess={() => {
             setShowCreateModal(false);
+            loadTournaments();
+          }}
+        />
+      )}
+
+      {tournamentToEdit && (
+        <TournamentEditModal
+          tournament={tournamentToEdit}
+          onClose={() => setTournamentToEdit(null)}
+          onSuccess={() => {
+            setTournamentToEdit(null);
             loadTournaments();
           }}
         />

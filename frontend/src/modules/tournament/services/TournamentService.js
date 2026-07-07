@@ -46,7 +46,10 @@ class TournamentService {
       headers: this.getHeaders(),
       body: JSON.stringify(data)
     });
-    if (!response.ok) throw new Error('Erro ao atualizar campeonato');
+    if (!response.ok) {
+      const err = await response.json();
+      throw { response: { data: err } };
+    }
     return response.json();
   }
 

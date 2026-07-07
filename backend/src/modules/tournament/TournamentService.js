@@ -66,15 +66,29 @@ class TournamentService {
 
   async updateTournament(id, data, userId, userRole) {
     const prisma = getPrisma();
-    const tournament = await prisma.tournament.findUnique({ where: { id } });
+    const tournament = await prisma.tournament.findUnique({
+      where: { id },
+      include: { _count: { select: { participants: true } } }
+    });
     if (!tournament) throw new Error("Campeonato não encontrado.");
 
     if (tournament.createdById !== userId && userRole !== 'ADMIN') {
       throw new Error("Apenas o criador ou um administrador pode editar este campeonato.");
     }
 
-    if (data.maxPlayers && data.maxPlayers % 2 !== 0) {
-      throw new Error("O número de participantes deve ser um número par.");
+    if (data.maxPlayers) {
+      if (data.maxPlayers % 2 !== 0) {
+        throw new Error("O número de participantes deve ser um número par.");
+      }
+      if (data.maxPlayers < tournament._count.participants) {
+        throw new Error("O número de participantes não pode ser menor que a quantidade já inscrita.");
+      }
+    }
+
+    if (data.startsAt && data.endsAt) {
+      if (new Date(data.startsAt) > new Date(data.endsAt)) {
+        throw new Error("A data de encerramento não pode ser anterior à data de início.");
+      }
     }
 
     return await prisma.tournament.update({

@@ -24,7 +24,8 @@ export const TournamentListScreen = ({ user, onBack, onSelectTournament }) => {
   const loadTournaments = async () => {
     try {
       setLoading(true);
-      const data = await TournamentService.getTournaments({ status: filter });
+      const queryStatus = filter === 'FINISHED' ? 'FINISHED,CANCELLED' : filter;
+      const data = await TournamentService.getTournaments({ status: queryStatus });
       setTournaments(data);
     } catch (error) {
       console.error("Erro ao carregar campeonatos:", error);

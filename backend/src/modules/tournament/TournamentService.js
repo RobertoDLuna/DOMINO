@@ -4,7 +4,13 @@ class TournamentService {
   async getTournaments(filters = {}) {
     const prisma = getPrisma();
     const where = {};
-    if (filters.status) where.status = filters.status;
+    if (filters.status) {
+      if (filters.status.includes(',')) {
+        where.status = { in: filters.status.split(',') };
+      } else {
+        where.status = filters.status;
+      }
+    }
     if (filters.gameType) where.gameType = filters.gameType;
 
     return await prisma.tournament.findMany({
@@ -50,7 +56,7 @@ class TournamentService {
     }
 
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    today.setUTCHours(0, 0, 0, 0);
     const startDate = new Date(data.startsAt);
     if (startDate < today) {
       throw new Error("A data de início do campeonato não pode ser no passado.");
@@ -100,7 +106,7 @@ class TournamentService {
 
     if (data.startsAt) {
       const today = new Date();
-      today.setHours(0, 0, 0, 0);
+      today.setUTCHours(0, 0, 0, 0);
       const startDate = new Date(data.startsAt);
       if (startDate < today) {
         throw new Error("A data de início do campeonato não pode ser no passado.");

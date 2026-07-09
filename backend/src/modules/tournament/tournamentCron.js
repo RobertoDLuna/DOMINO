@@ -1,14 +1,13 @@
 const cron = require('node-cron');
 const { getPrisma } = require('../../shared/config/prismaClient');
 
-// Roda todos os dias à meia-noite
-cron.schedule('0 0 * * *', async () => {
+const cancelExpiredTournaments = async () => {
     console.log('[CRON] Verificando campeonatos não realizados...');
     const prisma = getPrisma();
     
-    // Configura "today" para a meia noite de hoje
+    // Configura "today" para a meia noite de hoje (em UTC para bater com o BD)
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    today.setUTCHours(0, 0, 0, 0);
 
     try {
         const result = await prisma.tournament.updateMany({
@@ -31,6 +30,15 @@ cron.schedule('0 0 * * *', async () => {
     } catch (error) {
         console.error('[CRON] Erro ao cancelar campeonatos expirados:', error);
     }
-});
+};
 
-module.exports = cron;
+// Executa imediatamente ao iniciar o servidor para limpar qualquer pendência
+cancelExpiredTournaments();
+
+// Roda a cada hora no minuto zero (ex: 01:00, 02:00, etc) para garantir que rode caso o servidor caia à meia noite
+cron.schedule('0 * * * *', cancelExpiredTournaments);
+
+module.exports = {
+    cancelExpiredTournaments,
+    cron
+};

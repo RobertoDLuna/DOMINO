@@ -29,7 +29,7 @@ const TIME_OPTIONS = [
   { value: null, label: 'Sem tempo' },
 ];
 
-export default function ChessHomeScreen({ user, onBack }) {
+export default function ChessHomeScreen({ user, onBack, initialRoomCode }) {
   const { emit, on, connected } = useChessSocket();
 
   // Estados principais
@@ -44,7 +44,7 @@ export default function ChessHomeScreen({ user, onBack }) {
   const [subMode, setSubMode] = useState(null); // null | 'create' | 'join'
   const [aiLevel, setAiLevel] = useState(5);
   const [timeLimit, setTimeLimit] = useState(600); // 10 min padrão
-  const [joinCode, setJoinCode] = useState('');
+  const [joinCode, setJoinCode] = useState(initialRoomCode || '');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -65,6 +65,21 @@ export default function ChessHomeScreen({ user, onBack }) {
       window.location.reload();
     }
   };
+
+  useEffect(() => {
+    if (initialRoomCode && connected) {
+      setGameType('classic');
+      setMode('PVP');
+      setSubMode('join');
+      setJoinCode(initialRoomCode);
+      setLoading(true);
+      emit('join-chess-room', {
+        roomCode: initialRoomCode,
+        userId: myId,
+        userName: myName,
+      });
+    }
+  }, [initialRoomCode, connected, emit, myId, myName]);
 
   // ── Listeners de Evento do Socket (Xadrez Real) ───────────────────────────
   useEffect(() => {

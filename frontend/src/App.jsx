@@ -14,7 +14,7 @@ import { useGameContext } from "./context/GameContext";
 import ConfirmModal from "./shared/ui/ConfirmModal";
 
 function App() {
-  const { room, gameState, leaveRoom } = useGameContext();
+  const { room, gameState, leaveRoom, joinRoom } = useGameContext();
   const [user, setUser] = useState(null);
   const [guestMode, setGuestMode] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -24,6 +24,7 @@ function App() {
   const [selectedTheme, setSelectedTheme] = useState(null);
   const [activeGame, setActiveGame] = useState(null);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [tournamentRoomCode, setTournamentRoomCode] = useState(null);
   // Checks if we should be in a game screen even if context hasn't updated yet
   const [manualJoin, setManualJoin] = useState(false);
   const isInRoomSession = !!room || !!localStorage.getItem('domino_current_room') || manualJoin;
@@ -37,13 +38,29 @@ function App() {
   useEffect(() => {
     const openAdmin = () => toggleAdminPanel(true);
     const openTournaments = () => setActiveGame('tournaments');
+    
+    const handleJoinTournamentRoom = (e) => {
+      const { roomCode, gameType } = e.detail;
+      setTournamentRoomCode(roomCode);
+      if (gameType === 'DOMINO') {
+        setActiveGame('domino');
+        setManualJoin(true);
+        joinRoom(roomCode, user?.fullName || 'Convidado');
+      } else if (gameType === 'CHESS' || gameType === 'PEAO' || gameType === 'VELHA') {
+        setActiveGame('xadrez');
+      }
+    };
+
     window.addEventListener('openAdminPanel', openAdmin);
     window.addEventListener('openTournaments', openTournaments);
+    window.addEventListener('joinTournamentRoom', handleJoinTournamentRoom);
+    
     return () => {
       window.removeEventListener('openAdminPanel', openAdmin);
       window.removeEventListener('openTournaments', openTournaments);
+      window.removeEventListener('joinTournamentRoom', handleJoinTournamentRoom);
     }
-  }, []);
+  }, [joinRoom, user]);
 
   // Força o scroll para o topo ao transicionar de telas (evita que a tela permaneça scrollada ao logar)
   useEffect(() => {
@@ -125,7 +142,11 @@ function App() {
       ) : activeGame === 'xadrez' ? (
         <ChessHomeScreen
           user={user}
-          onBack={() => setActiveGame(null)}
+          initialRoomCode={tournamentRoomCode}
+          onBack={() => {
+            setActiveGame(null);
+            setTournamentRoomCode(null);
+          }}
         />
       ) : activeGame === 'quiz' ? (
         <QuizAppRouter user={user} onBack={() => setActiveGame(null)} />

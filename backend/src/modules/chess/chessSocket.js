@@ -77,9 +77,39 @@ module.exports = function chessSocket(io) {
 
     // ── JOIN ROOM ─────────────────────────────────────────────────────────────
     socket.on('join-chess-room', ({ roomCode, userId, userName }) => {
-      const room = rooms.get(roomCode);
+      let room = rooms.get(roomCode);
 
       if (!room) {
+        if (roomCode && roomCode.startsWith('T-')) {
+          // Auto-cria a sala do torneio quando o primeiro jogador tentar entrar
+          const chess = new Chess();
+          room = {
+            roomCode,
+            mode: 'PVP',
+            aiLevel: null,
+            chess,
+            player1: { socketId: socket.id, userId, userName },
+            player2: null,
+            white: null,
+            black: null,
+            timeLimit: 600, // 10 min
+            whiteTimeRemaining: 600 * 1000,
+            blackTimeRemaining: 600 * 1000,
+            lastMoveTimestamp: null,
+            drawOfferedBy: null,
+            rematchRequests: new Set(),
+          };
+          rooms.set(roomCode, room);
+          socket.join(roomCode);
+          socket.emit('chess-room-created', {
+            roomCode,
+            fen: chess.fen(),
+            timeLimit: room.timeLimit,
+          });
+          console.log(`[Chess] Tournament room auto-created: ${roomCode} by ${userName}`);
+          return;
+        }
+
         socket.emit('chess-error', { message: 'Sala não encontrada.' });
         return;
       }

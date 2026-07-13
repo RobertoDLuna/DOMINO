@@ -485,6 +485,28 @@ async function _persistGameResult(room, result, reason) {
     await chessRankingService.updateRanking(room.white.userId, room.black.userId, result);
 
     console.log(`[Chess] Game ${room.roomCode} persisted. Result: ${result}`);
+
+    // Integração automática com o módulo de Torneios
+    if (room.roomCode.startsWith('T-')) {
+       try {
+         const tournamentService = new (require('./../tournament/TournamentService'))();
+         
+         let winnerId = null;
+
+         if (result === 'WHITE_WIN') {
+           winnerId = room.white.userId;
+         } else if (result === 'BLACK_WIN') {
+           winnerId = room.black.userId;
+         }
+
+         await tournamentService.autoRegisterMatchByRoomCode(room.roomCode, {
+           winnerId
+         });
+         console.log(`[Chess] Tournament match ${room.roomCode} automatically advanced.`);
+       } catch (e) {
+         console.error('[Chess] Error advancing tournament match:', e);
+       }
+    }
   } catch (err) {
     console.error('[Chess] Error persisting game result:', err);
   }

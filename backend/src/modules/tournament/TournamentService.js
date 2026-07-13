@@ -371,6 +371,42 @@ class TournamentService {
     return true;
   }
 
+  async autoRegisterMatchByRoomCode(gameRoomCode, resultData) {
+    const prisma = getPrisma();
+    
+    const match = await prisma.tournamentMatch.findFirst({
+      where: { gameRoomCode },
+      include: { tournament: true }
+    });
+    
+    if (!match) return false;
+
+    // Se a partida já estiver finalizada, ignorar
+    if (match.status === 'FINISHED') return true;
+
+    const score1 = resultData.winnerId === match.player1Id ? 1 : 0;
+    const score2 = resultData.winnerId === match.player2Id ? 1 : 0;
+
+    await prisma.tournamentMatch.update({
+      where: { id: match.id },
+      data: {
+        score1,
+        score2,
+        winnerId: resultData.winnerId,
+        status: 'FINISHED'
+      }
+    });
+
+    if (match.tournament.format === 'ELIMINATION' && resultData.winnerId) {
+       const winnerName = resultData.winnerId === match.player1Id ? match.player1Name : match.player2Name;
+       await this.advanceWinner(prisma, match.tournamentId, match.round, match.position, resultData.winnerId, winnerName);
+    }
+    
+    await this.checkTournamentCompletion(prisma, match.tournamentId);
+
+    return true;
+  }
+
   async advanceWinner(prisma, tournamentId, round, position, winnerId, winnerName) {
     const nextRound = round + 1;
     const nextPosition = Math.floor(position / 2);

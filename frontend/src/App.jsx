@@ -21,12 +21,15 @@ function App() {
   const [showAdminPanel, setShowAdminPanel] = useState(() => {
     return window.location.pathname.startsWith('/admin');
   });
-  const [selectedTheme, setSelectedTheme] = useState(null);
-  const [activeGame, setActiveGame] = useState(null);
+  const [selectedTheme, setSelectedTheme] = useState(() => {
+    const saved = sessionStorage.getItem('edugames_selectedTheme');
+    return saved ? JSON.parse(saved) : null;
+  });
+  const [activeGame, setActiveGame] = useState(() => sessionStorage.getItem('edugames_activeGame') || null);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-  const [tournamentRoomCode, setTournamentRoomCode] = useState(null);
+  const [tournamentRoomCode, setTournamentRoomCode] = useState(() => sessionStorage.getItem('edugames_tournamentRoomCode') || null);
   // Checks if we should be in a game screen even if context hasn't updated yet
-  const [manualJoin, setManualJoin] = useState(false);
+  const [manualJoin, setManualJoin] = useState(() => sessionStorage.getItem('edugames_manualJoin') === 'true');
   const isInRoomSession = !!room || !!localStorage.getItem('domino_current_room') || manualJoin;
 
   useEffect(() => {
@@ -34,6 +37,26 @@ function App() {
     if (savedUser) setUser(savedUser);
     setLoading(false);
   }, []);
+
+  useEffect(() => {
+    if (activeGame) sessionStorage.setItem('edugames_activeGame', activeGame);
+    else sessionStorage.removeItem('edugames_activeGame');
+  }, [activeGame]);
+
+  useEffect(() => {
+    if (tournamentRoomCode) sessionStorage.setItem('edugames_tournamentRoomCode', tournamentRoomCode);
+    else sessionStorage.removeItem('edugames_tournamentRoomCode');
+  }, [tournamentRoomCode]);
+
+  useEffect(() => {
+    if (selectedTheme) sessionStorage.setItem('edugames_selectedTheme', JSON.stringify(selectedTheme));
+    else sessionStorage.removeItem('edugames_selectedTheme');
+  }, [selectedTheme]);
+
+  useEffect(() => {
+    if (manualJoin) sessionStorage.setItem('edugames_manualJoin', 'true');
+    else sessionStorage.removeItem('edugames_manualJoin');
+  }, [manualJoin]);
 
   useEffect(() => {
     const openAdmin = () => toggleAdminPanel(true);

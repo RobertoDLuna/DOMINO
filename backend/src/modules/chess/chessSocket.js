@@ -113,13 +113,63 @@ module.exports = function chessSocket(io) {
         socket.emit('chess-error', { message: 'Sala não encontrada.' });
         return;
       }
-      if (room.player2) {
-        socket.emit('chess-error', { message: 'Sala já está cheia.' });
+      if (room.player1.userId === userId) {
+        room.player1.socketId = socket.id;
+        socket.join(roomCode);
+        if (room.white?.userId === userId) room.white.socketId = socket.id;
+        if (room.black?.userId === userId) room.black.socketId = socket.id;
+        
+        socket.emit('chess-room-joined', {
+          roomCode,
+          whiteName: room.white?.userName || room.player1.userName,
+          blackName: room.black?.userName || room.player2?.userName,
+          fen: room.chess.fen(),
+          color: room.white?.userId === userId ? 'white' : 'black',
+          timeLimit: room.timeLimit,
+        });
+
+        if (room.white && room.black) {
+          socket.emit('chess-game-ready', {
+            white: room.white,
+            black: room.black,
+            fen: room.chess.fen(),
+            turn: room.chess.turn(),
+          });
+        }
+        console.log(`[Chess] Player 1 (${userId}) reconnected to ${roomCode}`);
         return;
       }
-      if (room.player1.userId === userId) {
-        socket.emit('chess-error', { message: 'Você já está nesta sala.' });
-        return;
+      
+      if (room.player2) {
+        if (room.player2.userId === userId) {
+          room.player2.socketId = socket.id;
+          socket.join(roomCode);
+          if (room.white?.userId === userId) room.white.socketId = socket.id;
+          if (room.black?.userId === userId) room.black.socketId = socket.id;
+          
+          socket.emit('chess-room-joined', {
+            roomCode,
+            whiteName: room.white?.userName || room.player1.userName,
+            blackName: room.black?.userName || room.player2.userName,
+            fen: room.chess.fen(),
+            color: room.white?.userId === userId ? 'white' : 'black',
+            timeLimit: room.timeLimit,
+          });
+
+          if (room.white && room.black) {
+            socket.emit('chess-game-ready', {
+              white: room.white,
+              black: room.black,
+              fen: room.chess.fen(),
+              turn: room.chess.turn(),
+            });
+          }
+          console.log(`[Chess] Player 2 (${userId}) reconnected to ${roomCode}`);
+          return;
+        } else {
+          socket.emit('chess-error', { message: 'Sala já está cheia.' });
+          return;
+        }
       }
 
       room.player2 = { socketId: socket.id, userId, userName };
@@ -415,26 +465,43 @@ module.exports = function chessSocket(io) {
 
     // ── DISCONNECT ────────────────────────────────────────────────────────────
     socket.on('disconnect', () => {
+      const disconnectedSocketId = socket.id;
       for (const [roomCode, room] of rooms.entries()) {
-        const wasP1 = room.player1?.socketId === socket.id;
-        const wasP2 = room.player2?.socketId === socket.id;
+        const wasP1 = room.player1?.socketId === disconnectedSocketId;
+        const wasP2 = room.player2?.socketId === disconnectedSocketId;
 
         if (wasP1 || wasP2) {
-          const result = (wasP1 && room.white?.socketId === socket.id) || (!wasP1 && room.black?.socketId === socket.id) ? 'BLACK_WIN' : 'WHITE_WIN';
-          
-          // Simplificando logicamente para o Real Chess: 
-          // Se as cores ainda não foram atribuídas, apenas fecha a sala.
+          const player = wasP1 ? room.player1 : room.player2;
+          console.log(`[Chess] ${player.userId} disconnected from ${roomCode}. Waiting 1 min for reconnect...`);
+
+          // Se a partida nem havia começado direito, fechar a sala
           if (!room.white) {
              rooms.delete(roomCode);
              break;
           }
 
-          chessNsp.to(roomCode).emit('chess-game-over', {
-            result,
-            reason: 'disconnection',
-          });
-          _persistGameResult(room, result, 'disconnection');
-          rooms.delete(roomCode);
+          if (room.status === 'FINISHED') break;
+
+          setTimeout(() => {
+             const updatedRoom = rooms.get(roomCode);
+             if (!updatedRoom || updatedRoom.status === 'FINISHED') return;
+             
+             // Check se o player ainda está com o mesmo socket desatualizado (não reconectou)
+             const currentPlayer = wasP1 ? updatedRoom.player1 : updatedRoom.player2;
+             if (currentPlayer && currentPlayer.socketId === disconnectedSocketId) {
+                console.log(`[Chess] Reconnect timeout for ${player.userId} in room ${roomCode}. Match forfeit.`);
+                const result = (wasP1 && updatedRoom.white?.socketId === disconnectedSocketId) || (!wasP1 && updatedRoom.black?.socketId === disconnectedSocketId) ? 'BLACK_WIN' : 'WHITE_WIN';
+                
+                updatedRoom.status = 'FINISHED';
+                chessNsp.to(roomCode).emit('chess-game-over', {
+                  result,
+                  reason: 'disconnection',
+                });
+                _persistGameResult(updatedRoom, result, 'disconnection');
+                rooms.delete(roomCode);
+             }
+          }, 60000);
+          
           break;
         }
       }

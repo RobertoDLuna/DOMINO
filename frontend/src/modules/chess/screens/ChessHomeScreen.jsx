@@ -33,15 +33,15 @@ export default function ChessHomeScreen({ user, onBack, initialRoomCode }) {
   const { emit, on, connected } = useChessSocket();
 
   // Estados principais
-  const [currentScreen, setCurrentScreen] = useState('LOBBY'); // 'LOBBY' | 'REPORT'
-  const [gameType, setGameType] = useState(null); // null (Todos) | 'classic' | 'velha' | 'peao'
+  const [currentScreen, setCurrentScreen] = useState(() => sessionStorage.getItem('edugames_chess_currentScreen') || 'LOBBY'); // 'LOBBY' | 'REPORT'
+  const [gameType, setGameType] = useState(() => sessionStorage.getItem('edugames_chess_gameType') || null); // null (Todos) | 'classic' | 'velha' | 'peao'
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [isChildSessionActive, setIsChildSessionActive] = useState(false);
   const [showRanking, setShowRanking] = useState(false);
 
   // Estados do lobby clássico (Xadrez Real)
-  const [mode, setMode] = useState(null); // null | 'PVP' | 'PVC'
-  const [subMode, setSubMode] = useState(null); // null | 'create' | 'join'
+  const [mode, setMode] = useState(() => sessionStorage.getItem('edugames_chess_mode') || null); // null | 'PVP' | 'PVC'
+  const [subMode, setSubMode] = useState(() => sessionStorage.getItem('edugames_chess_subMode') || null); // null | 'create' | 'join'
   const [aiLevel, setAiLevel] = useState(5);
   const [timeLimit, setTimeLimit] = useState(600); // 10 min padrão
   const [joinCode, setJoinCode] = useState(initialRoomCode || '');
@@ -49,7 +49,31 @@ export default function ChessHomeScreen({ user, onBack, initialRoomCode }) {
   const [loading, setLoading] = useState(false);
 
   // Sessão do jogo clássico
-  const [gameSession, setGameSession] = useState(null);
+  const [gameSession, setGameSession] = useState(() => {
+    const saved = sessionStorage.getItem('edugames_chess_gameSession');
+    return saved ? JSON.parse(saved) : null;
+  });
+
+  const [hasReconnected, setHasReconnected] = useState(false);
+
+  useEffect(() => {
+    sessionStorage.setItem('edugames_chess_currentScreen', currentScreen);
+    if (gameType) sessionStorage.setItem('edugames_chess_gameType', gameType); else sessionStorage.removeItem('edugames_chess_gameType');
+    if (mode) sessionStorage.setItem('edugames_chess_mode', mode); else sessionStorage.removeItem('edugames_chess_mode');
+    if (subMode) sessionStorage.setItem('edugames_chess_subMode', subMode); else sessionStorage.removeItem('edugames_chess_subMode');
+    if (gameSession) sessionStorage.setItem('edugames_chess_gameSession', JSON.stringify(gameSession)); else sessionStorage.removeItem('edugames_chess_gameSession');
+  }, [currentScreen, gameType, mode, subMode, gameSession]);
+
+  useEffect(() => {
+    if (connected && gameSession && gameSession.mode === 'PVP' && !hasReconnected && (!initialRoomCode || initialRoomCode !== gameSession.roomCode)) {
+      setHasReconnected(true);
+      emit('join-chess-room', {
+        roomCode: gameSession.roomCode,
+        userId: myId,
+        userName: myName,
+      });
+    }
+  }, [connected, gameSession, emit, myId, myName, hasReconnected, initialRoomCode]);
 
   // Identidade do usuário
   const myId = React.useMemo(() => user?.id || `guest_${Math.random().toString(36).substring(2, 8).toUpperCase()}`, [user?.id]);

@@ -6,16 +6,23 @@ import QuizSoloScreen from './screens/QuizSoloScreen';
 import QuizReportScreen from './screens/QuizReportScreen';
 
 export default function QuizAppRouter({ user, onBack }) {
-  const [currentScreen, setCurrentScreen] = useState('HOME'); // HOME, EDITOR, PLAY, REPORT, SOLO
-  const [screenProps, setScreenProps] = useState({});
+  const [currentScreen, setCurrentScreen] = useState(() => sessionStorage.getItem('edugames_quiz_currentScreen') || 'HOME'); // HOME, EDITOR, PLAY, REPORT, SOLO
+  const [screenProps, setScreenProps] = useState(() => {
+    const saved = sessionStorage.getItem('edugames_quiz_screenProps');
+    return saved ? JSON.parse(saved) : {};
+  });
 
   const navigate = (screen, props = {}) => {
     setCurrentScreen(screen);
     setScreenProps(props);
+    sessionStorage.setItem('edugames_quiz_currentScreen', screen);
+    sessionStorage.setItem('edugames_quiz_screenProps', JSON.stringify(props));
   };
 
   const handleBack = () => {
     if (currentScreen === 'HOME') {
+      sessionStorage.removeItem('edugames_quiz_currentScreen');
+      sessionStorage.removeItem('edugames_quiz_screenProps');
       onBack();
     } else {
       navigate('HOME');

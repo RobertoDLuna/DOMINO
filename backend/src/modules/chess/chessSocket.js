@@ -474,12 +474,6 @@ module.exports = function chessSocket(io) {
           const player = wasP1 ? room.player1 : room.player2;
           console.log(`[Chess] ${player.userId} disconnected from ${roomCode}. Waiting 1 min for reconnect...`);
 
-          // Se a partida nem havia começado direito, fechar a sala
-          if (!room.white) {
-             rooms.delete(roomCode);
-             break;
-          }
-
           if (room.status === 'FINISHED') break;
 
           setTimeout(() => {

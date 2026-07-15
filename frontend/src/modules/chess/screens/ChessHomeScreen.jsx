@@ -181,6 +181,10 @@ export default function ChessHomeScreen({ user, onBack, initialRoomCode }) {
   }
 
   function handleBackClassic() {
+    if (initialRoomCode && initialRoomCode.startsWith('T-') && onBack) {
+      onBack();
+      return;
+    }
     setGameSession(null);
     setMode(null);
     setSubMode(null);

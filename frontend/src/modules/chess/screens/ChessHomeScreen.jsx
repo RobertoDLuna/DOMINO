@@ -56,6 +56,10 @@ export default function ChessHomeScreen({ user, onBack, initialRoomCode }) {
 
   const [hasReconnected, setHasReconnected] = useState(false);
 
+  // Identidade do usuário
+  const myId = React.useMemo(() => user?.id || `guest_${Math.random().toString(36).substring(2, 8).toUpperCase()}`, [user?.id]);
+  const myName = user?.fullName || 'Convidado';
+
   useEffect(() => {
     sessionStorage.setItem('edugames_chess_currentScreen', currentScreen);
     if (gameType) sessionStorage.setItem('edugames_chess_gameType', gameType); else sessionStorage.removeItem('edugames_chess_gameType');
@@ -74,10 +78,6 @@ export default function ChessHomeScreen({ user, onBack, initialRoomCode }) {
       });
     }
   }, [connected, gameSession, emit, myId, myName, hasReconnected, initialRoomCode]);
-
-  // Identidade do usuário
-  const myId = React.useMemo(() => user?.id || `guest_${Math.random().toString(36).substring(2, 8).toUpperCase()}`, [user?.id]);
-  const myName = user?.fullName || 'Convidado';
 
   // Sincronização do estado de sessão ativa
   const isGameActive = !!gameSession || isChildSessionActive;

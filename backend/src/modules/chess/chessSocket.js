@@ -489,7 +489,7 @@ async function _persistGameResult(room, result, reason) {
     // Integração automática com o módulo de Torneios
     if (room.roomCode.startsWith('T-')) {
        try {
-         const tournamentService = new (require('./../tournament/TournamentService'))();
+         const tournamentService = require('./../tournament/TournamentService');
          
          let winnerId = null;
 

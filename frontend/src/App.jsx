@@ -130,6 +130,10 @@ function App() {
             setManualJoin(false);
             leaveRoom();
             if (!user) setGuestMode(false);
+            if (tournamentRoomCode) {
+              setActiveGame('tournaments');
+              setTournamentRoomCode(null);
+            }
           }}
         />
       ) : activeGame === 'domino' ? (
@@ -144,7 +148,11 @@ function App() {
           user={user}
           initialRoomCode={tournamentRoomCode}
           onBack={() => {
-            setActiveGame(null);
+            if (tournamentRoomCode) {
+              setActiveGame('tournaments');
+            } else {
+              setActiveGame(null);
+            }
             setTournamentRoomCode(null);
           }}
         />

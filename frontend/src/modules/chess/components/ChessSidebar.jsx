@@ -282,7 +282,7 @@ export default function ChessSidebar({
       )}
 
       <button className="chess-btn chess-btn-back" onClick={onBack}>
-        ← Voltar
+        ← {roomCode && roomCode.startsWith('T-') ? 'Voltar ao Campeonato' : 'Voltar'}
       </button>
     </aside>
   );

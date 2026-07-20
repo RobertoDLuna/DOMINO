@@ -685,8 +685,8 @@ export default function XadrezVelhaGame({ user, roomData, onExit }) {
   };
 
   return (
-    <div className="velha-container relative overflow-hidden pt-4 pb-20">
-      <div className={`w-full h-full flex flex-col absolute inset-0 transition-all duration-1000 ${gameOver ? 'blur-md scale-105 pointer-events-none opacity-50' : ''}`}>
+    <div className="velha-container relative overflow-hidden pt-4 pb-20 min-h-screen">
+      <div className={`w-full transition-all duration-1000 ${gameOver ? 'blur-md scale-105 pointer-events-none opacity-50' : ''}`}>
       <div className="absolute top-4 left-4 sm:top-6 sm:left-6 z-10">
         <button
           className="w-12 h-12 flex items-center justify-center bg-white rounded-2xl shadow-sm text-emerald-950 border-2 border-emerald-100 active:scale-95 transition-all shrink-0 font-black text-xl hover:border-emerald-300 hover:shadow-md"

@@ -53,31 +53,6 @@ function describeMove(move) {
   return '';
 }
 
-function SidebarVictoryAnimation({ type }) {
-  const particles = Array.from({ length: 20 });
-  const symbols = type === 'win' ? ['🏆', '⭐', '✨', '👑', '♟️'] : 
-                 type === 'loss' ? ['💀', '❌', '📉', '♟️'] : 
-                 ['🤝', '⚖️', '🏳️', '✨'];
-
-  return (
-    <div className={`peao-sidebar-win-animation peao-sidebar-animation-${type}`}>
-      {particles.map((_, i) => (
-        <div 
-          key={i} 
-          className="peao-sidebar-particle" 
-          style={{
-            left: `${Math.random() * 100}%`,
-            animationDelay: `${Math.random() * 2}s`,
-            animationDuration: `${2 + Math.random() * 2}s`,
-            fontSize: `${12 + Math.random() * 20}px`
-          }}
-        >
-          {symbols[Math.floor(Math.random() * symbols.length)]}
-        </div>
-      ))}
-    </div>
-  );
-}
 
 function PeaoTimer({ seconds, active }) {
   if (seconds === null || seconds === undefined || Number.isNaN(seconds)) return null;
@@ -131,14 +106,6 @@ export default function PeaoSidebar({
 }) {
   return (
     <aside className="peao-sidebar overflow-hidden relative">
-      {gameOver && (
-        <SidebarVictoryAnimation type={
-          gameOver.result === 'DRAW' ? 'draw' : 
-          ((gameOver.result === 'WHITE_WIN' && myColor === 'white') || (gameOver.result === 'BLACK_WIN' && myColor === 'black')) ? 'win' : 'loss'
-        } />
-      )}
-
-      {/* Nomes dos jogadores */}
       <div className="peao-sidebar-players">
         <div className="peao-sidebar-timer-container">
           <PlayerBadge
@@ -174,37 +141,6 @@ export default function PeaoSidebar({
             </div>
           )}
         </>
-      )}
-      
-      {/* Banner de Fim de Jogo */}
-      {gameOver && (
-        <div className={`peao-sidebar-gameover-banner peao-sidebar-gameover-${
-          gameOver.result === 'DRAW' ? 'draw' : 
-          ((gameOver.result === 'WHITE_WIN' && myColor === 'white') || (gameOver.result === 'BLACK_WIN' && myColor === 'black')) ? 'win' : 'loss'
-        }`}>
-          <div className="peao-sidebar-gameover-result">
-            {gameOver.result === 'DRAW' ? '🤝 Empate!' : 
-              ((gameOver.result === 'WHITE_WIN' && myColor === 'white') || (gameOver.result === 'BLACK_WIN' && myColor === 'black')) 
-              ? '🏆 Você Venceu!' 
-              : '💀 Você Perdeu'}
-          </div>
-          <div className="peao-sidebar-gameover-reason">{REASON_LABELS[gameOver.reason] || ''}</div>
-          
-          <div className="mt-4 flex flex-col gap-2 w-full relative z-10">
-            <button 
-              className={`peao-sidebar-btn ${rematchRequested ? 'peao-sidebar-btn-disabled' : 'peao-sidebar-btn-rematch'}`}
-              onClick={onRematch}
-              disabled={rematchRequested}
-            >
-              {rematchRequested ? '⏳ Aguardando...' : (opponentWantsRematch ? '🤝 Aceitar Revanche' : '🔄 Jogar Novamente')}
-            </button>
-            {opponentWantsRematch && !rematchRequested && (
-              <div className="text-[10px] text-green-600 font-bold uppercase text-center animate-pulse">
-                Oponente quer revanche!
-              </div>
-            )}
-          </div>
-        </div>
       )}
 
       {status === 'playing' && (

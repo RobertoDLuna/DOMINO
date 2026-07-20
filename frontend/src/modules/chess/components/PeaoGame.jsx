@@ -375,8 +375,34 @@ export default function PeaoGame({ user, roomData, onExit }) {
 
   const isMyTurn = turn === myPiece && !gameOver;
 
+  // Check if I won for styling
+  const iWon = gameOver && (
+    (gameOver.result === 'WHITE_WIN' && myColor === 'white') ||
+    (gameOver.result === 'BLACK_WIN' && myColor === 'black')
+  );
+
+  const REASON_LABELS = {
+    checkmate: 'Por Xeque-Mate',
+    stalemate: 'Por Afogamento',
+    breakthrough: 'Invasão Bem-sucedida',
+    insufficient_material: 'Material Insuficiente',
+    threefold_repetition: 'Repetição de Movimentos',
+    fifty_move_rule: 'Regra dos 50 Movimentos',
+    timeout: 'Tempo Esgotado',
+    resignation: 'Por Desistência'
+  };
+
+  const getGameOverMsg = () => {
+    if (!gameOver) return '';
+    if (gameOver.result === 'DRAW') return '🤝 EMPATE!';
+    return iWon ? 'VOCÊ VENCEU!' : 'VOCÊ PERDEU';
+  };
+
   return (
-    <div className="peao-screen">
+    <div className="peao-screen relative overflow-hidden">
+      {/* Elementos normais do jogo. Serão "borrados" quando terminar */}
+      <div className={`w-full h-full flex flex-col absolute inset-0 transition-all duration-1000 ${gameOver ? 'blur-md scale-105 pointer-events-none opacity-50' : ''}`}>
+
       {/* Theme switcher — top right */}
       <div className="peao-theme-switcher">
         <button
@@ -484,6 +510,68 @@ export default function PeaoGame({ user, roomData, onExit }) {
           />
         </div>
       </div>
+      </div>
+
+      {/* OVERLAY DE FIM DE JOGO */}
+      {gameOver && (
+        <div className="absolute inset-0 z-[110] flex items-center justify-center p-4">
+          <div className="absolute inset-0 z-[120] pointer-events-none overflow-hidden">
+            {iWon ? (
+              [...Array(60)].map((_, i) => (
+                <div key={i} className="confetti" style={{
+                  left: `${Math.random() * 100}%`,
+                  backgroundColor: ['#FFCE00', '#FFFFFF', '#009660', '#3b82f6', '#ef4444'][i % 5],
+                  animationDelay: `${Math.random() * 4}s`,
+                  animationDuration: `${2.5 + Math.random() * 2}s`,
+                  width: `${8 + Math.random() * 10}px`,
+                  height: `${Math.random() * 12 + 4}px`,
+                  position: 'absolute',
+                  top: '-20px'
+                }} />
+              ))
+            ) : (
+              [...Array(50)].map((_, i) => (
+                <div key={i} className="rain" style={{
+                  left: `${Math.random() * 100}%`,
+                  animationDelay: `${Math.random() * 1.5}s`,
+                  animationDuration: `${1 + Math.random() * 1}s`,
+                  opacity: Math.random() * 0.5,
+                  position: 'absolute',
+                  top: '-20px',
+                  width: '2px',
+                  height: '40px',
+                  backgroundColor: 'rgba(255,255,255,0.7)'
+                }} />
+              ))
+            )}
+          </div>
+          <section className={`p-6 sm:p-10 rounded-[3rem] flex flex-col items-center text-center max-w-lg w-full shadow-[0_40px_100px_rgba(0,0,0,0.5)] transform transition-all animate-in zoom-in duration-700 border-[10px] sm:border-[12px] bg-white ${iWon ? 'border-[#FFCE00]' : (gameOver.result === 'DRAW' ? 'border-gray-400' : 'border-red-500')} z-[130]`}>
+            <h1 className="text-base sm:text-xl font-black mb-1 sm:mb-2 uppercase tracking-widest text-[#009660] opacity-50">Fim de Jogo</h1>
+            <h2 className={`font-black mb-2 sm:mb-3 uppercase italic tracking-tighter leading-none ${iWon ? 'text-5xl sm:text-7xl text-[#FFCE00]' : (gameOver.result === 'DRAW' ? 'text-4xl sm:text-6xl text-gray-500' : 'text-4xl sm:text-6xl text-red-500')}`}>
+              {getGameOverMsg()}
+            </h2>
+            <div className={`text-base sm:text-lg font-black mb-6 sm:mb-8 p-4 rounded-[1.5rem] shadow-inner ${iWon ? 'bg-yellow-50 text-yellow-800' : (gameOver.result === 'DRAW' ? 'bg-gray-100 text-gray-700' : 'bg-red-50 text-red-900')}`}>
+              {REASON_LABELS[gameOver.reason] || gameOver.reason}
+            </div>
+            
+            <div className="flex flex-col gap-3 sm:gap-4 w-full">
+              {rematchRequested && !opponentWantsRematch ? (
+                <div className="bg-emerald-100 text-emerald-700 px-6 py-4 rounded-2xl sm:rounded-3xl text-lg font-black flex items-center justify-center gap-3 border-2 border-emerald-200 shadow-inner">
+                  <span>⏳</span> AGUARDANDO OPONENTE...
+                </div>
+              ) : (
+                <button onClick={handleRematch} className="group bg-[#009660] hover:bg-[#00a86b] text-white font-black px-6 py-4 rounded-2xl sm:rounded-3xl text-xl sm:text-2xl transition-all shadow-[0_6px_0_#004d32] active:translate-y-1 active:shadow-none flex items-center justify-center gap-3">
+                  <span className="group-hover:animate-spin">🔄</span> JOGAR DE NOVO
+                </button>
+              )}
+
+              <button onClick={onExit} className="bg-white hover:bg-red-50 text-red-500 font-black px-6 py-4 rounded-2xl sm:rounded-3xl text-xl sm:text-2xl transition-all shadow-[0_6px_0_#e5e7eb] active:translate-y-1 active:shadow-none border-2 border-gray-100 flex items-center justify-center gap-3">
+                <span>🏠</span> SAIR DO JOGO
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
     </div>
   );
 }

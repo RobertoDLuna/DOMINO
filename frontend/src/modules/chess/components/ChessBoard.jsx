@@ -52,6 +52,7 @@ export default function ChessBoard({
   const [selectedSquare, setSelectedSquare] = useState(null);
   const [optionSquares, setOptionSquares] = useState({});
   const [lastMoveSquares, setLastMoveSquares] = useState({});
+  const [checkmateStyles, setCheckmateStyles] = useState({});
   const [promotion, setPromotion] = useState(null); // { from, to }
 
   const [isTouchDevice, setIsTouchDevice] = useState(false);
@@ -75,6 +76,41 @@ export default function ChessBoard({
       setLastMoveSquares({});
     }
   }, [fen, lastMove, theme.lastMove]);
+
+  // Compute checkmate styles if any
+  useEffect(() => {
+    if (gameOver && gameOver.reason === 'checkmate') {
+      const chess = chessRef.current;
+      const board = chess.board();
+      let wKing, bKing;
+      for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < 8; c++) {
+          const piece = board[r][c];
+          if (piece && piece.type === 'k') {
+            const sq = String.fromCharCode(97 + c) + (8 - r);
+            if (piece.color === 'w') wKing = sq;
+            else bKing = sq;
+          }
+        }
+      }
+      
+      const isWhiteWin = gameOver.result === 'WHITE_WIN';
+      
+      // Inline SVGs for Crown and Fallen Crown
+      const greenCrownSVG = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 30 30" width="30" height="30"><circle cx="15" cy="15" r="15" fill="%2358a74f"/><text x="15" y="21" font-size="16" text-anchor="middle" fill="white">👑</text></svg>`;
+      const redFallenCrownSVG = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 30 30" width="30" height="30"><circle cx="15" cy="15" r="15" fill="%23d34e4e"/><text x="15" y="21" font-size="16" text-anchor="middle" fill="white" transform="rotate(90 15 15)">👑</text></svg>`;
+
+      const winStyle = { backgroundImage: `url('${greenCrownSVG}')`, backgroundRepeat: 'no-repeat', backgroundPosition: 'top right', backgroundSize: '35%' };
+      const loseStyle = { backgroundImage: `url('${redFallenCrownSVG}')`, backgroundRepeat: 'no-repeat', backgroundPosition: 'top right', backgroundSize: '35%' };
+
+      setCheckmateStyles({
+        [wKing]: isWhiteWin ? winStyle : loseStyle,
+        [bKing]: isWhiteWin ? loseStyle : winStyle,
+      });
+    } else {
+      setCheckmateStyles({});
+    }
+  }, [gameOver]);
 
   // Compute legal moves squares for the selected piece
   const getMoveOptions = useCallback((square) => {
@@ -207,7 +243,7 @@ export default function ChessBoard({
     _doMove(promotion.from, promotion.to, piece);
   }
 
-  const customSquareStyles = { ...lastMoveSquares, ...optionSquares };
+  const customSquareStyles = { ...lastMoveSquares, ...optionSquares, ...checkmateStyles };
 
   const ranks = myColor === 'white' ? ['8', '7', '6', '5', '4', '3', '2', '1'] : ['1', '2', '3', '4', '5', '6', '7', '8'];
   const files = myColor === 'white' ? ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'] : ['h', 'g', 'f', 'e', 'd', 'c', 'b', 'a'];

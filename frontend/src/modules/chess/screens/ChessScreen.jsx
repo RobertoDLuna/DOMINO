@@ -51,6 +51,7 @@ export default function ChessScreen({
   const [rematchRequested, setRematchRequested] = useState(false);
   const [opponentWantsRematch, setOpponentWantsRematch] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [showGameOverOverlay, setShowGameOverOverlay] = useState(false);
 
   // Timers (em segundos)
   const [whiteTime, setWhiteTime] = useState(timeLimit === undefined ? 600 : timeLimit);
@@ -260,6 +261,16 @@ export default function ChessScreen({
       return () => clearTimeout(timer);
     }
   }, [mode, setupPhase, drawWinner, user]);
+  useEffect(() => {
+    if (gameOver) {
+      const timer = setTimeout(() => {
+        setShowGameOverOverlay(true);
+      }, 7000);
+      return () => clearTimeout(timer);
+    } else {
+      setShowGameOverOverlay(false);
+    }
+  }, [gameOver]);
 
   function _checkGameOver() {
     const chess = chessRef.current;
@@ -501,7 +512,7 @@ export default function ChessScreen({
   return (
     <div className="chess-screen relative overflow-hidden">
       {/* Elementos normais do jogo. Serão "borrados" quando terminar */}
-      <div className={`w-full h-full flex flex-col absolute inset-0 transition-all duration-1000 ${gameOver ? 'blur-md scale-105 pointer-events-none opacity-50' : ''}`}>
+      <div className={`w-full h-full flex flex-col absolute inset-0 transition-all duration-1000 ${showGameOverOverlay ? 'blur-md scale-105 pointer-events-none opacity-50' : ''}`}>
 
       {/* Theme switcher — top right (Desktop) */}
       <div className="chess-theme-switcher hidden md:flex">
@@ -540,7 +551,7 @@ export default function ChessScreen({
             isMyTurn={isMyTurn}
             boardTheme={currentTheme}
             onMove={handleMove}
-            gameOver={!!gameOver}
+            gameOver={gameOver}
             disabled={status !== 'playing'}
             lastMove={moves[moves.length - 1]}
           />
@@ -614,9 +625,10 @@ export default function ChessScreen({
       </div>
       </div>
 
-      {/* OVERLAY DE FIM DE JOGO */}
-      {gameOver && (
-        <div className="absolute inset-0 z-[110] flex items-center justify-center p-4">
+      {/* OVERLAY DE FIM DE JOGO (Exibe 4 segundos após o fim) */}
+      {showGameOverOverlay && (
+        <div className="absolute inset-0 z-[110] flex flex-col items-center justify-center p-4">
+
           <div className="absolute inset-0 z-[120] pointer-events-none overflow-hidden">
             {iWon ? (
               [...Array(60)].map((_, i) => (
@@ -647,13 +659,13 @@ export default function ChessScreen({
               ))
             )}
           </div>
-          <section className={`p-6 sm:p-10 rounded-[3rem] flex flex-col items-center text-center max-w-lg w-full shadow-[0_40px_100px_rgba(0,0,0,0.5)] transform transition-all animate-in zoom-in duration-700 border-[10px] sm:border-[12px] bg-white ${iWon ? 'border-[#FFCE00]' : (gameOver.result === 'DRAW' ? 'border-gray-400' : 'border-red-500')} z-[130]`}>
+          <section className={`p-6 sm:p-10 rounded-[3rem] flex flex-col items-center text-center max-w-lg w-full shadow-[0_40px_100px_rgba(0,0,0,0.5)] transform transition-all animate-in zoom-in duration-700 border-[10px] sm:border-[12px] bg-white ${iWon ? 'border-[#FFCE00]' : (gameOver?.result === 'DRAW' ? 'border-gray-400' : 'border-red-500')} z-[130]`}>
             <h1 className="text-base sm:text-xl font-black mb-1 sm:mb-2 uppercase tracking-widest text-[#009660] opacity-50">Fim de Jogo</h1>
-            <h2 className={`font-black mb-2 sm:mb-3 uppercase italic tracking-tighter leading-none ${iWon ? 'text-5xl sm:text-7xl text-[#FFCE00]' : (gameOver.result === 'DRAW' ? 'text-4xl sm:text-6xl text-gray-500' : 'text-4xl sm:text-6xl text-red-500')}`}>
+            <h2 className={`font-black mb-2 sm:mb-3 uppercase italic tracking-tighter leading-none ${iWon ? 'text-5xl sm:text-7xl text-[#FFCE00]' : (gameOver?.result === 'DRAW' ? 'text-4xl sm:text-6xl text-gray-500' : 'text-4xl sm:text-6xl text-red-500')}`}>
               {getGameOverMsg()}
             </h2>
-            <div className={`text-base sm:text-lg font-black mb-6 sm:mb-8 p-4 rounded-[1.5rem] shadow-inner ${iWon ? 'bg-yellow-50 text-yellow-800' : (gameOver.result === 'DRAW' ? 'bg-gray-100 text-gray-700' : 'bg-red-50 text-red-900')}`}>
-              {REASON_LABELS[gameOver.reason] || gameOver.reason}
+            <div className={`text-base sm:text-lg font-black mb-6 sm:mb-8 p-4 rounded-[1.5rem] shadow-inner ${iWon ? 'bg-yellow-50 text-yellow-800' : (gameOver?.result === 'DRAW' ? 'bg-gray-100 text-gray-700' : 'bg-red-50 text-red-900')}`}>
+              {gameOver?.reason ? (REASON_LABELS[gameOver.reason] || gameOver.reason) : ''}
             </div>
             
             <div className="flex flex-col gap-3 sm:gap-4 w-full">

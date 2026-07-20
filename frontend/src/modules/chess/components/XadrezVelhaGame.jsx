@@ -234,6 +234,7 @@ export default function XadrezVelhaGame({ user, roomData, onExit }) {
   const [gameOver, setGameOver] = useState(null); // { result, reason, winLine }
   const [rematchRequested, setRematchRequested] = useState(false);
   const [opponentWantsRematch, setOpponentWantsRematch] = useState(false);
+  const [showGameOverOverlay, setShowGameOverOverlay] = useState(false);
 
   // Derivados de Cor
   const myId = roomData.myId || user?.id || 'YOU';
@@ -266,6 +267,7 @@ export default function XadrezVelhaGame({ user, roomData, onExit }) {
       setGameOver(null);
       setRematchRequested(false);
       setOpponentWantsRematch(false);
+      setShowGameOverOverlay(false);
       setSetupPhase('READY');
     });
 
@@ -355,6 +357,15 @@ export default function XadrezVelhaGame({ user, roomData, onExit }) {
       return () => clearTimeout(timer);
     }
   }, [isPVC, setupPhase, drawWinner, roomData]);
+
+  useEffect(() => {
+    if (gameOver) {
+      const timer = setTimeout(() => setShowGameOverOverlay(true), 7000);
+      return () => clearTimeout(timer);
+    } else {
+      setShowGameOverOverlay(false);
+    }
+  }, [gameOver]);
 
   // ── IA JOGANDO (PVC) ────────────────────────────────────────────────────
   useEffect(() => {
@@ -686,7 +697,7 @@ export default function XadrezVelhaGame({ user, roomData, onExit }) {
 
   return (
     <div className="velha-container relative overflow-hidden pt-4 pb-20 min-h-screen">
-      <div className={`w-full transition-all duration-1000 ${gameOver ? 'blur-md scale-105 pointer-events-none opacity-50' : ''}`}>
+      <div className={`w-full transition-all duration-1000 ${showGameOverOverlay ? 'blur-md scale-105 pointer-events-none opacity-50' : ''}`}>
       <div className="absolute top-4 left-4 sm:top-6 sm:left-6 z-10">
         <button
           className="w-12 h-12 flex items-center justify-center bg-white rounded-2xl shadow-sm text-emerald-950 border-2 border-emerald-100 active:scale-95 transition-all shrink-0 font-black text-xl hover:border-emerald-300 hover:shadow-md"
@@ -715,9 +726,8 @@ export default function XadrezVelhaGame({ user, roomData, onExit }) {
       {renderInventory(myColorCode)}
       </div>
 
-      {/* OVERLAY DE FIM DE JOGO */}
-      {gameOver && (
-        <div className="absolute inset-0 z-[110] flex items-center justify-center p-4">
+      {showGameOverOverlay && (
+        <div className="absolute inset-0 z-[110] flex flex-col items-center justify-center p-4">
           <div className="absolute inset-0 z-[120] pointer-events-none overflow-hidden">
             {iWon ? (
               [...Array(60)].map((_, i) => (
@@ -748,13 +758,18 @@ export default function XadrezVelhaGame({ user, roomData, onExit }) {
               ))
             )}
           </div>
-          <section className={`p-6 sm:p-10 rounded-[3rem] flex flex-col items-center text-center max-w-lg w-full shadow-[0_40px_100px_rgba(0,0,0,0.5)] transform transition-all animate-in zoom-in duration-700 border-[10px] sm:border-[12px] bg-white ${iWon ? 'border-[#FFCE00]' : (gameOver.result === 'DRAW' ? 'border-gray-400' : 'border-red-500')} z-[130]`}>
+          <section className={`p-6 sm:p-10 rounded-[3rem] flex flex-col items-center text-center max-w-lg w-full shadow-[0_40px_100px_rgba(0,0,0,0.5)] transform transition-all animate-in zoom-in duration-700 border-[10px] sm:border-[12px] bg-white ${iWon ? 'border-[#FFCE00]' : (gameOver?.result === 'DRAW' ? 'border-gray-400' : 'border-red-500')} z-[130]`}>
             <h1 className="text-base sm:text-xl font-black mb-1 sm:mb-2 uppercase tracking-widest text-[#009660] opacity-50">Fim de Jogo</h1>
-            <h2 className={`font-black mb-2 sm:mb-3 uppercase italic tracking-tighter leading-none ${iWon ? 'text-5xl sm:text-7xl text-[#FFCE00]' : (gameOver.result === 'DRAW' ? 'text-4xl sm:text-6xl text-gray-500' : 'text-4xl sm:text-6xl text-red-500')}`}>
+            <h2 className={`font-black mb-2 sm:mb-3 uppercase italic tracking-tighter leading-none ${iWon ? 'text-5xl sm:text-7xl text-[#FFCE00]' : (gameOver?.result === 'DRAW' ? 'text-4xl sm:text-6xl text-gray-500' : 'text-4xl sm:text-6xl text-red-500')}`}>
               {getGameOverMsg()}
             </h2>
-            <div className={`text-base sm:text-lg font-black mb-6 sm:mb-8 p-4 rounded-[1.5rem] shadow-inner ${iWon ? 'bg-yellow-50 text-yellow-800' : (gameOver.result === 'DRAW' ? 'bg-gray-100 text-gray-700' : 'bg-red-50 text-red-900')}`}>
-              {REASON_LABELS[gameOver.reason] || gameOver.reason}
+            <div className={`text-base sm:text-lg font-black mb-6 sm:mb-8 p-4 rounded-[1.5rem] shadow-inner ${iWon ? 'bg-yellow-50 text-yellow-800' : (gameOver?.result === 'DRAW' ? 'bg-gray-100 text-gray-700' : 'bg-red-50 text-red-900')}`}>
+              {gameOver?.reason === 'checkmate' ? 'Por Xeque-Mate' : 
+               gameOver?.reason === 'stalemate' ? 'Por Afogamento' : 
+               gameOver?.reason === 'repetition' ? 'Por Repetição' : 
+               gameOver?.reason === 'timeout' ? 'Tempo Esgotado' : 
+               gameOver?.reason === 'resignation' ? 'Desistência' : 
+               gameOver?.reason || ''}
             </div>
             
             <div className="flex flex-col gap-3 sm:gap-4 w-full">

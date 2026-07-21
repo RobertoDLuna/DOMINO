@@ -542,7 +542,7 @@ export default function ChessHomeScreen({ user, onBack, initialRoomCode }) {
             {!mode && (
               <section className="animate-in fade-in slide-in-from-bottom-4 duration-300">
                 <h2 className="text-xl font-black text-emerald-950 uppercase italic tracking-tight mb-6">Como deseja jogar?</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <button
                     className="group relative flex flex-col bg-white rounded-[2rem] border-2 border-emerald-100 p-8 text-left transition-all hover:scale-[1.02] hover:shadow-[0_20px_50px_rgba(0,150,96,0.1)] hover:border-emerald-300 active:scale-95 overflow-hidden"
                     onClick={() => { setMode('PVP'); setSubMode(null); setError(''); }}
@@ -568,6 +568,32 @@ export default function ChessHomeScreen({ user, onBack, initialRoomCode }) {
                     <p className="text-emerald-900/60 text-sm font-medium mb-6">Treine e aprimore suas jogadas contra a Inteligência Artificial.</p>
                     <span className="bg-slate-100 text-slate-700 text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-wider mt-auto w-fit">
                       Treino Casual
+                    </span>
+                  </button>
+                  <button
+                    className="group relative flex flex-col bg-white rounded-[2rem] border-2 border-emerald-100 p-8 text-left transition-all hover:scale-[1.02] hover:shadow-[0_20px_50px_rgba(0,150,96,0.1)] hover:border-emerald-300 active:scale-95 overflow-hidden"
+                    onClick={() => {
+                      setGameSession({
+                        roomCode: `local_${Date.now()}`,
+                        myColor: 'both',
+                        mode: 'PVP_LOCAL',
+                        aiLevel: null,
+                        whiteName: 'Jogador 1',
+                        blackName: 'Jogador 2',
+                        initialFen: null,
+                        status: 'playing',
+                        timeLimit: timeLimit,
+                        myId: myId,
+                      });
+                    }}
+                  >
+                    <div className="w-16 h-16 bg-emerald-50 rounded-2xl flex items-center justify-center text-4xl mb-6 group-hover:scale-110 transition-transform">
+                      📱
+                    </div>
+                    <h3 className="text-emerald-950 font-black text-xl uppercase italic tracking-tight mb-2">Jogador vs Jogador (Local)</h3>
+                    <p className="text-emerald-900/60 text-sm font-medium mb-6">Jogue com um amigo no mesmo dispositivo (Pass-and-Play).</p>
+                    <span className="bg-slate-100 text-slate-700 text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-wider mt-auto w-fit">
+                      Modo Offline
                     </span>
                   </button>
                 </div>

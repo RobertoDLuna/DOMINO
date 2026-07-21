@@ -39,9 +39,9 @@ export default function ChessScreen({
   const { emit, on } = useChessSocket();
 
   // Fases de Setup: 'WAITING' (PVP) | 'DRAWING' | 'CHOOSING' | 'READY'
-  const [setupPhase, setSetupPhase] = useState(mode === 'PVC' ? 'DRAWING' : 'WAITING');
+  const [setupPhase, setSetupPhase] = useState(mode === 'PVC' ? 'DRAWING' : (mode === 'PVP_LOCAL' ? 'READY' : 'WAITING'));
   const [drawWinner, setDrawWinner] = useState(null); // { userId, userName }
-  const [assignedColors, setAssignedColors] = useState(null); // { white: {userId}, black: {userId} }
+  const [assignedColors, setAssignedColors] = useState(mode === 'PVP_LOCAL' ? { white: {userId: 'p1', userName: 'Jogador 1'}, black: {userId: 'p2', userName: 'Jogador 2'} } : null); // { white: {userId}, black: {userId} }
 
   const [fen, setFen] = useState(INITIAL_FEN);
   const [moves, setMoves] = useState([]);
@@ -60,11 +60,11 @@ export default function ChessScreen({
   const chessRef = useRef(new Chess());
   const stockfishRef = useRef(null);
 
-  const myColor = assignedColors ? (assignedColors.white.userId === myId ? 'white' : 'black') : 'white';
-  const whiteName = assignedColors?.white?.userName || 'Aguardando...';
-  const blackName = assignedColors?.black?.userName || 'Aguardando...';
+  const myColor = mode === 'PVP_LOCAL' ? 'both' : (assignedColors ? (assignedColors.white.userId === myId ? 'white' : 'black') : 'white');
+  const whiteName = assignedColors?.white?.userName || (mode === 'PVP_LOCAL' ? 'Jogador 1' : 'Aguardando...');
+  const blackName = assignedColors?.black?.userName || (mode === 'PVP_LOCAL' ? 'Jogador 2' : 'Aguardando...');
 
-  const isMyTurn = assignedColors && chessRef.current.turn() === (myColor === 'white' ? 'w' : 'b');
+  const isMyTurn = mode === 'PVP_LOCAL' ? true : (assignedColors && chessRef.current.turn() === (myColor === 'white' ? 'w' : 'b'));
 
   // Compute status
   const isWaiting = mode === 'PVP' && !assignedColors;

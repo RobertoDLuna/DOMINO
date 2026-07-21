@@ -214,11 +214,12 @@ export default function XadrezVelhaGame({ user, roomData, onExit }) {
   const { emit, on } = useVelhaSocket();
 
   const isPVC = roomData.mode === 'PVC';
+  const isPVPLocal = roomData.mode === 'PVP_LOCAL';
 
   // Fases de Setup: 'WAITING' (PVP) | 'DRAWING' | 'CHOOSING' | 'READY'
-  const [setupPhase, setSetupPhase] = useState(isPVC ? 'DRAWING' : 'WAITING');
+  const [setupPhase, setSetupPhase] = useState(isPVC ? 'DRAWING' : (isPVPLocal ? 'READY' : 'WAITING'));
   const [drawWinner, setDrawWinner] = useState(null); // { userId, userName }
-  const [assignedColors, setAssignedColors] = useState(null); // { white: {userId}, black: {userId} }
+  const [assignedColors, setAssignedColors] = useState(isPVPLocal ? { white: {userId: 'p1', userName: 'Jogador 1'}, black: {userId: 'p2', userName: 'Jogador 2'} } : null); // { white: {userId}, black: {userId} }
 
   // Estado Local do Jogo
   const [board, setBoard] = useState(Array(9).fill(null));
@@ -238,8 +239,8 @@ export default function XadrezVelhaGame({ user, roomData, onExit }) {
 
   // Derivados de Cor
   const myId = roomData.myId || user?.id || 'YOU';
-  const myColor = assignedColors ? (assignedColors.white.userId == myId ? 'white' : 'black') : 'white';
-  const myColorCode = myColor === 'white' ? 'W' : 'B';
+  const myColor = isPVPLocal ? 'both' : (assignedColors ? (assignedColors.white.userId == myId ? 'white' : 'black') : 'white');
+  const myColorCode = isPVPLocal ? turn : (myColor === 'white' ? 'W' : 'B');
   const oppColorCode = myColorCode === 'W' ? 'B' : 'W';
 
   // ── ATUALIZAÇÕES DO SOCKET (PVP/PVC) ───────────────────────────────────
@@ -470,7 +471,7 @@ export default function XadrezVelhaGame({ user, roomData, onExit }) {
     if (phase === 'DROP') {
       if (board[idx] || !selectedDropPiece) return;
 
-      if (isPVC) {
+      if (isPVC || isPVPLocal) {
         handleLocalDrop(idx, selectedDropPiece, myColorCode);
       } else {
         emit('velha-drop-piece', { roomCode: roomData.roomCode, idx, pieceType: selectedDropPiece });
@@ -485,7 +486,7 @@ export default function XadrezVelhaGame({ user, roomData, onExit }) {
       }
 
       if (!piece && selectedMoveIdx !== null && validMoves.includes(idx)) {
-        if (isPVC) {
+        if (isPVC || isPVPLocal) {
           handleLocalMove(selectedMoveIdx, idx, myColorCode);
         } else {
           emit('velha-move-piece', { roomCode: roomData.roomCode, from: selectedMoveIdx, to: idx });
@@ -495,7 +496,7 @@ export default function XadrezVelhaGame({ user, roomData, onExit }) {
   };
 
   const handleRematch = () => {
-    if (isPVC) {
+    if (isPVC || isPVPLocal) {
       const oldWhite = assignedColors.white;
       const oldBlack = assignedColors.black;
       setAssignedColors({ white: oldBlack, black: oldWhite });
@@ -515,7 +516,7 @@ export default function XadrezVelhaGame({ user, roomData, onExit }) {
 
   const handleResign = () => {
     if (gameOver) return;
-    if (isPVC) {
+    if (isPVC || isPVPLocal) {
       setGameOver({ result: myColorCode === 'W' ? 'BLACK_WIN' : 'WHITE_WIN', reason: 'resignation' });
     } else {
       emit('velha-resign', { roomCode: roomData.roomCode });

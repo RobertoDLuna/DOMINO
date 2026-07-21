@@ -126,8 +126,9 @@ function getBestAIMove(board, hasMoved, aiColor, depth = 3) {
 export default function PeaoGame({ user, roomData, onExit }) {
   const { emit, on } = usePeaoSocket();
   const isPVC = roomData.mode === 'PVC';
-  const [myColor, setMyColor] = useState(roomData.color); // 'white' | 'black'
-  const myPiece = myColor === 'white' ? 'w' : 'b';
+  const isPVPLocal = roomData.mode === 'PVP_LOCAL';
+  const [myColor, setMyColor] = useState(roomData.color); // 'both', 'white', 'black'
+  const myPiece = isPVPLocal ? turn : (myColor === 'white' ? 'w' : 'b');
   const aiPiece = myPiece === 'w' ? 'b' : 'w';
   const humanPiece = myPiece;
 
@@ -160,7 +161,7 @@ export default function PeaoGame({ user, roomData, onExit }) {
 
   // ── Socket listeners (PVP) ────────────────────────────────────────────────
   useEffect(() => {
-    if (isPVC) return;
+    if (isPVC || isPVPLocal) return;
 
     const unsubs = [
       on('peao-game-ready', ({ board: b, turn: t, whiteName: wn, blackName: bn, timeLimit: serverTime }) => {
@@ -203,13 +204,13 @@ export default function PeaoGame({ user, roomData, onExit }) {
   const handleTimeout = useCallback((lostColor) => {
     if (gameOver) return;
 
-    if (isPVC) {
+    if (isPVC || isPVPLocal) {
       const result = lostColor === 'white' ? 'BLACK_WIN' : 'WHITE_WIN';
       setGameOver({ result, reason: 'timeout' });
     } else {
       emit('peao-claim-timeout', { roomCode: roomData.roomCode });
     }
-  }, [gameOver, isPVC, emit, roomData.roomCode]);
+  }, [gameOver, isPVC, isPVPLocal, emit, roomData.roomCode]);
 
   useEffect(() => {
     if (status !== 'playing' || gameOver) return;
@@ -270,8 +271,8 @@ export default function PeaoGame({ user, roomData, onExit }) {
       const newTurn = turn === 'w' ? 'b' : 'w';
       setTurn(newTurn);
 
-      if (isPVC) {
-        // Verifica vitória do humano
+      if (isPVC || isPVPLocal) {
+        // Verifica vitória
         const win = checkWinLocal(newBoard);
         if (win) { setGameOver({ result: win, reason: 'breakthrough' }); return; }
         if (!hasAnyMove(newBoard, newMoved, aiPiece)) {
@@ -330,7 +331,7 @@ export default function PeaoGame({ user, roomData, onExit }) {
 
   // ── Resign ───────────────────────────────────────────────────────────────
   const handleResign = () => {
-    if (isPVC) { setGameOver({ result: myColor === 'white' ? 'BLACK_WIN' : 'WHITE_WIN', reason: 'resignation' }); return; }
+    if (isPVC || isPVPLocal) { setGameOver({ result: turn === 'w' ? 'BLACK_WIN' : 'WHITE_WIN', reason: 'resignation' }); return; }
     emit('peao-resign', { roomCode: roomData.roomCode });
   };
 
@@ -354,8 +355,8 @@ export default function PeaoGame({ user, roomData, onExit }) {
 
   // ── Rematch ──────────────────────────────────────────────────────────────
   const handleRematch = () => {
-    if (isPVC) {
-      const nextColor = myColor === 'white' ? 'black' : 'white';
+    if (isPVC || isPVPLocal) {
+      const nextColor = (myColor === 'white' || myColor === 'both') ? (isPVPLocal ? 'both' : 'black') : 'white';
       setMyColor(nextColor);
       setBoard(createInitialBoard());
       setHasMoved(createHasMoved());
@@ -373,7 +374,7 @@ export default function PeaoGame({ user, roomData, onExit }) {
   };
 
   // ── Renderização do tabuleiro ─────────────────────────────────────────────
-  const squares = myColor === 'white'
+  const squares = (myColor === 'white' || myColor === 'both')
     ? Array.from({ length: 64 }, (_, i) => i)
     : Array.from({ length: 64 }, (_, i) => {
         const row = Math.floor(i / 8);
@@ -381,15 +382,17 @@ export default function PeaoGame({ user, roomData, onExit }) {
         return (7 - row) * 8 + (7 - col);
       });
 
-  const ranks = myColor === 'white' ? ['8','7','6','5','4','3','2','1'] : ['1','2','3','4','5','6','7','8'];
-  const files = myColor === 'white' ? ['a','b','c','d','e','f','g','h'] : ['h','g','f','e','d','c','b','a'];
+  const ranks = (myColor === 'white' || myColor === 'both') ? ['8','7','6','5','4','3','2','1'] : ['1','2','3','4','5','6','7','8'];
+  const files = (myColor === 'white' || myColor === 'both') ? ['a','b','c','d','e','f','g','h'] : ['h','g','f','e','d','c','b','a'];
 
   const isMyTurn = turn === myPiece && !gameOver;
 
   // Check if I won for styling
   const iWon = gameOver && (
-    (gameOver.result === 'WHITE_WIN' && myColor === 'white') ||
-    (gameOver.result === 'BLACK_WIN' && myColor === 'black')
+    isPVPLocal ? true : (
+      (gameOver.result === 'WHITE_WIN' && myColor === 'white') ||
+      (gameOver.result === 'BLACK_WIN' && myColor === 'black')
+    )
   );
 
   const REASON_LABELS = {

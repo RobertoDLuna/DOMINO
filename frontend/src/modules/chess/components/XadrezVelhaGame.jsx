@@ -761,9 +761,25 @@ export default function XadrezVelhaGame({ user, roomData, onExit }) {
           </div>
           <section className={`p-6 sm:p-10 rounded-[3rem] flex flex-col items-center text-center max-w-lg w-full shadow-[0_40px_100px_rgba(0,0,0,0.5)] transform transition-all animate-in zoom-in duration-700 border-[10px] sm:border-[12px] bg-white ${iWon ? 'border-[#FFCE00]' : (gameOver?.result === 'DRAW' ? 'border-gray-400' : 'border-red-500')} z-[130]`}>
             <h1 className="text-base sm:text-xl font-black mb-1 sm:mb-2 uppercase tracking-widest text-[#009660] opacity-50">Fim de Jogo</h1>
-            <h2 className={`font-black mb-2 sm:mb-3 uppercase italic tracking-tighter leading-none ${iWon ? 'text-5xl sm:text-7xl text-[#FFCE00]' : (gameOver?.result === 'DRAW' ? 'text-4xl sm:text-6xl text-gray-500' : 'text-4xl sm:text-6xl text-red-500')}`}>
-              {getGameOverMsg()}
-            </h2>
+            {isPVC || isPVPLocal ? (
+              <>
+                <h2 className={`font-black mb-2 sm:mb-3 uppercase italic tracking-tighter leading-none ${iWon ? 'text-5xl sm:text-7xl text-[#FFCE00]' : (gameOver?.result === 'DRAW' ? 'text-4xl sm:text-6xl text-gray-500' : 'text-4xl sm:text-6xl text-red-500')}`}>
+                  {gameOver?.result === 'DRAW' ? 'EMPATE!' : (iWon ? 'VITÓRIA!' : 'FOI QUASE!')}
+                </h2>
+                {gameOver?.result !== 'DRAW' && (
+                  <div className="flex flex-col gap-1 mb-6 sm:mb-8">
+                    <p className="text-xs sm:text-sm font-black text-gray-400 uppercase tracking-widest leading-none">Vencedor:</p>
+                    <p className={`text-2xl sm:text-4xl font-black uppercase italic ${iWon ? 'text-orange-500' : 'text-emerald-700'}`}>
+                      🏆 AS {gameOver?.result === 'WHITE_WIN' ? 'BRANCAS' : 'PRETAS'}
+                    </p>
+                  </div>
+                )}
+              </>
+            ) : (
+              <h2 className={`font-black mb-2 sm:mb-3 uppercase italic tracking-tighter leading-none ${iWon ? 'text-5xl sm:text-7xl text-[#FFCE00]' : (gameOver?.result === 'DRAW' ? 'text-4xl sm:text-6xl text-gray-500' : 'text-4xl sm:text-6xl text-red-500')}`}>
+                {getGameOverMsg()}
+              </h2>
+            )}
             <div className={`text-base sm:text-lg font-black mb-6 sm:mb-8 p-4 rounded-[1.5rem] shadow-inner ${iWon ? 'bg-yellow-50 text-yellow-800' : (gameOver?.result === 'DRAW' ? 'bg-gray-100 text-gray-700' : 'bg-red-50 text-red-900')}`}>
               {gameOver?.reason === 'checkmate' ? 'Por Xeque-Mate' : 
                gameOver?.reason === 'stalemate' ? 'Por Afogamento' : 

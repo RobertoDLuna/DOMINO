@@ -1,3 +1,4 @@
+@import './offline-responsive.css';
 /* Variáveis do Xadrez da Velha */
 :root {
   --velha-light: #f0d9b5;

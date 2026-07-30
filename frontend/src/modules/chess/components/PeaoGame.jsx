@@ -413,7 +413,7 @@ export default function PeaoGame({ user, roomData, onExit }) {
   };
 
   return (
-    <div className="peao-screen relative overflow-hidden">
+    <div className={`peao-screen relative overflow-hidden ${(isPVC || isPVPLocal) ? 'offline-responsive' : ''} ${isPVPLocal ? 'rotate-opponent' : ''}`}>
       {/* Elementos normais do jogo. Serão "borrados" quando terminar */}
       <div className={`w-full h-full flex flex-col absolute inset-0 transition-all duration-1000 ${showGameOverOverlay ? 'blur-md scale-105 pointer-events-none opacity-50' : ''}`}>
 
@@ -477,6 +477,7 @@ export default function PeaoGame({ user, roomData, onExit }) {
                             src={pieceFile} 
                             alt={piece === 'w' ? 'Peão Branco' : 'Peão Preto'} 
                             className="peao-board-piece" 
+                            data-piece={piece === 'w' ? 'wP' : 'bP'}
                           />
                         )}
                       </div>

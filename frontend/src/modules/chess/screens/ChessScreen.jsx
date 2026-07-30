@@ -510,7 +510,7 @@ export default function ChessScreen({
   };
 
   return (
-    <div className="chess-screen relative overflow-hidden">
+    <div className={`chess-screen relative overflow-hidden ${(mode === 'PVC' || mode === 'PVP_LOCAL') ? 'offline-responsive' : ''} ${mode === 'PVP_LOCAL' ? 'rotate-opponent' : ''}`}>
       {/* Elementos normais do jogo. Serão "borrados" quando terminar */}
       <div className={`w-full h-full flex flex-col absolute inset-0 transition-all duration-1000 ${showGameOverOverlay ? 'blur-md scale-105 pointer-events-none opacity-50' : ''}`}>
 

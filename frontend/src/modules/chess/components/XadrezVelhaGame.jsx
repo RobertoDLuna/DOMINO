@@ -634,7 +634,7 @@ export default function XadrezVelhaGame({ user, roomData, onExit }) {
     return (
       <div key={idx} className={cellClass} onClick={() => handleCellClick(idx)}>
         {piece && (
-          <span className={`velha-piece velha-piece-${piece[0]}`}>
+          <span className={`velha-piece velha-piece-${piece[0]}`} data-piece={piece[0] === 'W' ? 'wP' : 'bP'}>
             {PIECES[piece[1]].emoji}
           </span>
         )}
@@ -667,7 +667,7 @@ export default function XadrezVelhaGame({ user, roomData, onExit }) {
                 disabled={!isSelectable && !(!isMyInv && count > 0)}
                 onClick={() => isSelectable ? setSelectedDropPiece(pType) : null}
               >
-                <span className={`piece-icon velha-piece-${color}`}>{PIECES[pType].emoji}</span>
+                <span className={`piece-icon velha-piece-${color}`} data-piece={color === 'W' ? 'wP' : 'bP'}>{PIECES[pType].emoji}</span>
                 {count > 0 && <span className="piece-count">{count}</span>}
               </button>
             );
@@ -697,7 +697,7 @@ export default function XadrezVelhaGame({ user, roomData, onExit }) {
   };
 
   return (
-    <div className="velha-container relative overflow-hidden pt-4 pb-20 min-h-screen">
+    <div className={`velha-container velha-screen relative overflow-hidden pt-4 pb-20 min-h-screen ${(isPVC || isPVPLocal) ? 'offline-responsive' : ''} ${isPVPLocal ? 'rotate-opponent' : ''}`}>
       <div className={`w-full transition-all duration-1000 ${showGameOverOverlay ? 'blur-md scale-105 pointer-events-none opacity-50' : ''}`}>
       <div className="absolute top-4 left-4 sm:top-6 sm:left-6 z-10">
         <button

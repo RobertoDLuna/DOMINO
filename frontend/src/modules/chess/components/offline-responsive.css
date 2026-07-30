@@ -66,6 +66,13 @@
 }
 
 /* Rotates opponent's pieces (black) 180 degrees in local PVP mode */
-.rotate-opponent [data-piece^="b"] {
+.rotate-opponent [data-piece^="b"] > svg,
+.rotate-opponent img[data-piece^="b"],
+.rotate-opponent .velha-piece[data-piece^="b"],
+.rotate-opponent .velha-piece-B[data-piece^="b"] {
   transform: rotate(180deg);
+}
+
+.rotate-opponent .peao-board-sq--selected img[data-piece^="b"] {
+  transform: scale(1.08) rotate(180deg);
 }

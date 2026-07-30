@@ -337,20 +337,32 @@ export default function PeaoGame({ user, roomData, onExit }) {
 
   // ── Draw Handlers ────────────────────────────────────────────────────────
   const handleOfferDraw = () => {
-    if (isPVC) return;
-    emit('peao-offer-draw', { roomCode: roomData.roomCode });
+    if (isPVC) {
+      setGameOver({ result: 'DRAW', reason: 'agreement' });
+    } else if (isPVPLocal) {
+      setDrawOffered(true);
+    } else {
+      emit('peao-offer-draw', { roomCode: roomData?.roomCode });
+    }
   };
 
   const handleAcceptDraw = () => {
-    if (isPVC) return;
-    emit('peao-accept-draw', { roomCode: roomData.roomCode });
-    setDrawOffered(false);
+    if (isPVPLocal) {
+      setGameOver({ result: 'DRAW', reason: 'agreement' });
+      setDrawOffered(false);
+    } else if (!isPVC) {
+      emit('peao-accept-draw', { roomCode: roomData?.roomCode });
+      setDrawOffered(false);
+    }
   };
 
   const handleDeclineDraw = () => {
-    if (isPVC) return;
-    emit('peao-decline-draw', { roomCode: roomData.roomCode });
-    setDrawOffered(false);
+    if (isPVPLocal) {
+      setDrawOffered(false);
+    } else if (!isPVC) {
+      emit('peao-decline-draw', { roomCode: roomData?.roomCode });
+      setDrawOffered(false);
+    }
   };
 
   // ── Rematch ──────────────────────────────────────────────────────────────

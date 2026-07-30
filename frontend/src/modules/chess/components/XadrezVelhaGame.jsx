@@ -497,9 +497,11 @@ export default function XadrezVelhaGame({ user, roomData, onExit }) {
 
   const handleRematch = () => {
     if (isPVC || isPVPLocal) {
-      const oldWhite = assignedColors.white;
-      const oldBlack = assignedColors.black;
-      setAssignedColors({ white: oldBlack, black: oldWhite });
+      if (isPVC && assignedColors) {
+        const oldWhite = assignedColors.white;
+        const oldBlack = assignedColors.black;
+        setAssignedColors({ white: oldBlack, black: oldWhite });
+      }
       setBoard(Array(9).fill(null));
       setBoardHistory([Array(9).fill(null).join(',')]);
       setInventory({ W: { T: 1, C: 1, B: 1 }, B: { T: 1, C: 1, B: 1 } });
@@ -508,6 +510,7 @@ export default function XadrezVelhaGame({ user, roomData, onExit }) {
       setGameOver(null);
       setRematchRequested(false);
       setOpponentWantsRematch(false);
+      setShowGameOverOverlay(false);
     } else {
       setRematchRequested(true);
       emit('velha-request-rematch', { roomCode: roomData.roomCode });

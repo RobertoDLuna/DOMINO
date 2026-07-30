@@ -312,10 +312,12 @@ export default function ChessScreen({
 
   // ── Action handlers ────────────────────────────────────────────────────
   const handleRematch = () => {
-    if (mode === 'PVC') {
-      const oldWhite = assignedColors.white;
-      const oldBlack = assignedColors.black;
-      setAssignedColors({ white: oldBlack, black: oldWhite });
+    if (mode === 'PVC' || mode === 'PVP_LOCAL') {
+      if (mode === 'PVC' && assignedColors) {
+        const oldWhite = assignedColors.white;
+        const oldBlack = assignedColors.black;
+        setAssignedColors({ white: oldBlack, black: oldWhite });
+      }
       chessRef.current = new Chess();
       setFen(INITIAL_FEN);
       setMoves([]);
@@ -333,7 +335,7 @@ export default function ChessScreen({
 
   const handleResign = () => {
     if (gameOver) return;
-    if (mode === 'PVC') {
+    if (mode === 'PVC' || mode === 'PVP_LOCAL') {
       setGameOver({ result: myColor === 'white' ? 'BLACK_WIN' : 'WHITE_WIN', reason: 'resignation' });
     } else {
       emit('chess-resign', { roomCode });
@@ -341,20 +343,36 @@ export default function ChessScreen({
   };
 
   const handleOfferDraw = () => {
-    if (gameOver || mode === 'PVC') return;
-    emit('chess-offer-draw', { roomCode });
+    if (gameOver) return;
+    if (mode === 'PVC') {
+      // Computador aceita automaticamente (ou jogo encerra em empate amigavelmente)
+      setGameOver({ result: 'DRAW', reason: 'agreement' });
+    } else if (mode === 'PVP_LOCAL') {
+      setDrawOffered(true);
+    } else {
+      emit('chess-offer-draw', { roomCode });
+    }
   };
 
   const handleAcceptDraw = () => {
-    if (gameOver || mode === 'PVC') return;
-    emit('chess-accept-draw', { roomCode });
-    setDrawOffered(false);
+    if (gameOver) return;
+    if (mode === 'PVP_LOCAL') {
+      setGameOver({ result: 'DRAW', reason: 'agreement' });
+      setDrawOffered(false);
+    } else if (mode !== 'PVC') {
+      emit('chess-accept-draw', { roomCode });
+      setDrawOffered(false);
+    }
   };
 
   const handleDeclineDraw = () => {
-    if (gameOver || mode === 'PVC') return;
-    emit('chess-decline-draw', { roomCode });
-    setDrawOffered(false);
+    if (gameOver) return;
+    if (mode === 'PVP_LOCAL') {
+      setDrawOffered(false);
+    } else if (mode !== 'PVC') {
+      emit('chess-decline-draw', { roomCode });
+      setDrawOffered(false);
+    }
   };
 
   const handleStartGame = () => {

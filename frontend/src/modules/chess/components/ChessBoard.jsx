@@ -1,21 +1,21 @@
 /**
  * ChessBoard.jsx
- * The main chess board component.
+ * Componente principal do tabuleiro de xadrez.
  *
- * Responsibilities:
- *  - Render the board using react-chessboard
- *  - Validate moves locally with chess.js
- *  - Emit validated moves via Socket.IO
- *  - Handle promotion popup
- *  - Highlight last move and legal moves on piece selection
- *  - Support two visual themes: 'wood' (classic) and 'dark' (modern slate)
+ * Responsabilidades:
+ *  - Renderizar o tabuleiro usando react-chessboard
+ *  - Validar movimentos localmente com chess.js
+ *  - Emitir movimentos validados via Socket.IO
+ *  - Gerenciar modal de promoção de peão
+ *  - Destacar último lance e movimentos válidos na seleção de peças
+ *  - Suportar temas visuais: 'wood' (madeira clássica) e 'dark' (moderno)
  */
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { Chessboard } from 'react-chessboard';
 import { Chess } from 'chess.js';
 import ChessPromotion from './ChessPromotion';
 
-// ── Theme definitions ──────────────────────────────────────────────────────
+// ── Definições de Temas Visuais ─────────────────────────────────────────────
 export const BOARD_THEMES = {
   wood: {
     label: '🪵 Madeira Clássica',
@@ -46,7 +46,7 @@ export default function ChessBoard({
 }) {
   const theme = BOARD_THEMES[boardTheme] || BOARD_THEMES.wood;
 
-  // Local chess instance for move validation (mirrors server state)
+  // Instância local do chess.js para validação de lances (espelha o estado do servidor)
   const chessRef = useRef(new Chess(fen));
   const [localFen, setLocalFen] = useState(fen);
   const [selectedSquare, setSelectedSquare] = useState(null);
@@ -60,7 +60,7 @@ export default function ChessBoard({
     setIsTouchDevice('ontouchstart' in window || navigator.maxTouchPoints > 0);
   }, []);
 
-  // Sync when server sends a new FEN
+  // Sincroniza quando o servidor envia um novo FEN
   useEffect(() => {
     chessRef.current.load(fen);
     setLocalFen(fen);
@@ -77,7 +77,7 @@ export default function ChessBoard({
     }
   }, [fen, lastMove, theme.lastMove]);
 
-  // Compute checkmate styles if any
+  // Calcula estilos visuais para a casa do rei em xeque-mate
   useEffect(() => {
     if (gameOver && gameOver.reason === 'checkmate') {
       const chess = chessRef.current;
@@ -96,7 +96,7 @@ export default function ChessBoard({
       
       const isWhiteWin = gameOver.result === 'WHITE_WIN';
       
-      // Inline SVGs for Crown and Fallen Crown
+      // SVGs embutidos para Coroa Vencedora e Coroa Caída
       const greenCrownSVG = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 30 30" width="30" height="30"><circle cx="15" cy="15" r="15" fill="%2358a74f"/><text x="15" y="21" font-size="16" text-anchor="middle" fill="white">👑</text></svg>`;
       const redFallenCrownSVG = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 30 30" width="30" height="30"><circle cx="15" cy="15" r="15" fill="%23d34e4e"/><text x="15" y="21" font-size="16" text-anchor="middle" fill="white" transform="rotate(90 15 15)">👑</text></svg>`;
 
@@ -112,7 +112,7 @@ export default function ChessBoard({
     }
   }, [gameOver]);
 
-  // Compute legal moves squares for the selected piece
+  // Calcula casas de movimentos válidos para a peça selecionada
   const getMoveOptions = useCallback((square) => {
     const moves = chessRef.current.moves({ square, verbose: true });
     if (!moves.length) return {};
@@ -133,7 +133,7 @@ export default function ChessBoard({
   function onSquareClick(square) {
     if (!isMyTurn || gameOver || disabled) return;
 
-    // If a piece was already selected → try to move
+    // Se uma peça já estava selecionada → tenta mover
     if (selectedSquare && optionSquares[square]) {
       attemptMove(selectedSquare, square);
       return;
@@ -153,7 +153,7 @@ export default function ChessBoard({
   function onPieceDragBegin(piece, sourceSquare) {
     if (!isMyTurn || gameOver || disabled) return;
 
-    // React-chessboard gives us (piece, sourceSquare)
+    // O react-chessboard fornece (piece, sourceSquare)
     const square = sourceSquare;
     const chessPiece = chessRef.current.get(square);
     if (!chessPiece) return;
@@ -168,7 +168,7 @@ export default function ChessBoard({
   function onPieceDrop(sourceSquare, targetSquare, piece) {
     if (!isMyTurn || gameOver || disabled) return false;
 
-    // Validate if the move is legal before returning true to allow drag-and-drop
+    // Valida se o movimento é legal antes de permitir o arrastar e soltar
     let isLegal = false;
     try {
       const clone = new Chess(chessRef.current.fen());
@@ -179,17 +179,16 @@ export default function ChessBoard({
     }
 
     if (!isLegal) {
-      // Clear options if dropped on an invalid square
+      // Limpa as opções caso seja solto em uma casa inválida
       setSelectedSquare(null);
       setOptionSquares({});
       return false;
     }
 
-    // If it's legal, we proceed
+    // Se for válido, executa a jogada
     attemptMove(sourceSquare, targetSquare);
 
-    // Check if it's a promotion. If it is, we should return false so it temporarily snaps back
-    // while the promotion dialog is open. Otherwise, return true so the piece stays there.
+    // Se for promoção, retorna false para a peça voltar temporariamente enquanto o modal de promoção está aberto
     const isPromotion = piece && piece[1].toLowerCase() === 'p' && (targetSquare[1] === '8' || targetSquare[1] === '1');
     return !isPromotion;
   }
@@ -198,7 +197,7 @@ export default function ChessBoard({
     const chess = chessRef.current;
     const piece = chess.get(from);
 
-    // Check for pawn promotion
+    // Verifica promoção de peão
     const isPromotion =
       piece?.type === 'p' &&
       ((piece.color === 'w' && to[1] === '8') ||
@@ -218,7 +217,7 @@ export default function ChessBoard({
     try {
       result = chess.move({ from, to, promotion: promotionPiece });
     } catch {
-      /* invalid move — ignore */
+      /* lance inválido ignorado */
     }
 
     if (!result) {

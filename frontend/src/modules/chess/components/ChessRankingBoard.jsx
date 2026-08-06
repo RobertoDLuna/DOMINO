@@ -12,17 +12,13 @@ const TrophySVG = ({ fill = '#FFE066', size = 36 }) => (
   </svg>
 );
 
-const SparkSVG = ({ fill = '#FFD700', size = 10 }) => (
-  <svg width={size} height={size} viewBox="0 0 20 20" fill={fill}><path d="M10 0L11.8 8.2L20 10L11.8 11.8L10 20L8.2 11.8L0 10L8.2 8.2Z"/></svg>
-);
-
 const PODIUM_CONFIG = {
   1: { outerDiamond: '#8B6508', innerGrad: ['#FFD700','#FFC200'], cupFill: '#FFF8C0', spark: '#FFE566', barBg: '#FFCE00', barTop: '#9A6B00', barHMobile: 140, barHDesktop: 160, barWMobile: 90, barWDesktop: 120, tSize: 32, dSize: 64 },
   2: { outerDiamond: '#4A4A4A', innerGrad: ['#D4D4D4','#A0A0A0'], cupFill: '#EFEFEF', spark: '#C8C8C8', barBg: '#BABABA', barTop: '#5A5A5A', barHMobile: 110, barHDesktop: 130, barWMobile: 80, barWDesktop: 100, tSize: 26, dSize: 50 },
   3: { outerDiamond: '#5C2D0E', innerGrad: ['#C87832','#9A5020'], cupFill: '#FFDAAA', spark: '#D08838', barBg: '#E07828', barTop: '#6A3010', barHMobile: 80, barHDesktop: 100, barWMobile: 70, barWDesktop: 90, tSize: 20, dSize: 40 },
 };
 
-const Podium = ({ top3, mode, className = 'mt-20 sm:mt-24 mb-4' }) => {
+const Podium = ({ top3, className = 'mt-20 sm:mt-24 mb-4' }) => {
   if (!top3 || top3.length === 0) return null;
   const reordered = [];
   if (top3.length > 1) reordered.push({ ...top3[1], pos: 2 });

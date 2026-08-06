@@ -15,7 +15,7 @@ const AI_LEVELS = [
 export default function XadrezVelhaScreen({ user, onBack, onSessionActive }) {
   const { emit, on, isConnected } = useVelhaSocket();
 
-  // lobby state
+  // Estado do lobby
   const [mode, setMode] = useState(null); // null | 'PVP' | 'PVC'
   const [subMode, setSubMode] = useState(null); // 'create' | 'join'
   const [aiLevel, setAiLevel] = useState(3);
@@ -24,7 +24,7 @@ export default function XadrezVelhaScreen({ user, onBack, onSessionActive }) {
   const [loading, setLoading] = useState(false);
   const [showRanking, setShowRanking] = useState(false);
 
-  // game session
+  // Sessão da partida
   const [gameSession, setGameSession] = useState(null);
 
   // Identidade do usuário para esta sessão
@@ -146,7 +146,7 @@ export default function XadrezVelhaScreen({ user, onBack, onSessionActive }) {
 
   return (
     <div className="flex flex-col h-full animate-in fade-in duration-300">
-      {/* Header */}
+      {/* Cabeçalho */}
       <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
         <div className="flex items-center gap-4">
           <button 
@@ -182,7 +182,7 @@ export default function XadrezVelhaScreen({ user, onBack, onSessionActive }) {
         </div>
       </header>
 
-      {/* PVP/PVC selector */}
+      {/* Seletor de Modo (PVP / PVC / Local) */}
       {!mode && (
         <section className="animate-in fade-in slide-in-from-bottom-4 duration-300">
           <h2 className="text-xl font-black text-emerald-950 uppercase italic tracking-tight mb-6">Como deseja jogar?</h2>
@@ -248,7 +248,7 @@ export default function XadrezVelhaScreen({ user, onBack, onSessionActive }) {
         </section>
       )}
 
-      {/* PVP Options (Create / Join) */}
+      {/* Opções PVP (Criar / Entrar) */}
       {mode === 'PVP' && !subMode && (
         <section className="max-w-2xl mx-auto w-full animate-in fade-in slide-in-from-bottom-4 duration-300 mt-12">
           <h2 className="text-xl font-black text-emerald-950 uppercase italic tracking-tight mb-6 text-center">Multiplayer Online</h2>
@@ -273,7 +273,7 @@ export default function XadrezVelhaScreen({ user, onBack, onSessionActive }) {
         </section>
       )}
 
-      {/* PVP Create Action */}
+      {/* Ação de Criar Sala PVP */}
       {mode === 'PVP' && subMode === 'create' && (
         <section className="max-w-md mx-auto w-full animate-in fade-in slide-in-from-bottom-4 duration-300 mt-12 bg-white rounded-[2rem] border-2 border-emerald-100 p-8 text-center">
           <div className="w-16 h-16 bg-emerald-50 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-6">➕</div>
@@ -292,7 +292,7 @@ export default function XadrezVelhaScreen({ user, onBack, onSessionActive }) {
         </section>
       )}
 
-      {/* PVP Join Action */}
+      {/* Ação de Entrar na Sala PVP */}
       {mode === 'PVP' && subMode === 'join' && (
         <section className="max-w-md mx-auto w-full animate-in fade-in slide-in-from-bottom-4 duration-300 mt-12 bg-white rounded-[2rem] border-2 border-emerald-100 p-8 text-center">
           <div className="w-16 h-16 bg-emerald-50 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-6">🔗</div>
@@ -319,7 +319,7 @@ export default function XadrezVelhaScreen({ user, onBack, onSessionActive }) {
         </section>
       )}
 
-      {/* PVC Options */}
+      {/* Opções PVC (vs Computador) */}
       {mode === 'PVC' && (
         <section className="max-w-2xl mx-auto w-full animate-in fade-in slide-in-from-bottom-4 duration-300 mt-12 bg-white rounded-[2rem] border-2 border-emerald-100 p-8">
           <div className="text-center mb-8">

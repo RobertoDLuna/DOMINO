@@ -17,7 +17,7 @@ export default function ChessReportScreen({ onNavigate, user }) {
   const loadData = async () => {
     try {
       setLoading(true);
-      // Fetch both player stats and global ranking concurrently
+      // Busca estatísticas do jogador e ranking global simultaneamente
       const [statsRes, rankingRes] = await Promise.all([
         ChessReportService.getPlayerStats(user.id),
         ChessReportService.getGlobalRanking()
@@ -91,7 +91,7 @@ export default function ChessReportScreen({ onNavigate, user }) {
     <div className="min-h-screen bg-[#F0FDF4] text-[#1A1A1A] p-4 md:p-8 font-sans pb-24">
       <div className="max-w-6xl mx-auto space-y-6">
         
-        {/* Header Actions */}
+        {/* Ações do Cabeçalho */}
         <div className="flex items-center justify-between bg-white p-4 rounded-[2rem] shadow-sm border-2 border-emerald-100 mb-6 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 -mr-16 -mt-16 bg-[#FFCE00] rounded-full opacity-10" />
           
@@ -107,7 +107,7 @@ export default function ChessReportScreen({ onNavigate, user }) {
           </div>
         </div>
 
-        {/* Tabs */}
+        {/* Abas */}
         <div className="flex overflow-x-auto custom-scrollbar gap-2 mb-8 bg-white p-2 rounded-[2rem] border-2 border-emerald-100 shadow-sm">
           {[
             { id: 'GERAL', icon: Target, label: 'Visão Geral' },
@@ -127,7 +127,7 @@ export default function ChessReportScreen({ onNavigate, user }) {
           ))}
         </div>
 
-        {/* Tab Content */}
+        {/* Conteúdo da Aba */}
         <div className="space-y-6">
           
           {/* TAB: VISÃO GERAL */}

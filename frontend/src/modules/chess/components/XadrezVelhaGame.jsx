@@ -122,7 +122,7 @@ function minimax(board, inventory, turn, phase, depth, alpha, beta, isMaximizing
   const actions = getPossibleActions(board, inventory, turn, phase);
   if (actions.length === 0) return { score: 0 };
 
-  let bestAction = actions[Math.floor(Math.random() * actions.length)]; // Random fallback
+  let bestAction = actions[Math.floor(Math.random() * actions.length)]; // Escolha aleatória como fallback
 
   if (isMaximizing) {
     let maxEval = -Infinity;

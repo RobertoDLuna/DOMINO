@@ -149,7 +149,7 @@ export default function PeaoGame({ user, roomData, onExit }) {
   const [currentTheme, setCurrentTheme] = useState('wood');
   const [showGameOverOverlay, setShowGameOverOverlay] = useState(false);
 
-  // Timers
+  // Temporizadores
   const initialTime = roomData.timeLimit || 300;
   const [whiteTime, setWhiteTime] = useState(initialTime);
   const [blackTime, setBlackTime] = useState(initialTime);
@@ -159,7 +159,7 @@ export default function PeaoGame({ user, roomData, onExit }) {
   boardRef.current  = board;
   hasMovRef.current = hasMoved;
 
-  // ── Socket listeners (PVP) ────────────────────────────────────────────────
+  // ── Ouvintes do Socket (PVP Online) ───────────────────────────────────────
   useEffect(() => {
     if (isPVC || isPVPLocal) return;
 
@@ -198,7 +198,7 @@ export default function PeaoGame({ user, roomData, onExit }) {
     return () => unsubs.forEach(fn => fn());
   }, [isPVC, on, initialTime]);
 
-  // ── Timer ticking logic ───────────────────────────────────────────────────
+  // ── Lógica de contagem regressiva dos timers ──────────────────────────────
   const status = gameOver ? 'finished' : 'playing';
 
   const handleTimeout = useCallback((lostColor) => {
@@ -329,13 +329,13 @@ export default function PeaoGame({ user, roomData, onExit }) {
     if (roomData.blackName) setBlackName(roomData.blackName);
   }, [roomData.whiteName, roomData.blackName]);
 
-  // ── Resign ───────────────────────────────────────────────────────────────
+  // ── Desistência ──────────────────────────────────────────────────────────
   const handleResign = () => {
     if (isPVC || isPVPLocal) { setGameOver({ result: turn === 'w' ? 'BLACK_WIN' : 'WHITE_WIN', reason: 'resignation' }); return; }
     emit('peao-resign', { roomCode: roomData.roomCode });
   };
 
-  // ── Draw Handlers ────────────────────────────────────────────────────────
+  // ── Gerenciamento de Empate ───────────────────────────────────────────────
   const handleOfferDraw = () => {
     if (isPVC) {
       setGameOver({ result: 'DRAW', reason: 'agreement' });
@@ -365,7 +365,7 @@ export default function PeaoGame({ user, roomData, onExit }) {
     }
   };
 
-  // ── Rematch ──────────────────────────────────────────────────────────────
+  // ── Revanche / Jogar Novamente ────────────────────────────────────────────
   const handleRematch = () => {
     if (isPVC || isPVPLocal) {
       const nextColor = (myColor === 'white' || myColor === 'both') ? (isPVPLocal ? 'both' : 'black') : 'white';
@@ -399,7 +399,7 @@ export default function PeaoGame({ user, roomData, onExit }) {
 
   const isMyTurn = turn === myPiece && !gameOver;
 
-  // Check if I won for styling
+  // Verifica se o jogador local venceu para estilização visual
   const iWon = gameOver && (
     isPVPLocal ? true : (
       (gameOver.result === 'WHITE_WIN' && myColor === 'white') ||

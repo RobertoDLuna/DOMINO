@@ -1,7 +1,7 @@
 /**
  * ChessScreen.jsx
- * Main game container. Manages Socket.IO events, Stockfish AI (PVC mode),
- * board state, game flow and UI composition.
+ * Container principal do jogo de xadrez. Gerencia eventos do Socket.IO,
+ * IA Stockfish (modo PVC), estado do tabuleiro, fluxo de jogo e interface.
  */
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Chess } from 'chess.js';
@@ -10,8 +10,8 @@ import ChessSidebar, { ChessTimer } from '../components/ChessSidebar';
 import CapturedPieces from '../components/CapturedPieces';
 import { useChessSocket } from '../../../hooks/useChessSocket';
 
-// ── Stockfish worker ──────────────────────────────────────────────────────
-// stockfish.js is pre-copied to /public for direct URL access (no bundling)
+// ── Worker do Stockfish ───────────────────────────────────────────────────
+// stockfish.js está na pasta /public para acesso direto via URL
 function createStockfishWorker() {
   try {
     return new Worker('/stockfish.js');
@@ -21,14 +21,13 @@ function createStockfishWorker() {
   }
 }
 
-
-// ── Constants ─────────────────────────────────────────────────────────────
+// ── Constantes ────────────────────────────────────────────────────────────
 const INITIAL_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
 
 export default function ChessScreen({
   user,
   roomCode,
-  mode,          // 'PVP' | 'PVC'
+  mode,          // 'PVP' | 'PVC' | 'PVP_LOCAL'
   aiLevel,       // 1-10
   timeLimit,     // Em segundos
   myId,          // ID do jogador nesta sessão
@@ -38,7 +37,7 @@ export default function ChessScreen({
 }) {
   const { emit, on } = useChessSocket();
 
-  // Fases de Setup: 'WAITING' (PVP) | 'DRAWING' | 'CHOOSING' | 'READY'
+  // Fases de Preparação: 'WAITING' (PVP) | 'DRAWING' | 'CHOOSING' | 'READY'
   const [setupPhase, setSetupPhase] = useState(mode === 'PVC' ? 'DRAWING' : (mode === 'PVP_LOCAL' ? 'READY' : 'WAITING'));
   const [drawWinner, setDrawWinner] = useState(null); // { userId, userName }
   const [assignedColors, setAssignedColors] = useState(mode === 'PVP_LOCAL' ? { white: {userId: 'p1', userName: 'Jogador 1'}, black: {userId: 'p2', userName: 'Jogador 2'} } : null); // { white: {userId}, black: {userId} }
@@ -53,7 +52,7 @@ export default function ChessScreen({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showGameOverOverlay, setShowGameOverOverlay] = useState(false);
 
-  // Timers (em segundos)
+  // Temporizadores (em segundos)
   const [whiteTime, setWhiteTime] = useState(timeLimit === undefined ? 600 : timeLimit);
   const [blackTime, setBlackTime] = useState(timeLimit === undefined ? 600 : timeLimit);
 
@@ -66,11 +65,11 @@ export default function ChessScreen({
 
   const isMyTurn = mode === 'PVP_LOCAL' ? true : (assignedColors && chessRef.current.turn() === (myColor === 'white' ? 'w' : 'b'));
 
-  // Compute status
+  // Calcula o status do jogo
   const isWaiting = mode === 'PVP' && !assignedColors;
   const status = gameOver ? 'finished' : (isWaiting ? 'waiting' : 'playing');
 
-  // ── Stockfish setup (PVC) ───────────────────────────────────────────────
+  // ── Configuração do Stockfish (Modo PVC) ──────────────────────────────────
   useEffect(() => {
     if (mode !== 'PVC') return;
     const sf = createStockfishWorker();
@@ -79,7 +78,7 @@ export default function ChessScreen({
 
     sf.onmessage = (e) => {
       const line = e.data;
-      // Detect best move line: "bestmove e2e4 ..."
+      // Detecta a linha com o melhor movimento: "bestmove e2e4 ..."
       if (line.startsWith('bestmove')) {
         const parts = line.split(' ');
         const bestMove = parts[1];
@@ -94,7 +93,7 @@ export default function ChessScreen({
     return () => sf.terminate();
   }, [mode]);
 
-  // ── When it's AI's turn in PVC mode ────────────────────────────────────
+  // ── Vez da IA no modo PVC ────────────────────────────────────────────────
   useEffect(() => {
     if (mode !== 'PVC' || !stockfishRef.current || gameOver) return;
     const aiColor = myColor === 'white' ? 'b' : 'w';
@@ -123,7 +122,7 @@ export default function ChessScreen({
     _checkGameOver();
   }
 
-  // ── Timer Logic (Visual Mock) ──────────────────────────────────────────
+  // ── Lógica do Temporizador ───────────────────────────────────────────────
   useEffect(() => {
     if (status !== 'playing' || gameOver || timeLimit === null) return;
     if (moves.length === 0) return; // Não inicia o cronômetro antes da primeira jogada (movimento das brancas)
@@ -163,7 +162,7 @@ export default function ChessScreen({
     }
   }, [gameOver, mode, roomCode, emit]);
 
-  // ── Socket event listeners ─────────────────────────────────────────────
+  // ── Ouvintes de eventos Socket.IO ─────────────────────────────────────────
   useEffect(() => {
     const unsubMove = on('chess-move-made', ({ fen: newFen, moves: newMoves }) => {
       chessRef.current.load(newFen);
@@ -291,26 +290,26 @@ export default function ChessScreen({
     setGameOver({ result, reason });
   }
 
-  // ── Player move handler ────────────────────────────────────────────────
+  // ── Manipulador de movimentos do jogador ──────────────────────────────────
   const handleMove = useCallback(({ from, to, promotion }) => {
     if (mode === 'PVP') {
       emit('chess-move', { roomCode, move: { from, to, promotion } });
     } else {
-      // For PVC, we MUST apply the move locally
+      // Para PVC/Offline, aplicamos o movimento localmente
       try {
         chessRef.current.move({ from, to, promotion });
       } catch (err) {
-        return; // Invalid move
+        return; // Movimento inválido
       }
     }
 
-    // For PVC, updating FEN will trigger Stockfish useEffect
+    // Para PVC, a atualização do FEN dispara o useEffect do Stockfish
     setFen(chessRef.current.fen());
     setMoves(chessRef.current.history({ verbose: true }));
     _checkGameOver();
   }, [emit, mode, roomCode]);
 
-  // ── Action handlers ────────────────────────────────────────────────────
+  // ── Ações da partida (Revanche, Desistência, Empate) ──────────────────────
   const handleRematch = () => {
     if (mode === 'PVC' || mode === 'PVP_LOCAL') {
       if (mode === 'PVC' && assignedColors) {
@@ -505,7 +504,7 @@ export default function ChessScreen({
     </div>
   );
 
-  // Check if I won for styling
+  // Verifica se o jogador local venceu para estilização visual
   const iWon = gameOver && (
     (gameOver.result === 'WHITE_WIN' && myColor === 'white') ||
     (gameOver.result === 'BLACK_WIN' && myColor === 'black')
@@ -532,7 +531,7 @@ export default function ChessScreen({
       {/* Elementos normais do jogo. Serão "borrados" quando terminar */}
       <div className={`w-full h-full flex flex-col absolute inset-0 transition-all duration-1000 ${showGameOverOverlay ? 'blur-md scale-105 pointer-events-none opacity-50' : ''}`}>
 
-      {/* Theme switcher — top right (Desktop) */}
+      {/* Seletor de temas — canto superior direito (Desktop) */}
       <div className="chess-theme-switcher hidden md:flex">
         {Object.entries(BOARD_THEMES).map(([key, t]) => (
           <button
@@ -546,7 +545,7 @@ export default function ChessScreen({
         ))}
       </div>
 
-      {/* Top Mobile HUD (Opponent) */}
+      {/* HUD Mobile Superior (Oponente) */}
       <MobileHUD
         playerColor={opponentColor}
         name={opponentName}
@@ -556,12 +555,12 @@ export default function ChessScreen({
       />
 
       <div className="chess-layout">
-        {/* Captured pieces area */}
+        {/* Área de peças capturadas */}
         <div className="chess-captured-container">
           <CapturedPieces moves={moves} myColor={myColor} />
         </div>
 
-        {/* Board area */}
+        {/* Área do tabuleiro */}
         <div className="chess-board-area">
           <ChessBoard
             fen={fen}

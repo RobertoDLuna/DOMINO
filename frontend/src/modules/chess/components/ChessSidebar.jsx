@@ -1,7 +1,7 @@
 /**
  * ChessSidebar.jsx
- * Lateral panel showing: move history (SAN), game info, and action buttons
- * (resign, offer draw, accept/decline draw).
+ * Painel lateral exibindo: histórico de jogadas (SAN), informações da partida
+ * e botões de ação (desistir, propor empate, aceitar/recusar empate).
  */
 import React from 'react';
 
@@ -28,24 +28,6 @@ function describeMove(move) {
 
   return `${piece}${capture}${to}${promotion}${check}`;
 }
-
-const RESULT_LABELS = {
-  WHITE_WIN: '⬜ Brancas venceram',
-  BLACK_WIN: '⬛ Pretas venceram',
-  DRAW: '🤝 Empate',
-};
-
-const REASON_LABELS = {
-  checkmate: 'por Xeque-Mate',
-  resignation: 'por Desistência',
-  stalemate: 'por Afogamento',
-  agreement: 'por Acordo',
-  insufficient_material: 'por Material Insuficiente',
-  threefold_repetition: 'por Repetição (3x)',
-  fifty_move_rule: 'pela Regra dos 50 Lances',
-  disconnection: 'por Desconexão',
-  timeout: 'por Tempo Esgotado',
-};
 
 
 
@@ -117,7 +99,7 @@ export default function ChessSidebar({
   return (
     <aside className="chess-sidebar overflow-hidden relative">
 
-      {/* Player names */}
+      {/* Nomes dos jogadores */}
       <div className="chess-players">
         <div className="chess-timer-container">
           <PlayerBadge
@@ -140,7 +122,7 @@ export default function ChessSidebar({
         </div>
       </div>
 
-      {/* Status banner */}
+      {/* Banner de status */}
       {status === 'waiting' && (
         <>
           <div className="chess-status-banner chess-status-waiting">
@@ -161,7 +143,7 @@ export default function ChessSidebar({
         </div>
       )}
 
-      {/* Draw offer */}
+      {/* Proposta de empate */}
       {drawOffered && !gameOver && (
         <div className="chess-draw-offer">
           <p>🤝 Adversário propõe empate</p>
@@ -172,7 +154,7 @@ export default function ChessSidebar({
         </div>
       )}
 
-      {/* Move history */}
+      {/* Histórico de jogadas */}
       <div className="chess-history">
         <div className="chess-history-header">
           <span>Jogadas</span>
@@ -201,7 +183,7 @@ export default function ChessSidebar({
         </div>
       </div>
 
-      {/* Action buttons */}
+      {/* Botões de ação */}
       {status === 'playing' && !gameOver && (
         <div className="chess-actions">
           <button className="chess-btn chess-btn-draw" onClick={onOfferDraw}>

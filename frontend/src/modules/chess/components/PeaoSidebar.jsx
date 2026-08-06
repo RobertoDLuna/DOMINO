@@ -1,24 +1,9 @@
 /**
  * PeaoSidebar.jsx
- * Lateral panel showing: move history, game info, and action buttons for "Batalha dos Peões".
- * Herdado do layout e comportamento do Xadrez Tradicional (ChessSidebar.jsx).
+ * Painel lateral exibindo: histórico de jogadas, informações da partida
+ * e botões de ação para a Batalha dos Peões.
  */
 import React from 'react';
-
-const RESULT_LABELS = {
-  WHITE_WIN: '⬜ Brancas venceram',
-  BLACK_WIN: '⬛ Pretas venceram',
-  DRAW: '🤝 Empate',
-};
-
-const REASON_LABELS = {
-  breakthrough: 'por Conquista de Linha',
-  stalemate: 'por Stalemate (Sem Movimentos)',
-  resignation: 'por Desistência',
-  agreement: 'por Acordo',
-  disconnection: 'por Desconexão',
-  timeout: 'por Tempo Esgotado',
-};
 
 // Converte índices 0-63 para notação algébrica clássica
 function getCoords(idx) {

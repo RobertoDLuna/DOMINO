@@ -1,15 +1,15 @@
 /**
  * ChessPromotion.jsx
- * Modal displayed when a pawn reaches the last rank, allowing the player
- * to choose the promotion piece.
+ * Modal exibido quando um peão atinge a última fileira, permitindo ao jogador
+ * escolher a peça de promoção.
  */
 import React from 'react';
 
 const PIECES = [
-  { value: 'q', label: 'Dama', symbol: '♛' },
-  { value: 'r', label: 'Torre', symbol: '♜' },
-  { value: 'b', label: 'Bispo', symbol: '♝' },
-  { value: 'n', label: 'Cavalo', symbol: '♞' },
+  { value: 'q', label: 'Dama' },
+  { value: 'r', label: 'Torre' },
+  { value: 'b', label: 'Bispo' },
+  { value: 'n', label: 'Cavalo' },
 ];
 
 export default function ChessPromotion({ color, onSelect }) {

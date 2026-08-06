@@ -32,7 +32,7 @@ export default function QuizReportScreen({ onNavigate, quizId }) {
     <div className="min-h-screen bg-[#F0FDF4] text-emerald-900 p-4 md:p-8 font-sans pb-24">
       <div className="max-w-6xl mx-auto space-y-8">
         
-        {/* Header */}
+        {/* Cabeçalho */}
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 bg-white p-6 md:p-8 rounded-[2rem] border-2 border-emerald-100 shadow-sm">
           <div>
             <button onClick={() => onNavigate('HOME')} className="text-emerald-900/50 hover:text-emerald-900 flex items-center gap-2 transition-colors mb-4 font-black uppercase text-xs tracking-widest">
@@ -64,7 +64,7 @@ export default function QuizReportScreen({ onNavigate, quizId }) {
           </div>
         ) : (
           <>
-            {/* Tabs Navigation */}
+            {/* Navegação de abas */}
             <div className="flex border-b-2 border-emerald-100 mb-8 overflow-x-auto no-scrollbar">
               <button
                 onClick={() => setActiveTab('GERAL')}
@@ -92,7 +92,7 @@ export default function QuizReportScreen({ onNavigate, quizId }) {
             {activeTab === 'GERAL' && (
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 
-                {/* Left Column: Ranking */}
+                {/* Coluna esquerda: Ranking */}
                 <div className="lg:col-span-2 space-y-8">
               
               <div className="bg-white border-2 border-emerald-100 rounded-[2rem] p-6 md:p-8 shadow-sm">
@@ -140,7 +140,7 @@ export default function QuizReportScreen({ onNavigate, quizId }) {
                 </div>
               </div>
 
-              {/* Questions Stats */}
+              {/* Estatísticas por questão */}
               <div className="bg-white border-2 border-emerald-100 rounded-[2rem] p-6 md:p-8 shadow-sm">
                 <h2 className="text-2xl font-black italic uppercase tracking-tighter mb-8 flex items-center gap-3 text-emerald-900">
                   <Target className="text-red-500" size={32} /> Análise por Questão <span className="text-[10px] font-black not-italic text-emerald-900/40 tracking-widest ml-2 bg-emerald-50 px-3 py-1 rounded-xl">(Mais difíceis primeiro)</span>
@@ -176,11 +176,11 @@ export default function QuizReportScreen({ onNavigate, quizId }) {
 
             </div>
 
-            {/* Right Column: Diagnostics */}
+            {/* Coluna direita: Diagnósticos */}
             {report.quiz.type === 'PEDAGOGICO' && (
               <div className="space-y-8">
                 
-                {/* Level Distribution */}
+                {/* Distribuição por nível */}
                 <div className="bg-white border-2 border-emerald-100 rounded-[2rem] p-6 shadow-sm">
                   <h3 className="text-xl font-black italic uppercase tracking-tighter mb-8 text-emerald-900">Diagnóstico da Turma</h3>
                   
@@ -209,7 +209,7 @@ export default function QuizReportScreen({ onNavigate, quizId }) {
                   </div>
                 </div>
 
-                {/* BNCC Accuracy per Skill */}
+                {/* Precisão BNCC por habilidade */}
                 {report.bnccStats.length > 0 && (
                   <div className="bg-white border-2 border-emerald-100 rounded-[2rem] p-6 shadow-sm">
                     <h3 className="text-xl font-black italic uppercase tracking-tighter mb-2 text-emerald-900">
@@ -242,7 +242,7 @@ export default function QuizReportScreen({ onNavigate, quizId }) {
                   </div>
                 )}
 
-                {/* BNCC Need help */}
+                {/* Alerta de habilidades com dificuldade */}
                 {report.bnccStats.filter(b => b.averageAccuracy < 50).length > 0 && (
                   <div className="bg-red-50 border-2 border-red-100 rounded-[2rem] p-6 shadow-sm">
                     <h3 className="text-xl font-black italic uppercase tracking-tighter mb-2 text-red-600">Alerta BNCC</h3>

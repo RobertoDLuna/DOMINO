@@ -64,7 +64,7 @@ export const TournamentListScreen = ({ user, onBack, onSelectTournament }) => {
 
   return (
     <div className="min-h-screen bg-[#F0FDF4] p-4 lg:p-8">
-      {/* Header */}
+      {/* Cabeçalho */}
       <div className="max-w-5xl mx-auto mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <button 
@@ -89,7 +89,7 @@ export const TournamentListScreen = ({ user, onBack, onSelectTournament }) => {
         )}
       </div>
 
-      {/* Filters */}
+      {/* Filtros */}
       <div className="max-w-5xl mx-auto mb-8 flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
         {['OPEN', 'IN_PROGRESS', 'FINISHED'].map(f => (
           <button
@@ -106,7 +106,7 @@ export const TournamentListScreen = ({ user, onBack, onSelectTournament }) => {
         ))}
       </div>
 
-      {/* Grid */}
+      {/* Grade de Campeonatos */}
       <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {loading ? (
           <div className="col-span-full text-center py-20 text-emerald-900/40 font-black uppercase tracking-widest">

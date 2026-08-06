@@ -1,7 +1,7 @@
 /**
  * SoundService.js
- * Generates game sounds using the Web Audio API (no external dependencies).
- * This avoids CORS issues and browser autoplay restrictions for CDN audio.
+ * Gera efeitos sonoros do jogo usando a Web Audio API (sem dependências externas).
+ * Evita problemas de CORS e restrições de autoplay do navegador com áudios CDN.
  */
 
 class SoundService {
@@ -22,7 +22,7 @@ class SoundService {
     if (!this._ctx) {
       this._ctx = new (window.AudioContext || window.webkitAudioContext)();
     }
-    // Resume if browser suspended it (common after page load with no interaction yet)
+    // Retoma o contexto se o navegador tiver suspendido (comum após carregar a página sem interação prévia)
     if (this._ctx.state === 'suspended') {
       this._ctx.resume();
     }
@@ -30,7 +30,7 @@ class SoundService {
   }
 
   /**
-   * Creates and plays a simple synthesized sound.
+   * Cria e reproduz um som sintetizado simples.
    * @param {Object} opts - { type, frequency, duration, volume, decay }
    */
   _synth({ type = 'sine', frequency = 440, duration = 0.15, volume = 0.4, decay = 0.1 } = {}) {
@@ -52,36 +52,36 @@ class SoundService {
       oscillator.start(ctx.currentTime);
       oscillator.stop(ctx.currentTime + duration + decay);
     } catch (e) {
-      // Silently fail if Web Audio API not available
+      // Ignora silenciosamente caso a Web Audio API não esteja disponível
     }
   }
 
-  /** Pleasant "clack" when placing a piece */
+  /** Som de clique ao posicionar uma peça */
   playPlace() {
     this._synth({ type: 'triangle', frequency: 520, duration: 0.12, volume: 0.35 });
     setTimeout(() => this._synth({ type: 'triangle', frequency: 380, duration: 0.08, volume: 0.2 }), 60);
   }
 
-  /** Short "whoosh" when passing turn */
+  /** Som de passagem de turno */
   playPass() {
     this._synth({ type: 'sawtooth', frequency: 200, duration: 0.2, volume: 0.2, decay: 0.15 });
   }
 
-  /** Fanfare for winning */
+  /** Fanfarra de vitória */
   playWin() {
     [0, 100, 200, 350].forEach((delay, i) => {
-      const notes = [523, 659, 784, 1047]; // C5 E5 G5 C6
+      const notes = [523, 659, 784, 1047]; // Dó5 Mi5 Sol5 Dó6
       setTimeout(() => this._synth({ type: 'sine', frequency: notes[i], duration: 0.25, volume: 0.4 }), delay);
     });
   }
 
-  /** Low "thud" for losing */
+  /** Som grave de derrota */
   playLose() {
     this._synth({ type: 'sawtooth', frequency: 180, duration: 0.4, volume: 0.3, decay: 0.3 });
     setTimeout(() => this._synth({ type: 'sawtooth', frequency: 130, duration: 0.5, volume: 0.2, decay: 0.4 }), 200);
   }
 
-  /** Short tick for countdown */
+  /** Som de contagem regressiva */
   playTick() {
     this._synth({ type: 'square', frequency: 880, duration: 0.05, volume: 0.15 });
   }

@@ -12,7 +12,7 @@ export default function QuizEditorScreen({ user, onNavigate, quizId }) {
   const [uploadingImageIndex, setUploadingImageIndex] = useState(null);
   const [uploadingAnswerIndex, setUploadingAnswerIndex] = useState(null); // formato: "qIndex-aIndex"
   
-  // BNCC Search States
+  // Estados de busca BNCC
   const [bnccSuggestions, setBnccSuggestions] = useState([]);
   const [activeBnccQIndex, setActiveBnccQIndex] = useState(null);
   const [bnccSearchLoading, setBnccSearchLoading] = useState(false);
@@ -215,7 +215,7 @@ export default function QuizEditorScreen({ user, onNavigate, quizId }) {
     <div className="min-h-screen bg-[#F0FDF4] text-[#1A1A1A] p-4 md:p-8 font-sans pb-44">
       <div className="max-w-4xl mx-auto space-y-6">
         
-        {/* Header Actions */}
+        {/* Ações do cabeçalho */}
         <div className="flex items-center bg-white p-4 rounded-[2rem] shadow-sm border-2 border-emerald-100 mb-6">
           <button onClick={() => onNavigate('HOME')} className="text-emerald-900 hover:text-emerald-600 bg-emerald-50 px-4 py-2 rounded-2xl flex items-center gap-2 transition-colors font-black uppercase text-xs">
             <ArrowLeft size={16} /> Voltar para Biblioteca
@@ -224,7 +224,7 @@ export default function QuizEditorScreen({ user, onNavigate, quizId }) {
 
         {error && <div className="bg-red-50 border-2 border-red-200 text-red-700 p-4 rounded-2xl font-bold">{error}</div>}
 
-        {/* Basic Settings */}
+        {/* Configurações básicas */}
         <div className="bg-white border-2 border-emerald-100 shadow-[0_10px_30px_rgba(0,150,96,0.1)] rounded-[2rem] p-6 md:p-8 space-y-6 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 -mr-16 -mt-16 bg-[#FFCE00] rounded-full opacity-10" />
           
@@ -333,7 +333,7 @@ export default function QuizEditorScreen({ user, onNavigate, quizId }) {
           </div>
         </div>
 
-        {/* Questions List */}
+        {/* Lista de questões */}
         <div className="space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <h2 className="text-2xl font-black italic tracking-tighter uppercase text-emerald-900">
@@ -486,7 +486,7 @@ export default function QuizEditorScreen({ user, onNavigate, quizId }) {
                   )}
                 </div>
 
-                {/* Answers Grid */}
+                {/* Grade de alternativas */}
                 <div className="mt-6 p-6 bg-emerald-50/50 rounded-2xl border-2 border-emerald-50">
                   <label className="block text-emerald-900/70 text-[10px] uppercase tracking-widest font-black mb-4">Alternativas (Marque a correta)</label>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

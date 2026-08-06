@@ -21,7 +21,7 @@ export const TournamentDetailScreen = ({ tournamentId, user, onBack }) => {
       setLoading(true);
       const data = await TournamentService.getTournamentById(tournamentId);
       setTournament(data);
-      // Auto-select Matches tab if in progress
+      // Seleciona automaticamente a aba de Partidas se estiver em andamento
       if (data.status === 'IN_PROGRESS' || data.status === 'FINISHED') {
         setActiveTab('MATCHES');
       }
@@ -79,7 +79,7 @@ export const TournamentDetailScreen = ({ tournamentId, user, onBack }) => {
 
   return (
     <div className="min-h-screen bg-[#F0FDF4] p-4 lg:p-8">
-      {/* Header */}
+      {/* Cabeçalho */}
       <div className="max-w-5xl mx-auto mb-8 bg-[#009660] rounded-[2rem] p-8 text-white relative overflow-hidden shadow-xl">
         <div className="absolute -right-20 -top-20 w-64 h-64 bg-[#FFCE00] rounded-full blur-3xl opacity-20" />
         
@@ -141,7 +141,7 @@ export const TournamentDetailScreen = ({ tournamentId, user, onBack }) => {
           </div>
         </div>
 
-        {/* Actions Bar */}
+        {/* Barra de Ações */}
         <div className="mt-8 pt-8 border-t border-white/10 flex flex-col sm:flex-row gap-4 justify-between items-center relative z-10">
           <div className="text-[10px] font-black uppercase tracking-widest text-white/80 flex gap-6">
             <span>📅 Início: {new Date(tournament.startsAt).toLocaleDateString()}</span>
@@ -201,7 +201,7 @@ export const TournamentDetailScreen = ({ tournamentId, user, onBack }) => {
         </div>
       </div>
 
-      {/* Tabs Navigation */}
+      {/* Navegação de abas */}
       <div className="max-w-5xl mx-auto mb-8 flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
         <button
           onClick={() => setActiveTab('INFO')}
@@ -225,7 +225,7 @@ export const TournamentDetailScreen = ({ tournamentId, user, onBack }) => {
         )}
       </div>
 
-      {/* Tab Content */}
+      {/* Conteúdo da aba */}
       <div className="max-w-5xl mx-auto">
         
         {activeTab === 'INFO' && (

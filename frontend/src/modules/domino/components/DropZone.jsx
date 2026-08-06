@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 
 /**
- * DropZone for pieces on the board.
+ * Área de soltura (DropZone) para encaixe das pedras de dominó no tabuleiro.
  */
 export default function DropZone({
   onDrop,
@@ -18,7 +18,7 @@ export default function DropZone({
   const actualW = w || (horizontal ? 120 : 68);
   const actualH = h || (horizontal ? 68 : 120);
 
-  // Consistency with Piece.jsx e suporte dinâmico para produção
+  // Consistência com Piece.jsx e suporte dinâmico para produção
   const API_BASE = import.meta.env.VITE_API_URL 
     ? import.meta.env.VITE_API_URL.replace('/api', '') 
     : (typeof window !== 'undefined' ? window.location.origin : '');
@@ -74,7 +74,7 @@ export default function DropZone({
       style={{ width: actualW, height: actualH }}
       className={`${baseStyles} ${overStyles}`}
     >
-      {/* Visual background layers */}
+      {/* Camadas visuais de fundo */}
       <div className="absolute inset-0 bg-gradient-to-br from-yellow-400/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl"></div>
       <div className="absolute inset-0 animate-pulse bg-white/5 pointer-events-none rounded-2xl"></div>
 
@@ -89,7 +89,7 @@ export default function DropZone({
         </span>
       </div>
 
-      {/* Decorative corners */}
+      {/* Cantos decorativos */}
       <div className="absolute top-1 left-1 w-2 h-2 border-t-2 border-l-2 border-white/20"></div>
       <div className="absolute bottom-1 right-1 w-2 h-2 border-b-2 border-r-2 border-white/20"></div>
     </div>

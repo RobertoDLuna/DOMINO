@@ -20,7 +20,7 @@ export default function Piece({
   const actualW = width || (horizontal ? 140 : 66);
   const actualH = height || (horizontal ? 66 : 140);
 
-  // Empty string = same origin (works in dev via Vite proxy AND in production)
+  // String vazia = mesma origem (funciona em dev via proxy do Vite E em produção)
   const API_BASE = import.meta.env.VITE_API_URL 
     ? import.meta.env.VITE_API_URL.replace('/api', '') 
     : (typeof window !== 'undefined' ? window.location.origin : '');

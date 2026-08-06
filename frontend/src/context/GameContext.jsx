@@ -242,7 +242,7 @@ export const GameProvider = ({ children }) => {
   const forceEndGame = () => {
     if (room) {
       socket.emit('forceEndGame', { roomId: room });
-      // Reset local state immediately for the initiator
+      // Reseta o estado local imediatamente para quem iniciou o encerramento
       resetRoomState();
     }
   };

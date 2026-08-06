@@ -35,7 +35,7 @@ class QuizService {
     return data;
   }
 
-  // --- HTTP Methods ---
+  // --- Métodos HTTP ---
 
   async uploadImage(file) {
     const formData = new FormData();
@@ -99,7 +99,7 @@ class QuizService {
     return this._fetch(`/bncc-skills${params}`);
   }
 
-  // --- Player Methods ---
+  // --- Métodos do Jogador / Sessão ---
 
   async getQuizByRoomCode(code) {
     return this._fetch(`/room/${code}`);
@@ -120,7 +120,7 @@ class QuizService {
     return this._fetch(`/session/${sessionId}/finish`, { method: 'POST' });
   }
 
-  // --- Socket.IO Methods (Live Mode) ---
+  // --- Métodos de Socket.IO (Modo Ao Vivo / Live) ---
 
   connectSocket() {
     if (!this.socket) {
@@ -139,7 +139,7 @@ class QuizService {
     }
   }
 
-  // Host Methods
+  // Métodos do Anfitrião (Host)
   hostJoin(roomCode) {
     this.connectSocket().emit('quiz:hostJoin', { roomCode });
   }
@@ -160,7 +160,7 @@ class QuizService {
     this.connectSocket().emit('quiz:finish', { roomCode, finalLeaderboard });
   }
 
-  // Player Methods
+  // Métodos do Jogador
   playerJoin(roomCode, playerName) {
     this.connectSocket().emit('quiz:playerJoin', { roomCode, playerName });
   }
@@ -169,7 +169,7 @@ class QuizService {
     this.connectSocket().emit('quiz:submitAnswer', { roomCode, isCorrect, pointsEarned });
   }
 
-  // Event Listeners
+  // Ouvintes de Eventos
   on(event, callback) {
     this.connectSocket().on(event, callback);
   }

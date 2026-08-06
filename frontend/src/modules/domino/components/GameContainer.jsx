@@ -27,7 +27,7 @@ export default function GameContainer({ user, isGuest, initialTheme, onBack }) {
   const [showCreator, setShowCreator] = useState(false);
   const [selectingTheme, setSelectingTheme] = useState(isSelectingTheme || false);
 
-  // Sync with global context (server updates)
+  // Sincroniza com o contexto global (atualizações vindas do servidor)
   useEffect(() => {
     if (lobbyTheme) setSelectedTheme(lobbyTheme);
   }, [lobbyTheme]);

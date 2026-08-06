@@ -34,7 +34,7 @@ const ThemeCreator = ({ onThemeCreated, onClose }) => {
   const handleCreateCategory = async () => {
     if (!newCatName.trim()) return;
     
-    // Check if user already put some images (optional but recommended for populating)
+    // Verifica se o usuário já inseriu imagens (opcional para preenchimento)
     const currentSymbols = symbols.some(s => s) ? symbols : null;
 
     try {
@@ -47,7 +47,7 @@ const ThemeCreator = ({ onThemeCreated, onClose }) => {
       setNewCatName("");
       setError("");
       
-      // If symbols were sent, refresh themes listing so they can play it right away
+      // Se foram enviados símbolos, atualiza a lista de temas para poder jogar imediatamente
       if (currentSymbols) {
         window.dispatchEvent(new CustomEvent('refreshThemes'));
       }
@@ -91,7 +91,7 @@ const ThemeCreator = ({ onThemeCreated, onClose }) => {
       setLoading(true);
       const created = await ThemeService.createSubCategory(newSubName, formData.categoryId);
       
-      // Update local state
+      // Atualiza o estado local
       const updatedCategories = categories.map(c => {
         if (String(c.id) === String(formData.categoryId)) {
           return { ...c, subs: [...(c.subs || []), created] };
@@ -128,7 +128,7 @@ const ThemeCreator = ({ onThemeCreated, onClose }) => {
       setLoading(true);
       await ThemeService.deleteSubCategory(sub.id);
       
-      // Update local state
+      // Atualiza o estado local
       const updatedCategories = categories.map(c => {
         if (String(c.id) === String(formData.categoryId)) {
           return { ...c, subs: c.subs.filter(s => s.id !== sub.id) };
@@ -194,7 +194,7 @@ const ThemeCreator = ({ onThemeCreated, onClose }) => {
     <div className="fixed inset-0 z-[250] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-300">
       <div className="bg-white w-full max-w-2xl lg:max-w-4xl max-h-[92vh] rounded-[3rem] shadow-[0_40px_100px_rgba(0,0,0,0.5)] flex flex-col overflow-hidden">
         
-        {/* Header */}
+        {/* Cabeçalho */}
         <header className="p-6 sm:p-8 bg-gradient-to-r from-emerald-50 to-white border-b-2 border-emerald-100 flex justify-between items-center flex-shrink-0">
           <div>
             <h2 className="text-2xl sm:text-3xl font-black text-[#009660] uppercase italic tracking-tighter leading-none">Novo Tema</h2>
@@ -203,7 +203,7 @@ const ThemeCreator = ({ onThemeCreated, onClose }) => {
           <button onClick={onClose} className="w-10 h-10 rounded-full bg-white text-emerald-900 hover:bg-red-50 hover:text-red-500 transition-colors shadow-sm border border-gray-100 flex items-center justify-center font-black text-sm cursor-pointer">✕</button>
         </header>
 
-        {/* Body */}
+        {/* Conteúdo Principal */}
         <div className="flex-1 overflow-y-auto p-6 sm:p-8 space-y-5 scrollbar-hide">
           {error && (
             <div className="bg-red-50 text-red-500 p-4 rounded-2xl border-2 border-red-100 font-black text-sm uppercase tracking-tight text-center animate-in shake">
@@ -212,9 +212,9 @@ const ThemeCreator = ({ onThemeCreated, onClose }) => {
           )}
 
           <div className="flex flex-col lg:grid lg:grid-cols-2 gap-6 sm:gap-8">
-            {/* Left Column */}
+            {/* Coluna Esquerda */}
             <section className="space-y-4">
-              {/* Name */}
+              {/* Nome */}
               <div>
                 <label className="text-[10px] font-black uppercase text-emerald-900/60 mb-1.5 block ml-1">Nome do Tema *</label>
                 <input
@@ -227,7 +227,7 @@ const ThemeCreator = ({ onThemeCreated, onClose }) => {
                 />
               </div>
 
-              {/* Description */}
+              {/* Descrição */}
               <div>
                 <label className="text-[10px] font-black uppercase text-emerald-900/60 mb-1.5 block ml-1">Descrição Curta *</label>
                 <input
@@ -241,7 +241,7 @@ const ThemeCreator = ({ onThemeCreated, onClose }) => {
                 />
               </div>
 
-              {/* Summary */}
+              {/* Resumo */}
               <div>
                 <label className="text-[10px] font-black uppercase text-emerald-900/60 mb-1.5 block ml-1">Resumo Detalhado *</label>
                 <textarea
@@ -254,7 +254,7 @@ const ThemeCreator = ({ onThemeCreated, onClose }) => {
                 />
               </div>
 
-              {/* Category */}
+              {/* Categoria */}
               <div>
                 <div className="flex justify-between items-end mb-1.5 ml-1">
                   <label className="text-[10px] font-black uppercase text-emerald-900/60 block">
@@ -317,7 +317,7 @@ const ThemeCreator = ({ onThemeCreated, onClose }) => {
                 )}
               </div>
 
-              {/* Subcategory */}
+              {/* Subcategoria */}
               {formData.categoryId && (
                 <div>
                   <div className="flex justify-between items-end mb-1.5 ml-1">
@@ -376,7 +376,7 @@ const ThemeCreator = ({ onThemeCreated, onClose }) => {
                 </div>
               )}
 
-              {/* Visibility */}
+              {/* Visibilidade */}
               <div>
                 <label className="text-[10px] font-black uppercase text-emerald-900/60 mb-1.5 block ml-1">Visibilidade</label>
                 <div className="flex gap-2">
@@ -401,7 +401,7 @@ const ThemeCreator = ({ onThemeCreated, onClose }) => {
               </div>
             </section>
 
-            {/* Right Column — Images */}
+            {/* Coluna Direita — Imagens */}
             <section>
               <label className="text-[10px] font-black uppercase text-emerald-900/60 mb-2 block ml-1 text-center">
                 Imagens das Peças * <span className="text-emerald-300">(pontos 1 a 6)</span>

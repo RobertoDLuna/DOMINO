@@ -1,5 +1,5 @@
 // frontend/src/services/ThemeService.js
-// Use relative URL so it works in both dev (via Vite proxy) and production (same origin)
+// Usa URL relativa para funcionar em desenvolvimento (via proxy do Vite) e em produção (mesma origem)
 import AuthService from "./AuthService";
 
 import { API_URL } from '../config/api';
@@ -9,7 +9,7 @@ class ThemeService {
     try {
       const params = new URLSearchParams();
       
-      // Legacy support: if filters is a string, treat it as ownerId
+      // Suporte legado: se filters for uma string, trata como ownerId
       if (typeof filters === 'string') {
         params.append('ownerId', filters);
       } else {

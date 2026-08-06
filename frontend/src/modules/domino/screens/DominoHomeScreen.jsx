@@ -17,7 +17,7 @@ const GameCard = ({ theme, onClick }) => {
       onClick={() => onClick(theme)}
       className="group relative flex flex-col bg-white rounded-[2rem] border-2 border-emerald-100 p-5 text-left transition-all hover:scale-[1.03] hover:shadow-[0_20px_50px_rgba(0,150,96,0.15)] hover:border-emerald-300 active:scale-95 animate-in fade-in zoom-in duration-500 overflow-hidden"
     >
-      {/* Background Accent */}
+      {/* Destaque de fundo */}
       <div
         className="absolute top-0 right-0 w-32 h-32 -mr-16 -mt-16 rounded-full opacity-10 group-hover:opacity-20 transition-opacity"
         style={{ backgroundColor: theme.color || '#009660' }}
@@ -154,7 +154,7 @@ const HomeScreen = ({
 
       const dbThemes = await ThemeService.getThemes(filters);
 
-      // Merge with hardcoded themes
+      // Combina com temas padrão definidos no código
       const allDefaultThemes = defaultThemes.map(t => ({
         ...t,
         isDefault: true,
@@ -196,7 +196,7 @@ const HomeScreen = ({
 
   return (
     <div className="flex min-h-screen bg-[#F0FDF4] w-full relative">
-      {/* Mobile Overlay */}
+      {/* Sobreposição Mobile (Overlay) */}
       {showMobileMenu && (
         <div
           className="fixed inset-0 bg-emerald-900/40 z-40 lg:hidden backdrop-blur-sm"
@@ -204,7 +204,7 @@ const HomeScreen = ({
         />
       )}
 
-      {/* Sidebar */}
+      {/* Barra Lateral (Sidebar) */}
       <aside className={`fixed inset-y-0 left-0 w-72 bg-white/95 backdrop-blur-xl border-r-2 border-emerald-100 p-6 sm:p-8 flex flex-col z-50 transform transition-transform duration-300 lg:static lg:translate-x-0 ${showMobileMenu ? 'translate-x-0 shadow-2xl' : '-translate-x-full'}`}>
         <div className="flex items-center justify-between mb-8">
           <div className="flex flex-col">
@@ -230,7 +230,7 @@ const HomeScreen = ({
         </div>
 
         <nav className="flex-1 space-y-8 overflow-y-auto pr-2 scrollbar-hide">
-          {/* Categories */}
+          {/* Categorias */}
           <div>
             <h3 className="text-[10px] font-black uppercase text-emerald-900/70 tracking-widest mb-4 flex items-center gap-2">
               <span>📚</span> NÍVEIS DE ENSINO

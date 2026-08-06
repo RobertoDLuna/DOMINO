@@ -28,7 +28,7 @@ function App() {
   const [activeGame, setActiveGame] = useState(() => sessionStorage.getItem('edugames_activeGame') || null);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [tournamentRoomCode, setTournamentRoomCode] = useState(() => sessionStorage.getItem('edugames_tournamentRoomCode') || null);
-  // Checks if we should be in a game screen even if context hasn't updated yet
+  // Verifica se deve exibir a tela de jogo mesmo antes do contexto atualizar
   const [manualJoin, setManualJoin] = useState(() => sessionStorage.getItem('edugames_manualJoin') === 'true');
   const isInRoomSession = !!room || !!localStorage.getItem('domino_current_room') || manualJoin;
 

@@ -2,30 +2,20 @@ import React, { useState, useEffect } from "react";
 import Piece from "./Piece";
 import DropZone from "./DropZone";
 
-// Design constants
-const METRICS = {
-  H_W: 120,
-  H_H: 68,
-  V_W: 60,
-  V_H: 128, 
-  GAP: 4,   
-  MARGIN: 20 
-};
-
 /**
- * Calculates the optimal number of pieces per row based on container width.
- * This is the core of Option A - adaptive layout.
+ * Calcula o número ideal de peças por linha com base na largura do container.
+ * É o núcleo do layout adaptativo em formato de serpente (Snake layout).
  */
 function calcMaxPerRow(containerWidth, H_W, GAP, MARGIN) {
   const pieceSlot = H_W + GAP;
-  // Fit as many horizontal pieces as possible with comfortable margins
+  // Encaixa tantas peças horizontais quanto possível com margens confortáveis
   const maxFit = Math.floor((containerWidth - MARGIN * 2) / pieceSlot);
-  // Clamp between 3 (mobile min) and 8 (desktop max)
+  // Limita entre 3 (mínimo em telas pequenas) e 8 (máximo em telas grandes)
   return Math.max(3, Math.min(8, maxFit));
 }
 
 /**
- * SnakeBoard component handles the adaptive "snake" layout for the dominoes.
+ * Componente SnakeBoard: gerencia a disposição adaptativa das pedras no tabuleiro em trilha contínua.
  */
 export default function SnakeBoard({ board, isMyTurn, onDrop, draggingPiece }) {
   const containerRef = React.useRef(null);
@@ -57,11 +47,11 @@ export default function SnakeBoard({ board, isMyTurn, onDrop, draggingPiece }) {
     return () => observer.disconnect();
   }, []);
 
-  // Dynamically calculate maxPerRow based on actual container width
+  // Calcula dinamicamente o maxPerRow com base na largura atual do container
   const maxPerRow = calcMaxPerRow(containerSize.width, H_W, GAP, MARGIN);
 
   // ----------------------------------------------------------------
-  // 1. DETERMINISTIC ITEM LIST
+  // 1. LISTA DETERMINÍSTICA DE ITENS
   // ----------------------------------------------------------------
   const layoutItems = board.length === 0 
     ? [{ type: 'drop', side: 'left', label: 'COMEÇAR ✨' }]
@@ -77,17 +67,17 @@ export default function SnakeBoard({ board, isMyTurn, onDrop, draggingPiece }) {
   let nextMode = 'LEFT';
   let col = 0;
   
-  // Axes for perfect alignment
+  // Eixos para alinhamento preciso
   let rowAxisY = MARGIN + V_H / 2;
   let colAxisX = 0; 
   
-  // Cursors for placing the next piece in the current axis
+  // Cursores para posicionar a próxima peça no eixo atual
   let cursorX = MARGIN;
   let cursorY = 0;
   
   let downCount = 0;
 
-  // Center start for empty board
+  // Centraliza o início se o tabuleiro estiver vazio
   if (board.length === 0) {
     cursorX = (containerSize.width / 2) - (H_W / 2);
   }
@@ -96,12 +86,12 @@ export default function SnakeBoard({ board, isMyTurn, onDrop, draggingPiece }) {
     const isPiece = item.type === 'piece';
     const isDouble = isPiece && String(item.ladoA) === String(item.ladoB);
     
-    // Determine dimensions based on mode and piece type
+    // Determina as dimensões com base no modo e tipo da peça
     let horizontal = false;
     if (mode === 'RIGHT' || mode === 'LEFT') {
-      horizontal = !isDouble; // In rows, double is vertical
+      horizontal = !isDouble; // Em linhas, peças duplas (carroças) ficam na vertical
     } else {
-      horizontal = isDouble;  // In columns, double is horizontal
+      horizontal = isDouble;  // Em colunas, peças duplas ficam na horizontal
     }
     
     const w = horizontal ? H_W : V_W;
@@ -193,7 +183,7 @@ export default function SnakeBoard({ board, isMyTurn, onDrop, draggingPiece }) {
     }
   });
 
-  // Calculate final bounding box
+  // Calcula a caixa delimitadora final (Bounding Box)
   let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
   positions.forEach(pos => {
     const pw = pos.horizontal ? H_W : V_W;
@@ -210,7 +200,7 @@ export default function SnakeBoard({ board, isMyTurn, onDrop, draggingPiece }) {
   const logicalWidth = Math.max(contentW, containerSize.width);
   const logicalHeight = Math.max(contentH, containerSize.height);
 
-  // Center the bounding box within the logical container
+  // Centraliza a caixa delimitadora dentro do container lógico
   const offsetX = (logicalWidth / 2) - ((minX + maxX) / 2);
   const offsetY = (logicalHeight / 2) - ((minY + maxY) / 2);
   
@@ -219,7 +209,7 @@ export default function SnakeBoard({ board, isMyTurn, onDrop, draggingPiece }) {
     pos.posY += offsetY;
   });
 
-  // "Smart-fit scale": ajusta o conteúdo dentro do viewport visível com um respiro generoso de 64px
+  // Ajuste inteligente de escala: adapta o conteúdo ao viewport visível com respiro de 64px
   const scaleX = (containerSize.width - 64) / logicalWidth;
   const scaleY = (containerSize.height - 64) / logicalHeight;
   const boardScale = Math.min(scaleX, scaleY, 1.0); 
@@ -235,7 +225,7 @@ export default function SnakeBoard({ board, isMyTurn, onDrop, draggingPiece }) {
           transformOrigin: 'center center'
         }}
       >
-      {/* Empty board background */}
+      {/* Fundo de mesa vazia */}
       {board.length === 0 && (
         <div className="absolute inset-0 flex flex-col items-center justify-center opacity-10 pointer-events-none">
            <div className="text-[8rem] mb-4">🧩</div>
@@ -245,7 +235,7 @@ export default function SnakeBoard({ board, isMyTurn, onDrop, draggingPiece }) {
         </div>
       )}
 
-      {/* Visual Path (Dashed Line) */}
+      {/* Trilha visual conectando as pedras (Linha tracejada) */}
       {board.length > 1 && (
         <svg className="absolute inset-0 pointer-events-none opacity-10 w-full h-full">
           {positions.filter(p => p.type === 'piece').map((pos, i, arr) => {

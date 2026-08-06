@@ -2,7 +2,7 @@ import React from 'react';
 
 const TournamentRoundRobin = ({ matches, participants, tournament, user }) => {
 
-  // Calculate standings
+  // Calcula a classificação
   const standingsMap = {};
   participants.forEach(p => {
     standingsMap[p.userId] = {
@@ -44,7 +44,7 @@ const TournamentRoundRobin = ({ matches, participants, tournament, user }) => {
 
   const standings = Object.values(standingsMap).sort((a, b) => {
     if (b.points !== a.points) return b.points - a.points;
-    return b.won - a.won; // Tiebreaker: vitorias
+    return b.won - a.won; // Critério de desempate: vitórias
   });
 
   const handleEnterRoom = (match) => {

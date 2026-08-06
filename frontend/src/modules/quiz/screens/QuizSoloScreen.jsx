@@ -7,7 +7,7 @@ export default function QuizSoloScreen({ user, onNavigate, quizId }) {
   const [quizData, setQuizData] = useState(null);
   const [error, setError] = useState('');
 
-  // Game state
+  // Estado do jogo
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [timeLeft, setTimeLeft] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
@@ -21,13 +21,13 @@ export default function QuizSoloScreen({ user, onNavigate, quizId }) {
     loadQuizData();
   }, [quizId]);
 
-  // Timer effect
+  // Efeito do temporizador
   useEffect(() => {
     if (phase === 'QUESTION' && timeLeft > 0) {
       const timer = setTimeout(() => setTimeLeft(prev => prev - 1), 1000);
       return () => clearTimeout(timer);
     } else if (phase === 'QUESTION' && timeLeft === 0 && !selectedAnswer) {
-      // Auto-submit empty if time runs out
+      // Envio automático vazio se o tempo expirar
       handleSubmitAnswer(null);
     }
   }, [timeLeft, phase, selectedAnswer]);
@@ -50,7 +50,7 @@ export default function QuizSoloScreen({ user, onNavigate, quizId }) {
   };
 
   const handleSubmitAnswer = async (answerId) => {
-    if (selectedAnswer !== null) return; // already answered
+    if (selectedAnswer !== null) return; // Já respondido
     setSelectedAnswer(answerId);
     setPhase('FEEDBACK');
     
@@ -67,7 +67,7 @@ export default function QuizSoloScreen({ user, onNavigate, quizId }) {
       console.error("Erro ao enviar resposta:", err);
     }
     
-    // Auto proceed to next question after 3 seconds
+    // Avança automaticamente para a próxima questão após 3 segundos
     setTimeout(() => {
       handleNextQuestion();
     }, 3000);
@@ -107,7 +107,7 @@ export default function QuizSoloScreen({ user, onNavigate, quizId }) {
     return <div className="min-h-screen bg-[#F0FDF4] flex items-center justify-center font-black uppercase tracking-widest text-xl text-emerald-900">Carregando...</div>;
   }
 
-  // --- RENDER QUESTION & FEEDBACK ---
+  // --- RENDERIZAÇÃO DA QUESTÃO & FEEDBACK ---
   if (phase === 'QUESTION' || phase === 'FEEDBACK') {
     const question = quizData.questions[currentQuestionIndex];
     const colors = [
@@ -156,11 +156,11 @@ export default function QuizSoloScreen({ user, onNavigate, quizId }) {
               
               if (phase === 'FEEDBACK') {
                 if (ans.isCorrect) {
-                  activeClass = 'ring-8 ring-emerald-400/50 scale-[1.02] z-10'; // Correct answer highlights
+                  activeClass = 'ring-8 ring-emerald-400/50 scale-[1.02] z-10'; // Resposta correta destacada
                 } else if (isSelected && !ans.isCorrect) {
-                  activeClass = 'opacity-50 grayscale-[50%]'; // Wrong answer selected dims
+                  activeClass = 'opacity-50 grayscale-[50%]'; // Resposta errada selecionada esmaecida
                 } else {
-                  activeClass = 'opacity-30'; // Others dim
+                  activeClass = 'opacity-30'; // Outras opções esmaecidas
                 }
               }
 
@@ -199,7 +199,7 @@ export default function QuizSoloScreen({ user, onNavigate, quizId }) {
     );
   }
 
-  // --- RENDER FINISH ---
+  // --- RENDERIZAÇÃO FINAL (TELA DE ENCERRAMENTO) ---
   if (phase === 'FINISH') {
     return (
       <div className="min-h-screen bg-[#F0FDF4] flex flex-col items-center justify-center p-4">

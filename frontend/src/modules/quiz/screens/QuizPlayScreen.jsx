@@ -8,12 +8,12 @@ export default function QuizPlayScreen({ user, onNavigate, roomCode, isHostRoom 
   const [quizData, setQuizData] = useState(null);
   const [error, setError] = useState('');
   
-  // Player state
+  // Estado do jogador
   const [playerName, setPlayerName] = useState(user?.fullName || '');
   const [hasJoined, setHasJoined] = useState(false);
   const [sessionId, setSessionId] = useState(null);
   
-  // Game state
+  // Estado do jogo
   const [players, setPlayers] = useState([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(-1);
   const currentIndexRef = React.useRef(-1);
@@ -34,13 +34,13 @@ export default function QuizPlayScreen({ user, onNavigate, roomCode, isHostRoom 
     };
   }, [roomCode]);
 
-  // Timer effect
+  // Efeito do temporizador
   useEffect(() => {
     if (phase === 'QUESTION' && timeLeft > 0) {
       const timer = setTimeout(() => setTimeLeft(prev => prev - 1), 1000);
       return () => clearTimeout(timer);
     } else if (phase === 'QUESTION' && timeLeft === 0 && !isHost && !selectedAnswer) {
-      // Auto-submit empty if time runs out
+      // Envio automático vazio se o tempo expirar
       handleSubmitAnswer(null);
     }
   }, [timeLeft, phase, isHost]);
@@ -135,7 +135,7 @@ export default function QuizPlayScreen({ user, onNavigate, roomCode, isHostRoom 
   };
 
   const handleSubmitAnswer = async (answerId) => {
-    if (selectedAnswer !== null) return; // already answered
+    if (selectedAnswer !== null) return; // Já respondido
     setSelectedAnswer(answerId);
     
     const timeTaken = quizData.timePerQuestion - timeLeft;
@@ -149,7 +149,7 @@ export default function QuizPlayScreen({ user, onNavigate, roomCode, isHostRoom 
     }
   };
 
-  // --- HOST CONTROLS ---
+  // --- CONTROLES DO ANFITRIÃO (HOST) ---
   const hostStartQuiz = () => {
     QuizService.hostStart(roomCode);
     hostNextQuestion(0);
@@ -167,7 +167,7 @@ export default function QuizPlayScreen({ user, onNavigate, roomCode, isHostRoom 
     // Limpa qualquer temporizador anterior pendente
     if (questionTimerRef.current) clearTimeout(questionTimerRef.current);
 
-    // Auto-end question quando o tempo expirar
+    // Encerra a questão automaticamente quando o tempo expirar
     questionTimerRef.current = setTimeout(() => {
       hostEndQuestion(index);
     }, quizData.timePerQuestion * 1000);
@@ -238,7 +238,7 @@ export default function QuizPlayScreen({ user, onNavigate, roomCode, isHostRoom 
 
   if (!quizData) return <div className="min-h-screen bg-[#F0FDF4] flex items-center justify-center font-black uppercase tracking-widest text-xl text-emerald-900">Carregando...</div>;
 
-  // --- RENDER LOBBY ---
+  // --- RENDERIZAÇÃO DO LOBBY ---
   if (phase === 'LOBBY') {
     return (
       <div className="min-h-screen bg-[#F0FDF4] flex flex-col items-center justify-center p-4">
@@ -300,11 +300,11 @@ export default function QuizPlayScreen({ user, onNavigate, roomCode, isHostRoom 
     );
   }
 
-  // --- RENDER QUESTION ---
+  // --- RENDERIZAÇÃO DA QUESTÃO ---
   if (phase === 'QUESTION') {
     const question = quizData?.questions?.[currentQuestionIndex];
     
-    // Safety guard
+    // Verificação de segurança
     if (!question) {
       return (
         <div className="min-h-screen bg-[#F0FDF4] flex items-center justify-center p-4">
@@ -423,7 +423,7 @@ export default function QuizPlayScreen({ user, onNavigate, roomCode, isHostRoom 
     );
   }
 
-  // --- RENDER SCOREBOARD ---
+  // --- RENDERIZAÇÃO DO PLACAR ---
   if (phase === 'SCOREBOARD') {
     return (
       <div className="min-h-screen bg-[#F0FDF4] flex flex-col items-center justify-center p-4">
@@ -466,12 +466,11 @@ export default function QuizPlayScreen({ user, onNavigate, roomCode, isHostRoom 
     );
   }
 
-  // --- RENDER FINISH ---
+  // --- RENDERIZAÇÃO FINAL (PÓDIO) ---
   if (phase === 'FINISH') {
     return (
       <div className="min-h-screen bg-[#F0FDF4] flex flex-col items-center justify-center p-4">
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          {/* Confetti simulation would go here */}
         </div>
 
         <Trophy size={100} className="text-[#FFCE00] mb-6 drop-shadow-xl animate-bounce-slow" />
@@ -481,7 +480,7 @@ export default function QuizPlayScreen({ user, onNavigate, roomCode, isHostRoom 
         <p className="text-sm font-black uppercase tracking-widest text-emerald-900/50 mb-12">O jogo acabou!</p>
         
         <div className="flex items-end justify-center gap-2 md:gap-6 mb-16 h-64 w-full max-w-3xl">
-          {/* 2nd Place */}
+          {/* 2º Lugar */}
           {leaderboard[1] && (
             <div className="flex flex-col items-center animate-in slide-in-from-bottom-8 duration-700 delay-100 flex-1 max-w-[120px]">
               <span className="font-black uppercase text-gray-500 mb-3 truncate w-full text-center px-2">{leaderboard[1].name}</span>
@@ -491,7 +490,7 @@ export default function QuizPlayScreen({ user, onNavigate, roomCode, isHostRoom 
               </div>
             </div>
           )}
-          {/* 1st Place */}
+          {/* 1º Lugar */}
           {leaderboard[0] && (
             <div className="flex flex-col items-center animate-in slide-in-from-bottom-16 duration-700 z-10 flex-1 max-w-[140px]">
               <span className="font-black uppercase text-[#FFCE00] mb-3 truncate w-full text-center px-2 text-xl drop-shadow-sm">{leaderboard[0].name}</span>
@@ -501,7 +500,7 @@ export default function QuizPlayScreen({ user, onNavigate, roomCode, isHostRoom 
               </div>
             </div>
           )}
-          {/* 3rd Place */}
+          {/* 3º Lugar */}
           {leaderboard[2] && (
             <div className="flex flex-col items-center animate-in slide-in-from-bottom-4 duration-700 delay-200 flex-1 max-w-[120px]">
               <span className="font-black uppercase text-orange-400 mb-3 truncate w-full text-center px-2">{leaderboard[2].name}</span>

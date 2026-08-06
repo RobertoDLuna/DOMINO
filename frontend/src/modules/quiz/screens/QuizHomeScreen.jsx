@@ -50,7 +50,7 @@ export default function QuizHomeScreen({ user, onNavigate, onBack }) {
     <div className="min-h-screen bg-[#F0FDF4] text-[#1A1A1A] p-4 md:p-8 font-sans">
       <div className="max-w-6xl mx-auto space-y-8">
         
-        {/* Header */}
+        {/* Cabeçalho */}
         <div className="flex flex-col md:flex-row justify-between items-center gap-6 bg-white p-8 rounded-[2rem] shadow-[0_20px_50px_rgba(0,150,96,0.15)] border-2 border-emerald-100 relative animate-in fade-in zoom-in duration-500">
           <button onClick={onBack} className="absolute top-4 left-4 w-12 h-12 flex items-center justify-center bg-emerald-50 text-emerald-900 rounded-2xl hover:bg-emerald-100 transition-colors border-2 border-emerald-100" title="Voltar">
             <ArrowLeft size={24} />
@@ -63,7 +63,7 @@ export default function QuizHomeScreen({ user, onNavigate, onBack }) {
             <p className="text-[10px] sm:text-xs font-black uppercase text-emerald-900/70 tracking-[0.2em]">Aprenda, compita e divirta-se!</p>
           </div>
           
-          {/* Join Room Form */}
+          {/* Formulário de entrada na sala */}
           <form onSubmit={handleJoinQuiz} className="flex flex-col sm:flex-row gap-3 w-full md:w-auto mt-4 md:mt-0">
             <div className="relative">
               <Hash className="absolute left-4 top-1/2 transform -translate-y-1/2 text-emerald-400" size={20} />
@@ -92,7 +92,7 @@ export default function QuizHomeScreen({ user, onNavigate, onBack }) {
           </div>
         )}
 
-        {/* Teacher Panel */}
+        {/* Painel do professor */}
         <div className="space-y-6">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
             <h2 className="text-2xl font-black italic tracking-tighter uppercase text-emerald-900 flex items-center gap-2">
@@ -127,7 +127,7 @@ export default function QuizHomeScreen({ user, onNavigate, onBack }) {
             {quizzes.map((quiz) => (
               <div key={quiz.id} className="group relative flex flex-col bg-white rounded-[2rem] border-2 border-emerald-100 p-6 text-left transition-all hover:scale-[1.03] hover:shadow-[0_20px_50px_rgba(0,150,96,0.15)] hover:border-emerald-300 active:scale-95 animate-in fade-in zoom-in duration-500 overflow-hidden">
                 
-                {/* Background Accent */}
+                {/* Efeito visual de fundo */}
                 <div
                   className={`absolute top-0 right-0 w-32 h-32 -mr-16 -mt-16 rounded-full opacity-10 group-hover:opacity-20 transition-opacity ${quiz.type === 'PEDAGOGICO' ? 'bg-[#009660]' : 'bg-[#FFCE00]'}`}
                 />

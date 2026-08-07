@@ -192,8 +192,8 @@ class AdminController {
         return res.status(404).json({ error: 'Usuário não encontrado.' });
       }
 
-      // Salvaguarda: Ninguém pode excluir a conta de Administrador Mestre
-      if (targetUser.email === 'robertocgw@gmail.com') {
+      // Salvaguarda: Ninguém pode excluir a conta de Administrador Mestre se configurada no ambiente
+      if (process.env.MASTER_ADMIN_EMAIL && targetUser.email === process.env.MASTER_ADMIN_EMAIL) {
         return res.status(403).json({ error: 'Você não tem permissão para excluir a conta do Master Admin.' });
       }
 

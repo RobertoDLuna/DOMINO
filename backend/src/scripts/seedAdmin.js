@@ -6,9 +6,15 @@ async function seedAdmin() {
   const prisma = getPrisma();
   console.log('🛡️ Criando conta de Administrador...');
 
-  const fullName = "robertoluna";
-  const email = "robertocgw@gmail.com";
-  const password = process.env.ADMIN_SEED_PASSWORD || "admin123";
+  const fullName = process.env.ADMIN_SEED_NAME || "Administrador";
+  const email = process.env.ADMIN_SEED_EMAIL;
+  const password = process.env.ADMIN_SEED_PASSWORD;
+
+  if (!email || !password) {
+    console.log('⚠️ ADMIN_SEED_EMAIL e ADMIN_SEED_PASSWORD não configurados no .env. Pulando seed de admin.');
+    await prisma.$disconnect();
+    return;
+  }
 
   try {
     const existingAdmin = await prisma.user.findUnique({ where: { email } });
@@ -30,7 +36,7 @@ async function seedAdmin() {
       }
     });
 
-    console.log(`✅ Conta ADMIN criada com sucesso! Email: ${email}`);
+    console.log('✅ Conta ADMIN criada com sucesso!');
   } catch (error) {
     console.error('❌ Erro ao criar admin:', error.message);
   } finally {

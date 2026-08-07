@@ -397,7 +397,7 @@ const AdminDashboard = ({ onBack }) => {
                          >
                            🔑
                          </button>
-                         {(currentUser?.email === 'robertocgw@gmail.com' || u.email !== 'robertocgw@gmail.com') && u.id !== currentUser?.id && (
+                         {u.id !== currentUser?.id && (
                            <button 
                              onClick={() => handleDeleteUser(u.id, u.fullName)}
                              className="bg-red-50 hover:bg-red-500 text-red-400 hover:text-white p-2 rounded-xl text-xs font-black uppercase transition-colors"

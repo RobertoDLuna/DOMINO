@@ -13,7 +13,6 @@ Uma plataforma completa de jogos educacionais e clássicos desenvolvida para pro
 - [Variáveis de Ambiente](#-variáveis-de-ambiente)
 - [Instalação e Execução Local](#-instalação-e-execução-local)
 - [Carga de Dados e Matrizes BNCC](#-carga-de-dados-e-matrizes-bncc)
-- [Credenciais Padrão para Testes](#-credenciais-padrão-para-testes)
 - [Scripts e Comandos Úteis](#-scripts-e-comandos-úteis)
 - [Deploy em Produção](#-deploy-em-produção)
 
@@ -220,17 +219,6 @@ node backend/src/scripts/seedAdmin.js
 # 5. (Opcional) Simula torneios e gera histórico para visualização de dashboards
 node backend/src/scripts/simulateTournaments.js
 ```
-
----
-
-## 🔑 Credenciais Padrão para Testes
-
-Após executar os scripts de seed acima, você pode utilizar os seguintes acessos padrão no ambiente de desenvolvimento:
-
-| Perfil | E-mail | Senha Padrão | Finalidade |
-| :--- | :--- | :--- | :--- |
-| **Administrador** | `robertocgw@gmail.com` | `admin123` | Acesso total, aprovação de temas, importação de escolas e métricas gerais |
-| **Admin de Testes** | `admin@test.com` | `test123` | Utilizado na suíte de testes automatizados e Cypress E2E |
 
 ---
 

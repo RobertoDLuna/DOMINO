@@ -1,5 +1,5 @@
 require('dotenv').config();
-const { getPrisma } = require('../config/prismaClient');
+const { getPrisma } = require('../shared/config/prismaClient');
 
 /**
  * Seed script: populates initial educational categories and subcategories.

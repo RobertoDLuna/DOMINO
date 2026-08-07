@@ -1,5 +1,5 @@
 require('dotenv').config();
-const { getPrisma } = require('../config/prismaClient');
+const { getPrisma } = require('../shared/config/prismaClient');
 const bcrypt = require('bcryptjs');
 
 async function seedAdmin() {

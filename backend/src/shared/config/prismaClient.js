@@ -1,8 +1,8 @@
 require('dotenv').config();
 
 /**
- * Lazy Prisma Client singleton.
- * Only instantiates when a DB call is made — server starts even without a DB configured.
+ * Singleton preguiçoso (lazy) do Prisma Client.
+ * Apenas instancia quando uma consulta ao banco é realizada.
  */
 let _prisma = null;
 

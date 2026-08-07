@@ -1,6 +1,6 @@
 /**
  * peaoSocket.js
- * Socket.IO handler for the Batalha de Peões module (PVP).
+ * Manipulador Socket.IO para o módulo de Batalha de Peões (PVP).
  */
 
 const rooms = new Map();
@@ -10,11 +10,11 @@ function generateRoomCode() {
 }
 
 function checkWinLocal(board) {
-  // White wins se chegar na linha 8 (índices 0 a 7)
+  // Brancas vencem se alcançarem a linha 8 (índices 0 a 7)
   for (let i = 0; i <= 7; i++) {
     if (board[i] === 'w') return 'WHITE_WIN';
   }
-  // Black wins se chegar na linha 1 (índices 56 a 63)
+  // Pretas vencem se alcançarem a linha 1 (índices 56 a 63)
   for (let i = 56; i <= 63; i++) {
     if (board[i] === 'b') return 'BLACK_WIN';
   }
@@ -33,7 +33,7 @@ module.exports = function peaoSocket(io) {
 
   chessNsp.on('connection', (socket) => {
 
-    // ── CREATE ROOM ──────────────────────────────────────────────────────────
+    // ── CRIAR SALA ───────────────────────────────────────────────────────────
     socket.on('create-peao-room', ({ userId, userName, mode = 'PVP' }) => {
       const roomCode = generateRoomCode();
 
@@ -53,10 +53,10 @@ module.exports = function peaoSocket(io) {
       socket.join(roomCode);
 
       socket.emit('peao-room-created', { roomCode });
-      console.log(`[Peao] Room created: ${roomCode} by ${userName}`);
+      console.log(`[Peao] Sala criada: ${roomCode} por ${userName}`);
     });
 
-    // ── JOIN ROOM ─────────────────────────────────────────────────────────────
+    // ── ENTRAR NA SALA ───────────────────────────────────────────────────────
     socket.on('join-peao-room', ({ roomCode, userId, userName }) => {
       const room = rooms.get(roomCode);
 
@@ -97,11 +97,11 @@ module.exports = function peaoSocket(io) {
           userId: winner.userId,
           userName: winner.userName,
         });
-        console.log(`[Peao] Draw result for ${roomCode}: ${winner.userName}`);
+        console.log(`[Peao] Resultado do sorteio para ${roomCode}: ${winner.userName}`);
       }, 1000);
     });
 
-    // ── COLOR PICKING ─────────────────────────────────────────────────────────
+    // ── ESCOLHA DE COR ────────────────────────────────────────────────────────
     socket.on('peao-pick-color', ({ roomCode, color }) => {
       const room = rooms.get(roomCode);
       if (!room || room.white || room.black) return;
@@ -127,7 +127,7 @@ module.exports = function peaoSocket(io) {
       });
     });
 
-    // ── MAKE MOVE ─────────────────────────────────────────────────────────────
+    // ── EXECUTAR MOVIMENTO ───────────────────────────────────────────────────
     socket.on('peao-move', ({ roomCode, from, to }) => {
       const room = rooms.get(roomCode);
       if (!room) return;
@@ -148,7 +148,7 @@ module.exports = function peaoSocket(io) {
       }
     });
 
-    // ── REMATCH ───────────────────────────────────────────────────────────────
+    // ── REVANCHE ──────────────────────────────────────────────────────────────
     socket.on('peao-request-rematch', ({ roomCode }) => {
       const room = rooms.get(roomCode);
       if (!room) return;
@@ -179,7 +179,7 @@ module.exports = function peaoSocket(io) {
       }
     });
 
-    // ── RESIGN ────────────────────────────────────────────────────────────────
+    // ── DESISTIR ──────────────────────────────────────────────────────────────
     socket.on('peao-resign', ({ roomCode }) => {
       const room = rooms.get(roomCode);
       if (!room) return;
@@ -189,7 +189,7 @@ module.exports = function peaoSocket(io) {
       chessNsp.to(roomCode).emit('peao-game-over', { result, reason: 'resignation' });
     });
 
-    // ── DISCONNECT ────────────────────────────────────────────────────────────
+    // ── DESCONEXÃO ────────────────────────────────────────────────────────────
     socket.on('disconnect', () => {
       for (const [roomCode, room] of rooms.entries()) {
         const wasP1 = room.player1?.socketId === socket.id;

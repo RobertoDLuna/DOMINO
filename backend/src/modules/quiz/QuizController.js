@@ -3,7 +3,7 @@ const QuizSessionService = require('./QuizSessionService');
 const QuizReportService = require('./QuizReportService');
 
 class QuizController {
-  // --- Upload ---
+  // --- Upload de Imagem ---
   uploadImage(req, res, next) {
     try {
       if (!req.file) {
@@ -16,10 +16,10 @@ class QuizController {
     }
   }
 
-  // --- Quiz Management ---
+  // --- Gerenciamento de Quiz ---
   async createQuiz(req, res, next) {
     try {
-      const creatorId = req.user.id; // from authMiddleware
+      const creatorId = req.user.id; // Obtido via authMiddleware
       const quiz = await QuizService.createQuiz(req.body, creatorId);
       res.status(201).json(quiz);
     } catch (error) {
@@ -78,7 +78,7 @@ class QuizController {
 
   async startQuiz(req, res, next) {
     try {
-      const { mode } = req.body; // 'LIVE' or 'ASYNC'
+      const { mode } = req.body; // 'LIVE' ou 'ASYNC'
       const quiz = await QuizService.startQuiz(req.params.id, mode);
       res.json(quiz);
     } catch (error) {
@@ -108,10 +108,10 @@ class QuizController {
     }
   }
 
-  // --- Session Management ---
+  // --- Gerenciamento de Sessão de Participação ---
   async createSession(req, res, next) {
     try {
-      // req.user might be undefined if guest, so we accept guest name in body
+      // req.user pode ser indefinido se for convidado
       const userId = req.user?.id || null;
       const userName = req.user?.fullName || req.body.guestName;
       if (!userName) return res.status(400).json({ error: 'Nome do participante é obrigatório' });
@@ -142,7 +142,7 @@ class QuizController {
     }
   }
 
-  // --- Reports ---
+  // --- Relatórios ---
   async getQuizReport(req, res, next) {
     try {
       const report = await QuizReportService.getQuizReport(req.params.id);
@@ -152,7 +152,7 @@ class QuizController {
     }
   }
 
-  // --- BNCC Skills ---
+  // --- Habilidades BNCC ---
   async listBnccSkills(req, res, next) {
     try {
       const { search } = req.query;

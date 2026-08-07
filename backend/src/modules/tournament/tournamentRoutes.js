@@ -4,7 +4,7 @@ const TournamentController = require('./TournamentController');
 const TournamentRankingService = require('./TournamentRankingService');
 const { authMiddleware } = require('../../shared/middleware/authMiddleware'); // Supondo o authMiddleware padrão
 
-// Ranking routes (Públicas)
+// Rotas de Ranking (Públicas)
 router.get('/ranking', async (req, res) => {
   try {
     const ranking = await TournamentRankingService.getRanking();
@@ -14,7 +14,7 @@ router.get('/ranking', async (req, res) => {
   }
 });
 
-// Tournament routes (Públicas/Leitura)
+// Rotas de Torneios (Públicas/Leitura)
 router.get('/', TournamentController.getTournaments);
 router.get('/:id', TournamentController.getTournament);
 

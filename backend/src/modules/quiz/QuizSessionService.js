@@ -2,7 +2,7 @@ const { getPrisma } = require("../../shared/config/prismaClient");
 
 class QuizSessionService {
   /**
-   * Calculate student diagnostic level
+   * Calcula o nível diagnóstico do estudante
    */
   calculateStudentLevel(correctAnswers, totalQuestions) {
     if (totalQuestions === 0) return 'INICIANTE';
@@ -15,7 +15,7 @@ class QuizSessionService {
   }
 
   /**
-   * Create a new session for a user playing a quiz
+   * Cria uma nova sessão para um usuário jogando um quiz
    */
   async createSession(quizId, userId, userName, schoolId = null) {
     const prisma = getPrisma();
@@ -30,12 +30,12 @@ class QuizSessionService {
   }
 
   /**
-   * Submit an answer for a specific question
+   * Submete uma resposta para uma pergunta específica
    */
   async submitAnswer(sessionId, questionId, answerId, timeTakenSecs = 0) {
     const prisma = getPrisma();
     
-    // Validate if the answer is correct
+    // Valida se a alternativa escolhida é a correta
     let isCorrect = false;
     let basePoints = 0;
     
@@ -54,7 +54,7 @@ class QuizSessionService {
       basePoints = Math.max(500, basePoints - timePenalty);
     }
 
-    // Record response
+    // Registra a resposta individual
     const response = await prisma.quizResponse.create({
       data: {
         sessionId,
@@ -72,7 +72,7 @@ class QuizSessionService {
     });
     const correctAnswerId = correctAnswer ? correctAnswer.id : null;
 
-    // Update session aggregates
+    // Atualiza agregados da sessão do jogador
     await prisma.quizSession.update({
       where: { id: sessionId },
       data: {
@@ -92,7 +92,7 @@ class QuizSessionService {
   }
 
   /**
-   * Finalize a session and calculate diagnostics
+   * Finaliza uma sessão e calcula diagnósticos e ranking
    */
   async finalizeSession(sessionId) {
     const prisma = getPrisma();
@@ -103,7 +103,7 @@ class QuizSessionService {
 
     if (!session) throw new Error('Sessão não encontrada');
 
-    // Only calculate level if it's a pedagogical quiz
+    // Apenas calcula nível se for um quiz pedagógico
     let studentLevel = null;
     if (session.quiz.type === 'PEDAGOGICO') {
       studentLevel = this.calculateStudentLevel(session.correctAnswers, session.totalQuestions);
@@ -117,7 +117,7 @@ class QuizSessionService {
       }
     });
 
-    // Calculate ranking relative to all other sessions of this quiz
+    // Calcula o ranking em relação às outras sessões deste quiz
     const totalPlayers = await prisma.quizSession.count({
       where: { quizId: session.quizId, completedAt: { not: null } }
     });
@@ -130,14 +130,14 @@ class QuizSessionService {
       }
     });
 
-    // rank is betterScoresCount + 1 (if 0 people have better scores, you are rank 1)
+    // rank é betterScoresCount + 1 (se 0 pessoas tiverem pontuação melhor, você é 1º lugar)
     const rank = betterScoresCount + 1;
 
     return { ...updatedSession, rank, totalPlayers };
   }
 
   /**
-   * Get session details with responses
+   * Obtém detalhes da sessão incluindo respostas
    */
   async getSessionDetails(sessionId) {
     const prisma = getPrisma();

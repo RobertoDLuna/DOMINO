@@ -3,19 +3,19 @@ const ScoringService = require("./ScoringService");
 const themes = require("../../shared/config/themes");
 
 /**
- * GameService handles the core business logic for the Dominoes game.
+ * GameService gerencia as regras de negócio centrais para o jogo de Dominó.
  */
 class GameService {
   /**
-   * Generates a unique room ID.
+   * Gera um ID único para a sala.
    */
   generateRoomId() {
     return Math.random().toString(36).substring(2, 7).toUpperCase();
   }
 
   /**
-   * Initializes a new game instance.
-   * Now async to fetch potential custom themes from Postgres.
+   * Inicializa uma nova instância de jogo.
+   * Assíncrono para permitir a busca de temas personalizados no Postgres.
    */
   async createGame(players, themeId = 'animais') {
     let theme = themes[themeId];
@@ -45,7 +45,7 @@ class GameService {
     const images = theme.symbols;
     const pieces = [];
 
-    // Generate all combinations for a double-6 set (using theme symbols)
+    // Gera todas as combinações para um conjunto de duplo-6 (usando os símbolos do tema)
     for (let i = 0; i < images.length; i++) {
       for (let j = i; j < images.length; j++) {
         pieces.push({ 
@@ -59,7 +59,7 @@ class GameService {
       }
     }
 
-    // Shuffle
+    // Embaralha as peças
     pieces.sort(() => Math.random() - 0.5);
 
     const playerHands = {};
@@ -86,7 +86,7 @@ class GameService {
           startingPieceId = piece.id;
         }
         
-        // Em paralelo, calculamos fallback caso ngm tire carroça na distribuição
+        // Em paralelo, calculamos fallback caso ninguém tire carroça na distribuição
         const pieceSum = piece.vA + piece.vB;
         if (maxDouble === -1 && pieceSum > maxPieceValueSum) {
           maxPieceValueSum = pieceSum;
@@ -110,13 +110,13 @@ class GameService {
       currentTurn: startingPlayerId,
       startingPieceId: startingPieceId, // Armazena qual peça DEVE ser a primeira jogada
       players: players,
-      theme: theme, // Store theme for UI info
+      theme: theme, // Armazena dados do tema para a interface
       status: 'playing'
     };
   }
 
   /**
-   * Checks if no more moves are possible for any player.
+   * Verifica se não há mais jogadas possíveis para nenhum jogador (trancamento/fechamento).
    */
   checkDeadlock(game) {
     if (game.board.length === 0) return false;
@@ -141,15 +141,15 @@ class GameService {
   }
 
   /**
-   * Determines the winner when a deadlock occurs (player with fewer pieces).
+   * Determina o vencedor em caso de trancamento (jogador com menos pontos/peças).
    */
   getWinnerOnDeadlock(game) {
     return ScoringService.getTrancamentoWinner(game);
   }
 
   /**
-   * Validates and processes a move.
-   * Returns { canPlay: boolean, finalPiece: object, nextTurn: string, isOver: boolean }
+   * Valida e processa uma jogada.
+   * Retorna { canPlay: boolean, finalPiece: object, nextTurn: string, isOver: boolean }
    */
   processMove(game, playerId, pieceId, side) {
     const playerHand = game.hands[playerId];
@@ -197,10 +197,10 @@ class GameService {
     }
 
     if (canPlay) {
-      // Remove from hand
+      // Remove da mão
       playerHand.splice(pieceIdx, 1);
       
-      // Update board
+      // Atualiza o tabuleiro
       if (side === 'left' || game.board.length === 0) {
         game.board.unshift(finalPiece);
       } else {

@@ -3,15 +3,15 @@ const path = require('path');
 const fs = require('fs');
 
 /**
- * ThemeController - Manages custom educational themes.
- * Gracefully handles DB unavailability (server runs without Postgres configured).
+ * ThemeController - Gerencia temas educacionais customizados.
+ * Trata graciosamente a indisponibilidade do banco de dados quando necessário.
  */
 class ThemeController {
 
   async getCategories(req, res) {
     try {
       const prisma = getPrisma();
-      // Only show approved categories or default ones (isApproved: true)
+      // Apenas exibe categorias aprovadas ou padrão (isApproved: true)
       const categories = await prisma.category.findMany({
         where: { isApproved: true },
         include: { subs: true }
@@ -74,9 +74,9 @@ class ThemeController {
       const prisma = getPrisma();
       const { name, description, color, categoryId, subcategoryId, isPublic } = req.body;
       const files = req.files;
-      const ownerId = req.user.id; // From authMiddleware
+      const ownerId = req.user.id; // Obtido via authMiddleware
 
-      // Validate required fields
+      // Validação de campos obrigatórios
       if (!name?.trim()) return res.status(400).json({ error: "O nome do tema é obrigatório." });
       if (!categoryId) return res.status(400).json({ error: "Selecione um nível de ensino válido." });
       if (!files || files.length < 6) return res.status(400).json({ error: "Envie as 6 imagens." });
@@ -89,7 +89,7 @@ class ThemeController {
           description: description?.trim() || null,
           color: color || '#009660',
           isPublic: isPublic === 'true' || isPublic === true,
-          isApproved: false, // Wait for admin
+          isApproved: false, // Aguarda moderação do administrador
           ownerId,
           categoryId: parseInt(categoryId),
           subcategoryId: subcategoryId && !isNaN(parseInt(subcategoryId)) ? parseInt(subcategoryId) : null,
@@ -127,7 +127,7 @@ class ThemeController {
           data: { 
             name: name.trim(),
             isDefault: false,
-            isApproved: false, // Custom categories also need approval?
+            isApproved: false, // Categorias customizadas também passam por aprovação
             subs: {
               create: defaultSubs.map(name => ({ name, isDefault: false }))
             }
@@ -145,7 +145,7 @@ class ThemeController {
             categoryId: category.id,
             symbols: symbolsUrls,
             isPublic: true,
-            isApproved: false, // Theme needs approval
+            isApproved: false, // Tema precisa de aprovação
             ownerId,
             color: '#009660'
           }
@@ -166,7 +166,7 @@ class ThemeController {
       const theme = await prisma.theme.findUnique({ where: { id } });
       if (!theme) return res.status(404).json({ error: "Tema não encontrado." });
 
-      // Remove uploaded image files from disk (Using absolute normalized paths)
+      // Remove arquivos de imagem do disco
       theme.symbols.forEach(url => {
         const relativePath = url.startsWith('/') ? url.slice(1) : url;
         const filePath = path.resolve(__dirname, '../../../', relativePath);

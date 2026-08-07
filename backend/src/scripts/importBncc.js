@@ -3,7 +3,7 @@ const { getPrisma } = require('../shared/config/prismaClient');
 const fs = require('fs');
 const path = require('path');
 
-// Helper state-machine style CSV parser row splitter
+// Utilitário para divisão de linhas de CSV estilo máquina de estados
 function parseCSVRow(row) {
   const result = [];
   let current = '';

@@ -157,7 +157,7 @@ class AuthController {
   }
 
   async me(req, res) {
-    // req.user is populated by authMiddleware
+    // req.user é preenchido pelo authMiddleware
     try {
       const prisma = getPrisma();
       const user = await prisma.user.findUnique({

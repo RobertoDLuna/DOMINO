@@ -4,7 +4,7 @@ const GameService = require("./GameService");
 const RankingService = require("./RankingService");
 
 /**
- * Socket.io Controller for Domino Game.
+ * Controlador Socket.io para o Jogo de Dominó.
  */
 module.exports = (io) => {
   const touch = async (roomId) => {
@@ -19,7 +19,7 @@ module.exports = (io) => {
     }
   };
 
-  // Job de limpeza a cada 60s para salas inativas (3 minutos)
+  // Job de limpeza a cada 60s para salas inativas (10 minutos)
   setInterval(async () => {
     try {
       const allRooms = await RedisService.getAllRooms();
@@ -48,7 +48,7 @@ module.exports = (io) => {
     console.log(`🔌 Usuário conectado: ${socket.id}`);
 
     /**
-     * Create Room Handler
+     * Manipulador de Criação de Sala
      */
     socket.on("createRoom", async ({ playerId, playerName, themeId }) => {
       try {
@@ -77,7 +77,7 @@ module.exports = (io) => {
     });
 
     /**
-     * Join Room Handler
+     * Manipulador de Entrada na Sala
      */
     socket.on("joinRoom", async ({ roomId, playerId, playerName }) => {
       try {
@@ -150,7 +150,7 @@ module.exports = (io) => {
     });
 
     /**
-     * Select Theme Handler (Lobby)
+     * Manipulador de Seleção de Tema (Lobby)
      */
     socket.on("selectTheme", async ({ roomId, themeId }) => {
       try {
@@ -170,7 +170,7 @@ module.exports = (io) => {
     });
 
     /**
-     * Select Max Players Handler (Lobby)
+     * Manipulador de Seleção de Capacidade de Jogadores (Lobby)
      */
     socket.on("selectMaxPlayers", async ({ roomId, maxPlayers }) => {
       try {
@@ -190,7 +190,7 @@ module.exports = (io) => {
     });
 
     /**
-     * Start Game Handler
+     * Manipulador de Início de Partida
      */
     socket.on("startGame", async ({ roomId, themeId }) => {
       try {
@@ -228,7 +228,7 @@ module.exports = (io) => {
     });
 
     /**
-     * Play Again Vote Handler
+     * Manipulador de Voto para Jogar Novamente
      */
     socket.on("playAgain", async ({ roomId }) => {
       try {
@@ -246,7 +246,7 @@ module.exports = (io) => {
     });
 
     /**
-     * Helper to handle turn transitions
+     * Auxiliar para gerenciar transições de turnos
      */
     const finalizeTurn = async (game, roomId) => {
       try {
@@ -306,7 +306,7 @@ module.exports = (io) => {
     };
 
     /**
-     * Move Execution Handler
+     * Manipulador de Execução de Jogada
      */
     socket.on("makeMove", async ({ pieceId, side, roomId }) => {
       try {

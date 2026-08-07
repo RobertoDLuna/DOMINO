@@ -2,12 +2,12 @@ const { getPrisma } = require("../../shared/config/prismaClient");
 
 class QuizReportService {
   /**
-   * Generates a comprehensive report for a specific quiz
+   * Gera um relatório analítico completo para um quiz específico
    */
   async getQuizReport(quizId) {
     const prisma = getPrisma();
     
-    // Fetch quiz info
+    // Busca informações do quiz e questões
     const quiz = await prisma.quizGame.findUnique({
       where: { id: quizId },
       include: {
@@ -21,7 +21,7 @@ class QuizReportService {
 
     if (!quiz) throw new Error('Quiz não encontrado');
 
-    // Fetch all sessions and responses
+    // Busca todas as sessões finalizadas e suas respostas
     const sessions = await prisma.quizSession.findMany({
       where: { quizId, completedAt: { not: null } },
       include: {
@@ -41,7 +41,7 @@ class QuizReportService {
       };
     }
 
-    // 1. Ranking
+    // 1. Ranking dos Alunos
     const ranking = sessions.map((s, index) => ({
       position: index + 1,
       userId: s.userId,
@@ -53,13 +53,13 @@ class QuizReportService {
       studentLevel: s.studentLevel
     }));
 
-    // 2. Question Stats & Distractors
+    // 2. Estatísticas das Questões e Análise de Distratores
     const questionStats = quiz.questions.map(question => {
       const responsesForQ = sessions.flatMap(s => s.responses.filter(r => r.questionId === question.id));
       const totalAnswers = responsesForQ.length;
       const correctAnswers = responsesForQ.filter(r => r.isCorrect).length;
       
-      // Count how many times each answer was chosen
+      // Contabiliza quantas vezes cada alternativa foi escolhida
       const answerCounts = {};
       question.answers.forEach(a => answerCounts[a.id] = 0);
       responsesForQ.forEach(r => {
@@ -85,7 +85,7 @@ class QuizReportService {
       };
     });
 
-    // 3. Level Distribution (only for PEDAGOGICO)
+    // 3. Distribuição de Níveis Diagnósticos (apenas para quizzes pedagógicos)
     const levelDistribution = {
       INICIANTE: 0,
       EM_CONSTRUCAO: 0,
@@ -99,7 +99,7 @@ class QuizReportService {
       });
     }
 
-    // 4. BNCC Skills Analysis (Hardest/Easiest skills)
+    // 4. Análise de Habilidades BNCC (Habilidades com maior e menor taxa de acerto)
     const bnccMap = {};
     questionStats.forEach(q => {
       if (q.bnccCode) {
@@ -112,9 +112,9 @@ class QuizReportService {
     const bnccStats = Object.values(bnccMap).map(b => ({
       code: b.code,
       averageAccuracy: Math.round(b.totalAccuracy / b.totalQuestions)
-    })).sort((a, b) => a.averageAccuracy - b.averageAccuracy); // Ascending (hardest first)
+    })).sort((a, b) => a.averageAccuracy - b.averageAccuracy); // Ordem crescente (mais difíceis primeiro)
 
-    // 5. Response Grid (Matriz Aluno x Questão)
+    // 5. Matriz Aluno x Questão (Response Grid)
     const questionsOrdered = [...quiz.questions].sort((a, b) => a.order - b.order);
     const responseGrid = {
       columns: questionsOrdered.map((q, i) => ({
@@ -143,7 +143,7 @@ class QuizReportService {
       quiz: { title: quiz.title, type: quiz.type, id: quiz.id },
       totalParticipants: sessions.length,
       ranking,
-      questionStats: questionStats.sort((a, b) => a.accuracy - b.accuracy), // Hardest first
+      questionStats: questionStats.sort((a, b) => a.accuracy - b.accuracy), // Mais difíceis primeiro
       levelDistribution,
       bnccStats,
       responseGrid

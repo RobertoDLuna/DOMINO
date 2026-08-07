@@ -41,17 +41,17 @@ async function seed() {
       for (const [grade, questions] of Object.entries(grouped)) {
         const quizTitle = `Banco BNCC - ${subjectName} (${grade})`;
         
-        // Check if exists
+        // Verifica se já existe
         const existing = await prisma.quizGame.findFirst({
           where: { title: quizTitle }
         });
 
         if (existing) {
-          console.log(`⏭️  Skipping existing: ${quizTitle}`);
+          console.log(`⏭️  Pulando o que já existe: ${quizTitle}`);
           continue;
         }
 
-        // Create Quiz Game
+        // Cria o jogo de Quiz
         await prisma.quizGame.create({
           data: {
             title: quizTitle,

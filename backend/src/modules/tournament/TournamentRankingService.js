@@ -27,7 +27,7 @@ class TournamentRankingService {
       const isChampion = p.finalPosition === 1 ? 1 : 0;
       const isPodium = p.finalPosition && p.finalPosition <= 3 ? 1 : 0;
       
-      // Calculate points if not directly set
+      // Calcula os pontos caso não estejam definidos diretamente
       let earnedPoints = p.points || 0;
       if (p.finalPosition) {
          if (p.finalPosition === 1) earnedPoints = 10;

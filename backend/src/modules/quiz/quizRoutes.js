@@ -21,17 +21,17 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
 
-// Upload route
+// Rota de upload de imagens
 router.post('/upload-image', authMiddleware, restrictRole(['PROFESSOR', 'ADMIN']), upload.single('image'), QuizController.uploadImage);
 
-// Public routes (joining/playing)
+// Rotas públicas ou com autenticação opcional (entrada de alunos e participação)
 router.get('/bncc-skills', optionalAuth, QuizController.listBnccSkills);
 router.get('/room/:code', optionalAuth, QuizController.getQuizByRoomCode);
 router.post('/:id/session', optionalAuth, QuizController.createSession);
 router.post('/session/:sessionId/answer', optionalAuth, QuizController.submitAnswer);
 router.post('/session/:sessionId/finish', optionalAuth, QuizController.finalizeSession);
 
-// Protected routes (listing, creating, reports)
+// Rotas protegidas (gerenciamento, criação e relatórios)
 router.get('/', optionalAuth, QuizController.listQuizzes);
 router.get('/:id', optionalAuth, QuizController.getQuiz);
 router.post('/', authMiddleware, restrictRole(['PROFESSOR', 'ADMIN']), QuizController.createQuiz);

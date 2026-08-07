@@ -1,9 +1,9 @@
 /**
  * velhaSocket.js
- * Socket.IO handler for the Xadrez da Velha module (PVP).
+ * Manipulador Socket.IO para o módulo de Xadrez da Velha (PVP).
  */
 
-// In-memory store: roomCode → RoomState
+// Armazenamento em memória: roomCode → Estado da Sala
 const rooms = new Map();
 
 function generateRoomCode() {
@@ -11,7 +11,7 @@ function generateRoomCode() {
 }
 
 /**
- * Lógica do Xadrez da Velha - Helpers
+ * Lógica do Xadrez da Velha - Auxiliares
  */
 function checkWin(board) {
   const lines = [
@@ -37,7 +37,7 @@ module.exports = function velhaSocket(io) {
 
   chessNsp.on('connection', (socket) => {
 
-    // ── CREATE ROOM ──────────────────────────────────────────────────────────
+    // ── CRIAR SALA ───────────────────────────────────────────────────────────
     socket.on('create-velha-room', ({ userId, userName, mode = 'PVP' }) => {
       const roomCode = generateRoomCode();
 
@@ -60,10 +60,10 @@ module.exports = function velhaSocket(io) {
       socket.join(roomCode);
 
       socket.emit('velha-room-created', { roomCode });
-      console.log(`[Velha] Room created: ${roomCode} by ${userName}`);
+      console.log(`[Velha] Sala criada: ${roomCode} por ${userName}`);
     });
 
-    // ── JOIN ROOM ─────────────────────────────────────────────────────────────
+    // ── ENTRAR NA SALA ───────────────────────────────────────────────────────
     socket.on('join-velha-room', ({ roomCode, userId, userName }) => {
       const room = rooms.get(roomCode);
 
@@ -105,11 +105,11 @@ module.exports = function velhaSocket(io) {
           winnerId: winner.userId,
           winnerName: winner.userName,
         });
-        console.log(`[Velha] Draw result for ${roomCode}: ${winner.userName}`);
+        console.log(`[Velha] Resultado do sorteio para ${roomCode}: ${winner.userName}`);
       }, 1000);
     });
 
-    // ── COLOR PICKING ─────────────────────────────────────────────────────────
+    // ── ESCOLHA DE COR ────────────────────────────────────────────────────────
     socket.on('velha-pick-color', ({ roomCode, color }) => {
       const room = rooms.get(roomCode);
       if (!room || room.white || room.black) return;
@@ -135,14 +135,14 @@ module.exports = function velhaSocket(io) {
       });
     });
 
-    // ── MAKE MOVE (DROP & MOVE) ──────────────────────────────────────────────
+    // ── EXECUTAR JOGADA (COLOCAÇÃO E MOVIMENTO) ───────────────────────────────
     socket.on('velha-drop-piece', ({ roomCode, idx, pieceType }) => {
       const room = rooms.get(roomCode);
       if (!room) return;
 
       const colorCode = socket.id === room.white.socketId ? 'W' : 'B';
       
-      // Update state
+      // Atualiza o estado
       room.board[idx] = colorCode + pieceType;
       room.inventory[colorCode][pieceType] -= 1;
 
@@ -194,14 +194,14 @@ module.exports = function velhaSocket(io) {
         });
         return;
       }
-      // Check 3-fold repetition
+      // Verifica repetição tríplice
       const repetitions = room.boardHistory.filter(s => s === room.board.join(',')).length;
       if (repetitions >= 3) {
         chessNsp.to(roomCode).emit('velha-game-over', { result: 'DRAW', reason: 'repetition' });
       }
     }
 
-    // ── REMATCH ───────────────────────────────────────────────────────────────
+    // ── REVANCHE ──────────────────────────────────────────────────────────────
     socket.on('velha-request-rematch', ({ roomCode }) => {
       const room = rooms.get(roomCode);
       if (!room) return;
@@ -235,7 +235,7 @@ module.exports = function velhaSocket(io) {
       }
     });
 
-    // ── RESIGN ────────────────────────────────────────────────────────────────
+    // ── DESISTIR ──────────────────────────────────────────────────────────────
     socket.on('velha-resign', ({ roomCode }) => {
       const room = rooms.get(roomCode);
       if (!room) return;
@@ -245,7 +245,7 @@ module.exports = function velhaSocket(io) {
       chessNsp.to(roomCode).emit('velha-game-over', { result, reason: 'resignation' });
     });
 
-    // ── DISCONNECT ────────────────────────────────────────────────────────────
+    // ── DESCONEXÃO ────────────────────────────────────────────────────────────
     socket.on('disconnect', () => {
       for (const [roomCode, room] of rooms.entries()) {
         const wasP1 = room.player1?.socketId === socket.id;

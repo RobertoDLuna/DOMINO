@@ -34,7 +34,7 @@ const optionalAuth = (req, res, next) => {
     const decoded = jwt.verify(token, JWT_SECRET);
     req.user = decoded; // { id, email, role }
   } catch (error) {
-    // optional auth doesn't fail if token is invalid, just ignores it
+    // Autenticação opcional: não falha caso o token seja inválido, apenas o ignora
   }
   next();
 };

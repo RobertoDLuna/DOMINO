@@ -1,6 +1,6 @@
 /**
- * Educational themes for the Domino game.
- * Each theme has a set of 7 symbols (Double-6 set logic).
+ * Temas educativos para o jogo de Dominó.
+ * Cada tema possui um conjunto de 7 símbolos (lógica do conjunto Double-6).
  */
 const themes = {
   animais: {

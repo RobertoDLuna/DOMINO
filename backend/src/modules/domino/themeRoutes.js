@@ -6,14 +6,14 @@ const fs = require('fs');
 const ThemeController = require('./ThemeController');
 const { authMiddleware, restrictRole } = require('../../shared/middleware/authMiddleware');
 
-// Ensure upload directories exist (Using Absolute Paths for Docker persistence)
+// Garante que o diretório de uploads exista
 const uploadDir = path.resolve(__dirname, '../../../uploads/themes');
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
 
 /**
- * Multer Storage setup for file uploads.
+ * Configuração do Multer para armazenamento de uploads.
  */
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -28,15 +28,15 @@ const storage = multer.diskStorage({
 
 const upload = multer({ 
   storage,
-  limits: { fileSize: 2 * 1024 * 1024 } // Approx 2MB per file
+  limits: { fileSize: 2 * 1024 * 1024 } // Aprox. 2MB por arquivo
 });
 
 /**
- * Routes setup:
- * 1. GET /categories: List standard system categories.
- * 2. GET /: List available/public themes.
- * 3. POST /: Register a new theme with up to 6 symbols.
- * 4. DELETE /: Remove a specific theme.
+ * Rotas de Temas e Categorias:
+ * 1. GET /categories: Lista categorias/níveis padrão do sistema.
+ * 2. GET /: Lista temas públicos ou do usuário logado.
+ * 3. POST /: Cria um novo tema com 6 símbolos.
+ * 4. DELETE /: Remove um tema específico.
  */
 router.get('/categories', ThemeController.getCategories);
 router.post('/categories', 

@@ -50,7 +50,7 @@ class TournamentService {
 
   async createTournament(data, userId) {
     const prisma = getPrisma();
-    // Validate if maxPlayers is even
+    // Valida se o número máximo de jogadores é par
     if (data.maxPlayers % 2 !== 0) {
       throw new Error("O número de participantes deve ser um número par.");
     }
@@ -236,11 +236,11 @@ class TournamentService {
   }
 
   async generateEliminationBracket(prisma, tournamentId, participants) {
-    // Basic power of 2 bracket. If participants < power of 2, some get byes.
-    // For simplicity, we assume we generate matches for the first round.
-    // E.g., if 8 participants, 4 matches. If 7, 1 bye.
+    // Chave básica em potência de 2. Se participantes < potência de 2, alguns recebem avanço direto (byes).
+    // Gera os confrontos para a primeira rodada.
+    // Ex: se 8 participantes, 4 partidas. Se 7, 1 avanço direto.
     
-    // Nearest power of 2 >= length
+    // Menor potência de 2 maior ou igual ao total de participantes
     const bracketSize = Math.pow(2, Math.ceil(Math.log2(participants.length || 2)));
     const byes = bracketSize - participants.length;
 
@@ -293,7 +293,7 @@ class TournamentService {
 
     await prisma.tournamentMatch.createMany({ data: matches });
 
-    // Avançar bye se existir
+    // Avançar participantes com avanço direto (bye) se existirem
     const r1Matches = matches.filter(m => m.round === 1 && m.status === 'FINISHED');
     for (const m of r1Matches) {
       await this.advanceWinner(prisma, tournamentId, 1, m.position, m.winnerId, m.player1Name);
@@ -307,7 +307,7 @@ class TournamentService {
     
     const teamArray = [...participants];
     if (teamArray.length % 2 !== 0) {
-      teamArray.push(null); // bye
+      teamArray.push(null); // avanço direto / folga
       roundCount = teamArray.length - 1;
       numMatches = teamArray.length / 2;
     }
@@ -331,7 +331,7 @@ class TournamentService {
           });
         }
       }
-      // rotate (keep first element fixed)
+      // Rotaciona mantendo o primeiro elemento fixo
       teamArray.splice(1, 0, teamArray.pop());
     }
 
@@ -423,7 +423,7 @@ class TournamentService {
       ? { player1Id: winnerId, player1Name: winnerName }
       : { player2Id: winnerId, player2Name: winnerName };
       
-    // Set room code if both players are present
+    // Define o código da sala de jogo caso ambos os jogadores estejam definidos
     if ((isPlayer1 && nextMatch.player2Id) || (!isPlayer1 && nextMatch.player1Id)) {
         dataToUpdate.gameRoomCode = `T-${tournamentId.substring(0,4)}-R${nextRound}-M${nextPosition}`;
     }
@@ -444,7 +444,7 @@ class TournamentService {
         where: { id: tournamentId },
         data: { status: 'FINISHED' }
       });
-      // Here we could trigger a ranking update via TournamentRankingService
+      // Atualização de ranking pode ser disparada aqui via TournamentRankingService
     }
   }
 }

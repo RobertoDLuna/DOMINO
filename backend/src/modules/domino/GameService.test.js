@@ -39,7 +39,7 @@ describe('GameService', () => {
       expect(game.hands['p2']).toHaveLength(7);
       expect(game.pile).toHaveLength(14); // 28 - 14
       expect(game.status).toBe('playing');
-      expect(game.theme.name).toBe('Animais Selvagens 🦁'); // Fallback theme
+      expect(game.theme.name).toBe('Animais Selvagens 🦁'); // Tema de fallback
     });
 
     it('deve usar o tema que vier do Prisma se existir', async () => {

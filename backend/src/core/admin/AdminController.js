@@ -179,7 +179,7 @@ class AdminController {
   async deleteUser(req, res) {
     const { id } = req.params;
     
-    // Safety check: Prevent admin from deleting themselves
+    // Verificação de segurança: Impede o administrador de excluir a própria conta
     if (req.user && req.user.id === id) {
       return res.status(400).json({ error: 'Você não pode excluir sua própria conta de administrador.' });
     }
@@ -192,15 +192,12 @@ class AdminController {
         return res.status(404).json({ error: 'Usuário não encontrado.' });
       }
 
-      // Safeguard: Nobody can delete the Master admin account
+      // Salvaguarda: Ninguém pode excluir a conta de Administrador Mestre
       if (targetUser.email === 'robertocgw@gmail.com') {
         return res.status(403).json({ error: 'Você não tem permissão para excluir a conta do Master Admin.' });
       }
 
-      // Delete themes of the user first or let cascade delete handle it if configured
-      // We will reassign or delete their themes to avoid unlinked themes if not cascaded
-      // Actually Prisma doesn't always cascade depending on schema, so let's delete their themes manually 
-      // or at least detach them. The schema has ownerId String? so it can be set to null.
+      // Desvincula os temas do usuário antes da exclusão para evitar orfandade
       await prisma.theme.updateMany({
         where: { ownerId: id },
         data: { ownerId: null }
@@ -225,7 +222,7 @@ class AdminController {
 
       const prisma = getPrisma();
       
-      // Upsert schools (create if name doesn't exist)
+      // Cria ou atualiza as escolas (upsert)
       let count = 0;
       for (const school of schools) {
         if (!school.name) continue;

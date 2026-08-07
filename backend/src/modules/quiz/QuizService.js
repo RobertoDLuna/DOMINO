@@ -2,14 +2,14 @@ const { getPrisma } = require("../../shared/config/prismaClient");
 
 class QuizService {
   /**
-   * Generates a unique 5-character room code
+   * Gera um código único de 5 caracteres para a sala
    */
   generateRoomCode() {
     return Math.random().toString(36).substring(2, 7).toUpperCase();
   }
 
   /**
-   * Create a new Quiz Game
+   * Cria um novo Quiz
    */
   async createQuiz(data, creatorId) {
     const prisma = getPrisma();
@@ -55,12 +55,12 @@ class QuizService {
   }
 
   /**
-   * Update an existing Quiz Game
+   * Atualiza um Quiz existente
    */
   async updateQuiz(id, data, userId) {
     const prisma = getPrisma();
     
-    // Check permission
+    // Verifica permissão do criador
     const existingQuiz = await prisma.quizGame.findUnique({ where: { id } });
     if (!existingQuiz) throw new Error('Quiz não encontrado');
     if (existingQuiz.createdById !== userId) throw new Error('Acesso negado: Somente o criador pode editar este quiz.');
@@ -105,7 +105,7 @@ class QuizService {
         const q = questions[index];
 
         if (q.id) {
-          // Update
+          // Atualização de questão
           await prisma.quizQuestion.update({
             where: { id: q.id },
             data: {
@@ -148,7 +148,7 @@ class QuizService {
           }
 
         } else {
-          // Create
+          // Criação de nova questão
           await prisma.quizQuestion.create({
             data: {
               quizId: id,
@@ -175,7 +175,7 @@ class QuizService {
   }
 
   /**
-   * List quizzes with filters
+   * Lista quizzes com suporte a filtros
    */
   async listQuizzes(filters = {}, userId = null, isAdmin = false) {
     const prisma = getPrisma();
@@ -216,7 +216,7 @@ class QuizService {
   }
 
   /**
-   * Get Quiz details
+   * Obtém detalhes de um Quiz por ID
    */
   async getQuizById(id) {
     const prisma = getPrisma();
@@ -237,7 +237,7 @@ class QuizService {
   }
 
   /**
-   * Delete Quiz
+   * Exclui um Quiz
    */
   async deleteQuiz(id, userId) {
     const prisma = getPrisma();
@@ -250,7 +250,7 @@ class QuizService {
   }
 
   /**
-   * Start a Quiz (changes status and generates code if not ASYNC only)
+   * Inicia um Quiz (altera status e gera código de sala se necessário)
    */
   async startQuiz(id, mode) {
     const prisma = getPrisma();
@@ -260,7 +260,7 @@ class QuizService {
     const status = mode === 'ASYNC' ? 'ASYNC' : 'LIVE';
     let roomCode = quiz.roomCode;
     
-    // Always generate a room code if it doesn't have one or if starting a new live session
+    // Sempre gera um código de sala se não tiver ou se estiver iniciando uma nova sessão ao vivo
     if (!roomCode || status === 'LIVE') {
       roomCode = this.generateRoomCode();
     }
@@ -275,7 +275,7 @@ class QuizService {
   }
 
   /**
-   * Stop/Finish a Quiz
+   * Encerra um Quiz
    */
   async finishQuiz(id) {
     const prisma = getPrisma();
@@ -283,13 +283,13 @@ class QuizService {
       where: { id },
       data: {
         status: 'FINISHED',
-        roomCode: null // free up the room code
+        roomCode: null // Libera o código de sala
       }
     });
   }
 
   /**
-   * Find Quiz by room code (for students joining)
+   * Busca Quiz por código de sala (para alunos entrando)
    */
   async getQuizByRoomCode(roomCode) {
     const prisma = getPrisma();
@@ -300,7 +300,7 @@ class QuizService {
           orderBy: { order: 'asc' },
           include: {
             answers: {
-              select: { id: true, answerText: true, imageUrl: true, order: true } // Do NOT expose isCorrect
+              select: { id: true, answerText: true, imageUrl: true, order: true } // Não expõe isCorrect para segurança
             }
           }
         }
@@ -309,7 +309,7 @@ class QuizService {
   }
 
   /**
-   * List BNCC skills with optional search filter
+   * Lista habilidades da BNCC com filtro de busca opcional
    */
   async listBnccSkills(search) {
     const prisma = getPrisma();
@@ -324,7 +324,7 @@ class QuizService {
     return await prisma.bnccSkill.findMany({
       where,
       orderBy: { code: 'asc' },
-      take: 100 // Limit results for performance
+      take: 100 // Limita resultados para melhor performance
     });
   }
 }

@@ -118,7 +118,7 @@ async function runTest() {
   try {
     console.log('--- PREPARANDO BANCO E USUÁRIOS FAKE ---');
     
-    // Create admin user
+    // Cria usuário administrador
     let adminUser = await prisma.user.findFirst({ where: { role: 'ADMIN' } });
     if (!adminUser) {
       adminUser = await prisma.user.create({

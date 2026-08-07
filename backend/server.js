@@ -15,7 +15,7 @@ const quizRoutes = require("./src/modules/quiz/quizRoutes");
 const tournamentRoutes = require("./src/modules/tournament/tournamentRoutes");
 require("./src/modules/tournament/tournamentCron"); // Inicializa os cron jobs de torneio
 
-// Global error handlers for Docker troubleshooting
+// Handlers globais de erro para diagnóstico no Docker
 process.on("uncaughtException", (err) => {
   console.error("❌ FATAL: Uncaught Exception:", err);
   process.exit(1);
@@ -71,7 +71,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// API Routes
+// Rotas da API
 app.use("/api/auth", authRoutes);
 app.use("/api/schools", schoolRoutes);
 app.use("/api/themes", themeRoutes);
@@ -82,7 +82,7 @@ app.use("/api/chess/reports", chessReportRoutes);
 app.use("/api/quiz", quizRoutes);
 app.use("/api/tournaments", tournamentRoutes);
 
-// Serving Static Frontend Files (Production)
+// Servindo arquivos estáticos do Frontend (Produção)
 const frontendPath = path.join(__dirname, "../frontend/dist");
 const indexPath = path.join(frontendPath, "index.html");
 console.log(`🌐 Servindo frontend de: ${frontendPath}`);
@@ -142,7 +142,7 @@ try {
 
 const PORT = process.env.PORT || 3001;
 
-// Healthcheck
+// Verificação de integridade (Healthcheck)
 app.get("/health", (req, res) => {
   res.status(200).json({ status: "ok", message: "Servidor de Dominó Online" });
 });

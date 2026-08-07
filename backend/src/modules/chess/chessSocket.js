@@ -1,31 +1,31 @@
 /**
  * chessSocket.js
- * Socket.IO handler for the Chess module.
- * Follows the same pattern as gameSocket.js.
+ * Manipulador Socket.IO para o módulo de Xadrez.
+ * Segue o mesmo padrão de gameSocket.js.
  *
- * Events (client → server):
- *   create-chess-room  → creates a room, returns roomCode
- *   join-chess-room    → joins a room as second player
- *   chess-move         → sends a move (UCI format), validated server-side
- *   chess-resign       → player resigns
- *   chess-offer-draw   → offers a draw
- *   chess-accept-draw  → accepts the draw offer
- *   chess-decline-draw → declines the draw offer
+ * Eventos (cliente → servidor):
+ *   create-chess-room  → cria uma sala, retorna roomCode
+ *   join-chess-room    → entra em uma sala como segundo jogador
+ *   chess-move         → envia movimento (formato UCI), validado no servidor
+ *   chess-resign       → jogador desiste da partida
+ *   chess-offer-draw   → propõe empate
+ *   chess-accept-draw  → aceita proposta de empate
+ *   chess-decline-draw → recusa proposta de empate
  *
- * Events (server → client):
- *   chess-room-created  → { roomCode, color: 'white' }
- *   chess-room-joined   → { fen, moves, whiteId, blackId, whiteName, blackName }
- *   chess-opponent-joined → opponent connected, game starts
- *   chess-move-made     → { fen, move, san, moves }
- *   chess-game-over     → { result, reason }
- *   chess-draw-offered  → draw was offered by opponent
- *   chess-draw-declined → opponent declined
- *   chess-error         → { message }
+ * Eventos (servidor → cliente):
+ *   chess-room-created    → { roomCode, color: 'white' }
+ *   chess-room-joined     → { fen, moves, whiteId, blackId, whiteName, blackName }
+ *   chess-opponent-joined → oponente conectado, partida pronta
+ *   chess-move-made       → { fen, move, san, moves }
+ *   chess-game-over       → { result, reason }
+ *   chess-draw-offered    → proposta de empate feita pelo oponente
+ *   chess-draw-declined   → oponente recusou o empate
+ *   chess-error           → { message }
  */
 
 const { Chess } = require('chess.js');
 
-// In-memory store: roomCode → RoomState
+// Armazenamento em memória: roomCode → Estado da Sala
 const rooms = new Map();
 
 function generateRoomCode() {
@@ -39,9 +39,9 @@ module.exports = function chessSocket(io) {
   const chessNsp = io.of('/chess');
 
   chessNsp.on('connection', (socket) => {
-    console.log(`[Chess] Player connected: ${socket.id}`);
+    console.log(`[Chess] Jogador conectado: ${socket.id}`);
 
-    // ── CREATE ROOM ──────────────────────────────────────────────────────────
+    // ── CRIAR SALA ───────────────────────────────────────────────────────────
     socket.on('create-chess-room', ({ userId, userName, mode = 'PVP', aiLevel = 5, timeLimit = 600 }) => {
       const roomCode = generateRoomCode();
       const chess = new Chess();
@@ -72,10 +72,10 @@ module.exports = function chessSocket(io) {
         timeLimit: room.timeLimit,
       });
 
-      console.log(`[Chess] Room created: ${roomCode} by ${userName} (mode: ${mode})`);
+      console.log(`[Chess] Sala criada: ${roomCode} por ${userName} (modo: ${mode})`);
     });
 
-    // ── JOIN ROOM ─────────────────────────────────────────────────────────────
+    // ── ENTRAR NA SALA ───────────────────────────────────────────────────────
     socket.on('join-chess-room', ({ roomCode, userId, userName }) => {
       let room = rooms.get(roomCode);
 
@@ -106,7 +106,7 @@ module.exports = function chessSocket(io) {
             fen: chess.fen(),
             timeLimit: room.timeLimit,
           });
-          console.log(`[Chess] Tournament room auto-created: ${roomCode} by ${userName}`);
+          console.log(`[Chess] Sala de torneio criada automaticamente: ${roomCode} por ${userName}`);
           return;
         }
 
@@ -136,7 +136,7 @@ module.exports = function chessSocket(io) {
             turn: room.chess.turn(),
           });
         }
-        console.log(`[Chess] Player 1 (${userId}) reconnected to ${roomCode}`);
+        console.log(`[Chess] Jogador 1 (${userId}) reconectou à sala ${roomCode}`);
         return;
       }
       
@@ -164,7 +164,7 @@ module.exports = function chessSocket(io) {
               turn: room.chess.turn(),
             });
           }
-          console.log(`[Chess] Player 2 (${userId}) reconnected to ${roomCode}`);
+          console.log(`[Chess] Jogador 2 (${userId}) reconectou à sala ${roomCode}`);
           return;
         } else {
           socket.emit('chess-error', { message: 'Sala já está cheia.' });
@@ -175,13 +175,13 @@ module.exports = function chessSocket(io) {
       room.player2 = { socketId: socket.id, userId, userName };
       socket.join(roomCode);
 
-      // 1. Notifica o criador
+      // 1. Notifica o criador da sala
       socket.to(room.player1.socketId).emit('chess-opponent-joined', {
         blackId: userId,
         blackName: userName,
       });
 
-      // 2. Notifica o joiner (ele entra no ChessScreen)
+      // 2. Notifica o participante que entrou
       socket.emit('chess-room-joined', {
         roomCode,
         whiteName: room.player1.userName,
@@ -191,7 +191,7 @@ module.exports = function chessSocket(io) {
         timeLimit: room.timeLimit,
       });
 
-      // 3. SORTEIO AUTOMÁTICO (com delay para garantir mount no client)
+      // 3. Sorteio automático (com delay para garantir montagem no cliente)
       setTimeout(() => {
         if (!rooms.has(roomCode)) return;
         const winner = Math.random() > 0.5 ? room.player1 : room.player2;
@@ -199,11 +199,11 @@ module.exports = function chessSocket(io) {
           userId: winner.userId,
           userName: winner.userName,
         });
-        console.log(`[Chess] Draw result for ${roomCode}: ${winner.userName}`);
+        console.log(`[Chess] Resultado do sorteio para ${roomCode}: ${winner.userName}`);
       }, 1000);
     });
 
-    // ── COLOR PICKING ─────────────────────────────────────────────────────────
+    // ── ESCOLHA DE COR ────────────────────────────────────────────────────────
     socket.on('chess-pick-color', ({ roomCode, color }) => {
       const room = rooms.get(roomCode);
       if (!room || room.white || room.black) return;
@@ -232,7 +232,7 @@ module.exports = function chessSocket(io) {
       }
     });
 
-    // ── REMATCH ───────────────────────────────────────────────────────────────
+    // ── REVANCHE ──────────────────────────────────────────────────────────────
     socket.on('chess-request-rematch', ({ roomCode }) => {
       const room = rooms.get(roomCode);
       if (!room) return;
@@ -241,7 +241,7 @@ module.exports = function chessSocket(io) {
       socket.to(roomCode).emit('chess-rematch-requested');
 
       if (room.rematchRequests.size === 2) {
-        // Swap colors
+        // Inverte as cores na revanche
         const oldWhite = room.white;
         const oldBlack = room.black;
         room.white = oldBlack;
@@ -265,20 +265,20 @@ module.exports = function chessSocket(io) {
       }
     });
 
-    // ── START GAME ────────────────────────────────────────────────────────────
+    // ── INICIAR JOGO ──────────────────────────────────────────────────────────
     socket.on('chess-start-game', ({ roomCode }) => {
       const room = rooms.get(roomCode);
       if (!room) return;
       
-      // Only the room creator (white) can start
+      // Apenas o criador da sala (peças brancas) pode iniciar
       if (room.white.socketId === socket.id) {
         room.status = 'PLAYING';
         chessNsp.to(roomCode).emit('chess-game-started');
-        console.log(`[Chess] Room ${roomCode} started by host.`);
+        console.log(`[Chess] Partida na sala ${roomCode} iniciada pelo anfitrião.`);
       }
     });
 
-    // ── MAKE MOVE ─────────────────────────────────────────────────────────────
+    // ── EXECUTAR MOVIMENTO ───────────────────────────────────────────────────
     socket.on('chess-move', ({ roomCode, move }) => {
       const room = rooms.get(roomCode);
       if (!room) {
@@ -286,7 +286,7 @@ module.exports = function chessSocket(io) {
         return;
       }
 
-      // Determine which color this socket is
+      // Determina a cor correspondente a este socket
       const isWhite = room.white?.socketId === socket.id;
       const isBlack = room.black?.socketId === socket.id;
       if (!isWhite && !isBlack) {
@@ -296,8 +296,8 @@ module.exports = function chessSocket(io) {
 
       const isFirstMove = room.chess.history().length === 0;
 
-      // Check for timeout BEFORE processing the move (Lazy Timestamp Evaluation)
-      const turn = room.chess.turn(); // 'w' or 'b'
+      // Verifica timeout antes de processar o lance (avaliação preguiçosa de timestamp)
+      const turn = room.chess.turn(); // 'w' ou 'b'
       if (room.timeLimit && room.lastMoveTimestamp && !isFirstMove) {
         const elapsed = Date.now() - room.lastMoveTimestamp;
         if (turn === 'w') {
@@ -319,13 +319,13 @@ module.exports = function chessSocket(io) {
         }
       }
 
-      // Validate turn
+      // Valida o turno
       if ((turn === 'w' && !isWhite) || (turn === 'b' && !isBlack)) {
         socket.emit('chess-error', { message: 'Não é sua vez.' });
         return;
       }
 
-      // Attempt move
+      // Tenta realizar o movimento
       let result;
       try {
         result = room.chess.move(move);
@@ -338,10 +338,10 @@ module.exports = function chessSocket(io) {
         return;
       }
 
-      // Reset draw offer on any move
+      // Reseta oferta de empate em qualquer movimento realizado
       room.drawOfferedBy = null;
 
-      // Update timestamps
+      // Atualiza marcadores de tempo
       if (room.timeLimit) {
          if (isFirstMove) {
             // Se for o primeiro movimento (das brancas), apenas inicia o marcador temporal para o próximo turno
@@ -364,10 +364,10 @@ module.exports = function chessSocket(io) {
         moves: room.chess.history({ verbose: true }),
       };
 
-      // Broadcast to all in room
+      // Transmite para todos na sala
       chessNsp.to(roomCode).emit('chess-move-made', payload);
 
-      // Check for game over
+      // Verifica fim de jogo
       if (room.chess.isGameOver()) {
         let result = 'DRAW';
         let reason = 'draw';
@@ -390,7 +390,7 @@ module.exports = function chessSocket(io) {
       }
     });
 
-    // ── CLAIM TIMEOUT ─────────────────────────────────────────────────────────
+    // ── REIVINDICAR TIMEOUT ───────────────────────────────────────────────────
     socket.on('chess-claim-timeout', ({ roomCode }) => {
       const room = rooms.get(roomCode);
       if (!room || !room.timeLimit || !room.lastMoveTimestamp || room.chess.isGameOver()) return;
@@ -414,7 +414,7 @@ module.exports = function chessSocket(io) {
       }
     });
 
-    // ── RESIGN ────────────────────────────────────────────────────────────────
+    // ── DESISTIR ──────────────────────────────────────────────────────────────
     socket.on('chess-resign', ({ roomCode }) => {
       const room = rooms.get(roomCode);
       if (!room) return;
@@ -426,7 +426,7 @@ module.exports = function chessSocket(io) {
       _persistGameResult(room, result, 'resignation');
     });
 
-    // ── OFFER DRAW ────────────────────────────────────────────────────────────
+    // ── PROPOR EMPATE ─────────────────────────────────────────────────────────
     socket.on('chess-offer-draw', ({ roomCode }) => {
       const room = rooms.get(roomCode);
       if (!room) return;
@@ -434,14 +434,14 @@ module.exports = function chessSocket(io) {
       const isWhite = room.white?.socketId === socket.id;
       room.drawOfferedBy = isWhite ? 'white' : 'black';
 
-      // Notify the opponent
+      // Notifica o adversário
       const opponentSocketId = isWhite ? room.black?.socketId : room.white?.socketId;
       if (opponentSocketId) {
         chessNsp.to(opponentSocketId).emit('chess-draw-offered');
       }
     });
 
-    // ── ACCEPT DRAW ───────────────────────────────────────────────────────────
+    // ── ACEITAR EMPATE ────────────────────────────────────────────────────────
     socket.on('chess-accept-draw', ({ roomCode }) => {
       const room = rooms.get(roomCode);
       if (!room || !room.drawOfferedBy) return;
@@ -450,7 +450,7 @@ module.exports = function chessSocket(io) {
       _persistGameResult(room, 'DRAW', 'agreement');
     });
 
-    // ── DECLINE DRAW ──────────────────────────────────────────────────────────
+    // ── RECUSAR EMPATE ────────────────────────────────────────────────────────
     socket.on('chess-decline-draw', ({ roomCode }) => {
       const room = rooms.get(roomCode);
       if (!room) return;
@@ -463,7 +463,7 @@ module.exports = function chessSocket(io) {
       }
     });
 
-    // ── DISCONNECT ────────────────────────────────────────────────────────────
+    // ── DESCONEXÃO ────────────────────────────────────────────────────────────
     socket.on('disconnect', () => {
       const disconnectedSocketId = socket.id;
       for (const [roomCode, room] of rooms.entries()) {
@@ -472,7 +472,7 @@ module.exports = function chessSocket(io) {
 
         if (wasP1 || wasP2) {
           const player = wasP1 ? room.player1 : room.player2;
-          console.log(`[Chess] ${player.userId} disconnected from ${roomCode}. Waiting 1 min for reconnect...`);
+          console.log(`[Chess] ${player.userId} desconectou da sala ${roomCode}. Aguardando 1 min para reconexão...`);
 
           if (room.status === 'FINISHED') break;
 
@@ -480,10 +480,10 @@ module.exports = function chessSocket(io) {
              const updatedRoom = rooms.get(roomCode);
              if (!updatedRoom || updatedRoom.status === 'FINISHED') return;
              
-             // Check se o player ainda está com o mesmo socket desatualizado (não reconectou)
+             // Verifica se o jogador ainda está com o socket antigo (não reconectou)
              const currentPlayer = wasP1 ? updatedRoom.player1 : updatedRoom.player2;
              if (currentPlayer && currentPlayer.socketId === disconnectedSocketId) {
-                console.log(`[Chess] Reconnect timeout for ${player.userId} in room ${roomCode}. Match forfeit.`);
+                console.log(`[Chess] Tempo de reconexão esgotado para ${player.userId} na sala ${roomCode}. Partida concedida.`);
                 const result = (wasP1 && updatedRoom.white?.socketId === disconnectedSocketId) || (!wasP1 && updatedRoom.black?.socketId === disconnectedSocketId) ? 'BLACK_WIN' : 'WHITE_WIN';
                 
                 updatedRoom.status = 'FINISHED';
@@ -506,18 +506,18 @@ module.exports = function chessSocket(io) {
 const chessRankingService = require('./ChessRankingService');
 
 /**
- * Persists game result to the database (PVP only, for ranking).
- * Runs async without blocking the socket.
+ * Persiste o resultado do jogo no banco de dados (Apenas PVP, para ranking).
+ * Executa assincronamente sem travar o socket.
  */
 async function _persistGameResult(room, result, reason) {
-  if (room.mode !== 'PVP') return; // PVC does not count for ranking
-  if (!room.white?.userId || !room.black?.userId) return; // guests don't count
+  if (room.mode !== 'PVP') return; // PVC não pontua no ranking
+  if (!room.white?.userId || !room.black?.userId) return; // Convidados não pontuam
 
   try {
     const { getPrisma } = require('../../shared/config/prismaClient');
     const prisma = getPrisma();
 
-    // Save game record
+    // Salva o registro da partida
     await prisma.chessGame.upsert({
       where: { roomCode: room.roomCode },
       update: {
@@ -542,10 +542,10 @@ async function _persistGameResult(room, result, reason) {
       },
     });
 
-    // Update ranking using the centralized service
+    // Atualiza o ranking utilizando o serviço centralizado
     await chessRankingService.updateRanking(room.white.userId, room.black.userId, result);
 
-    console.log(`[Chess] Game ${room.roomCode} persisted. Result: ${result}`);
+    console.log(`[Chess] Jogo ${room.roomCode} persistido. Resultado: ${result}`);
 
     // Integração automática com o módulo de Torneios
     if (room.roomCode.startsWith('T-')) {
@@ -563,12 +563,12 @@ async function _persistGameResult(room, result, reason) {
          await tournamentService.autoRegisterMatchByRoomCode(room.roomCode, {
            winnerId
          });
-         console.log(`[Chess] Tournament match ${room.roomCode} automatically advanced.`);
+         console.log(`[Chess] Partida do torneio ${room.roomCode} avançada automaticamente.`);
        } catch (e) {
-         console.error('[Chess] Error advancing tournament match:', e);
+         console.error('[Chess] Erro ao avançar partida de torneio:', e);
        }
     }
   } catch (err) {
-    console.error('[Chess] Error persisting game result:', err);
+    console.error('[Chess] Erro ao persistir resultado do jogo:', err);
   }
 }

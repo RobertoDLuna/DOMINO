@@ -3,7 +3,7 @@ const router = express.Router();
 const AdminController = require('./AdminController');
 const { authMiddleware, restrictRole } = require('../../shared/middleware/authMiddleware');
 
-// Check token and enforce ADMIN roll
+// Valida o token e restringe o acesso apenas a ADMIN
 router.use(authMiddleware);
 router.use(restrictRole(['ADMIN']));
 

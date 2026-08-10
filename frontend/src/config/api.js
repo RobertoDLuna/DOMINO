@@ -23,6 +23,4 @@ export const API_BASE_URL = getBaseUrl();
 export const API_URL = `${API_BASE_URL}/api`;
 export const SOCKET_URL = API_BASE_URL;
 
-console.log(`📡 [Rede] Ambiente: ${import.meta.env.PROD ? 'PRODUÇÃO' : 'DESENVOLVIMENTO'}`);
-console.log(`🔗 [Rede] API URL: ${API_URL}`);
-console.log(`🔌 [Rede] SOCKET URL: ${SOCKET_URL}`);
+// Logs de ambiente removidos para ambiente de produção limpo

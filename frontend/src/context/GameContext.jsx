@@ -70,7 +70,8 @@ export const GameProvider = ({ children }) => {
     }
 
     socket.on('connect', () => {
-      console.log('🔗 Conectado ao servidor!', socket.id);
+      // Log simplificado sem socket.id
+      console.log('🔗 Conectado ao servidor!');
       setIsConnected(true);
       setMyId(socket.id);
       

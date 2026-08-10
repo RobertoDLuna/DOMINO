@@ -3,7 +3,7 @@ import { API_URL } from '../config/api';
 class AuthService {
   async getSchools() {
     try {
-      console.log(`[AuthService] Buscando escolas em: ${API_URL}/schools`);
+      // Log removido para ambiente limpo
       const res = await fetch(`${API_URL}/schools`, { cache: 'no-store' });
       
       if (!res.ok) {
@@ -12,7 +12,7 @@ class AuthService {
       }
       
       const data = await res.json();
-      console.log(`[AuthService] ${data.length} escolas encontradas.`);
+      // Log removido para ambiente limpo
       return Array.isArray(data) ? data : [];
     } catch (err) {
       console.error('[AuthService] Falha catastrófica ao buscar escolas:', err);

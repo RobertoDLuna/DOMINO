@@ -99,19 +99,6 @@ docker volume ls | grep domino
 
 ---
 
-## 🔄 Atualizar a Imagem (CI/CD)
-
-```bash
-# Fazer build e push da nova imagem:
-docker build -t robsluna/domino-game:latest .
-docker push robsluna/domino-game:latest
-
-# No VPS, atualizar o serviço:
-docker service update --image robsluna/domino-game:latest domino_app
-```
-
----
-
 ## ⚠️ Backup do Banco
 
 ```bash

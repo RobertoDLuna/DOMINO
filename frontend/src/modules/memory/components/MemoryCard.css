@@ -18,11 +18,14 @@
   transform: rotateY(180deg);
 }
 
+.memory-card-container.matched {
+  opacity: 0.5;
+}
+
 .memory-card-container.matched .memory-card-inner {
   transform: rotateY(180deg) scale(0.95);
-  opacity: 0.8;
   /* Animação suave para cartas encontradas */
-  animation: pulseMatch 0.5s ease-out;
+  animation: pulseMatch 0.5s ease-out forwards;
 }
 
 .memory-card-front, .memory-card-back {

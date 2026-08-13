@@ -1,18 +1,31 @@
 import React, { useState, useEffect } from 'react';
+import { Trash2 } from 'lucide-react';
 import ThemeService from '../../../services/ThemeService';
 import { themes as defaultThemes } from '../../../config/themes';
 import logoCampina from '../../../assets/logo-campina.png';
 
-const GameCard = ({ theme, onClick }) => {
+const GameCard = ({ theme, onClick, user, onDelete }) => {
   const isDefault = theme.isDefault;
   const author = theme.owner?.fullName || (isDefault ? 'SISTEMA' : 'DESCONHECIDO');
   const categoryName = theme.category?.name || 'GERAL';
+  const canDelete = !isDefault && user && (user.role === 'ADMIN' || user.role === 'PROFESSOR' || user.id === theme.ownerId);
 
   return (
-    <button
+    <div
       onClick={() => onClick(theme)}
-      className="group relative flex flex-col bg-white rounded-[2rem] border-2 border-emerald-100 p-5 text-left transition-all hover:scale-[1.03] hover:shadow-[0_20px_50px_rgba(0,150,96,0.15)] hover:border-emerald-300 active:scale-95 animate-in fade-in zoom-in duration-500 overflow-hidden"
+      className="group relative flex flex-col bg-white rounded-[2rem] border-2 border-emerald-100 p-5 text-left transition-all hover:scale-[1.03] hover:shadow-[0_20px_50px_rgba(0,150,96,0.15)] hover:border-emerald-300 active:scale-95 animate-in fade-in zoom-in duration-500 overflow-hidden cursor-pointer"
+      role="button"
+      tabIndex={0}
     >
+      {canDelete && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onDelete(theme); }}
+          className="absolute top-4 right-4 bg-red-50 text-red-500 w-8 h-8 rounded-xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:bg-red-500 hover:text-white border-2 border-red-100 z-20"
+          title="Excluir Tema"
+        >
+          <Trash2 size={16} strokeWidth={2.5} />
+        </button>
+      )}
       <div
         className="absolute top-0 right-0 w-32 h-32 -mr-16 -mt-16 rounded-full opacity-10 group-hover:opacity-20 transition-opacity"
         style={{ backgroundColor: theme.color || '#009660' }}
@@ -27,7 +40,7 @@ const GameCard = ({ theme, onClick }) => {
           </span>
         )}
       </div>
-      <h3 className="text-emerald-900 font-black text-lg leading-tight uppercase mb-1 truncate">
+      <h3 className="text-emerald-900 font-black text-lg leading-tight uppercase mb-1 truncate pr-8">
         {theme.name}
       </h3>
       <p className="text-emerald-900/60 text-xs font-medium mb-4 line-clamp-2 h-8">
@@ -45,7 +58,7 @@ const GameCard = ({ theme, onClick }) => {
           </div>
         </div>
       </div>
-    </button>
+    </div>
   );
 };
 
@@ -55,38 +68,50 @@ const MemoryMenu = ({ user, onBack, onStartGame, onViewReports }) => {
   const [search, setSearch] = useState('');
   const [activeTab, setActiveTab] = useState('ALL');
 
+  const fetchThemes = async () => {
+    setLoading(true);
+    try {
+      const dbThemes = await ThemeService.getThemes({ search });
+      const allDefaultThemes = defaultThemes.map(t => ({
+        ...t,
+        isDefault: true,
+        category: { name: 'GERAL' },
+        createdAt: new Date().toISOString()
+      }));
+
+      const filteredDefaults = allDefaultThemes.filter(t => {
+        if (search && !t.name.toLowerCase().includes(search.toLowerCase())) return false;
+        return true;
+      });
+
+      const filteredDbThemes = dbThemes.filter(dbTheme =>
+        !allDefaultThemes.some(defaultTheme => defaultTheme.id === dbTheme.id)
+      );
+
+      // Apenas temas que têm imagens configuradas podem ser jogados (para o jogo da memória)
+      // O array symbols deve ter pelomenos 6 imagens (mesmo do domino).
+      setThemes([...filteredDefaults, ...filteredDbThemes].filter(t => t.symbols && t.symbols.length >= 6));
+    } catch (err) {
+      console.error("Erro ao carregar dados da Home:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const dbThemes = await ThemeService.getThemes({ search });
-        const allDefaultThemes = defaultThemes.map(t => ({
-          ...t,
-          isDefault: true,
-          category: { name: 'GERAL' },
-          createdAt: new Date().toISOString()
-        }));
-
-        const filteredDefaults = allDefaultThemes.filter(t => {
-          if (search && !t.name.toLowerCase().includes(search.toLowerCase())) return false;
-          return true;
-        });
-
-        const filteredDbThemes = dbThemes.filter(dbTheme =>
-          !allDefaultThemes.some(defaultTheme => defaultTheme.id === dbTheme.id)
-        );
-
-        // Apenas temas que têm imagens configuradas podem ser jogados (para o jogo da memória)
-        // O array symbols deve ter pelomenos 6 imagens (mesmo do domino).
-        setThemes([...filteredDefaults, ...filteredDbThemes].filter(t => t.symbols && t.symbols.length >= 6));
-      } catch (err) {
-        console.error("Erro ao carregar dados da Home:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
+    fetchThemes();
   }, [search]);
+
+  const handleDeleteTheme = async (theme) => {
+    if (window.confirm(`Deseja realmente excluir o tema "${theme.name}"?`)) {
+      try {
+        await ThemeService.deleteTheme(theme.id);
+        fetchThemes();
+      } catch (err) {
+        alert(err.message || 'Erro ao excluir tema.');
+      }
+    }
+  };
 
   const filteredThemes = themes.filter(t => {
     if (activeTab === 'DEFAULT') return t.isDefault;
@@ -150,7 +175,7 @@ const MemoryMenu = ({ user, onBack, onStartGame, onViewReports }) => {
             ))
           ) : filteredThemes.length > 0 ? (
             filteredThemes.map(theme => (
-              <GameCard key={theme.id} theme={theme} onClick={onStartGame} />
+              <GameCard key={theme.id} theme={theme} onClick={onStartGame} user={user} onDelete={handleDeleteTheme} />
             ))
           ) : (
             <div className="col-span-full py-20 text-center">

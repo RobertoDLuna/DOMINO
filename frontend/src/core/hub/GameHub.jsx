@@ -169,7 +169,7 @@ const GameHub = ({ user, onSelectGame, onLogout }) => {
       title: 'Super Memória',
       description: 'Treine seu cérebro combinando cartas de temas escolares.',
       icon: '🧠',
-      color: '#db2777',
+      color: '#009660',
       playersOnline: 15,
       badge: 'Novo'
     }

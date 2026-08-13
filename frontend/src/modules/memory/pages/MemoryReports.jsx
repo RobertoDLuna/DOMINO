@@ -36,55 +36,55 @@ const MemoryReports = ({ onBack }) => {
   };
 
   return (
-    <div className="flex min-h-screen bg-[#FDF2F8] w-full">
+    <div className="flex min-h-screen bg-[#F0FDF4] w-full">
       <main className="flex-1 p-6 sm:p-10 lg:p-12 overflow-y-auto h-screen max-w-7xl mx-auto">
         <header className="flex items-center gap-4 mb-12">
           <button
             onClick={onBack}
-            className="w-12 h-12 flex items-center justify-center bg-white rounded-2xl shadow-sm text-pink-900 border-2 border-pink-100 active:scale-95 transition-transform shrink-0 font-black text-xl"
+            className="w-12 h-12 flex items-center justify-center bg-white rounded-2xl shadow-sm text-emerald-900 border-2 border-emerald-100 active:scale-95 transition-transform shrink-0 font-black text-xl"
             title="Voltar"
           >
             ←
           </button>
           <div>
-            <h2 className="text-3xl sm:text-4xl font-black text-pink-900 uppercase italic tracking-tighter">Relatórios</h2>
-            <p className="text-xs sm:text-sm font-medium text-pink-900/70">Desempenho dos alunos no Jogo da Memória</p>
+            <h2 className="text-3xl sm:text-4xl font-black text-emerald-900 uppercase italic tracking-tighter">Relatórios</h2>
+            <p className="text-xs sm:text-sm font-medium text-emerald-900/70">Desempenho dos alunos no Jogo da Memória</p>
           </div>
         </header>
 
-        <div className="bg-white rounded-[2rem] shadow-sm border border-pink-100 overflow-hidden">
+        <div className="bg-white rounded-[2rem] shadow-sm border border-emerald-100 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-pink-50 border-b border-pink-100">
-                  <th className="p-4 text-[10px] font-black uppercase text-pink-900/60 tracking-widest">Aluno</th>
-                  <th className="p-4 text-[10px] font-black uppercase text-pink-900/60 tracking-widest">Tema</th>
-                  <th className="p-4 text-[10px] font-black uppercase text-pink-900/60 tracking-widest text-center">Erros</th>
-                  <th className="p-4 text-[10px] font-black uppercase text-pink-900/60 tracking-widest text-center">Maior Sequência de Erros</th>
-                  <th className="p-4 text-[10px] font-black uppercase text-pink-900/60 tracking-widest text-center">Tempo</th>
-                  <th className="p-4 text-[10px] font-black uppercase text-pink-900/60 tracking-widest text-center">Pontuação</th>
-                  <th className="p-4 text-[10px] font-black uppercase text-pink-900/60 tracking-widest text-right">Data</th>
+                <tr className="bg-emerald-50 border-b border-emerald-100">
+                  <th className="p-4 text-[10px] font-black uppercase text-emerald-900/60 tracking-widest">Aluno</th>
+                  <th className="p-4 text-[10px] font-black uppercase text-emerald-900/60 tracking-widest">Tema</th>
+                  <th className="p-4 text-[10px] font-black uppercase text-emerald-900/60 tracking-widest text-center">Erros</th>
+                  <th className="p-4 text-[10px] font-black uppercase text-emerald-900/60 tracking-widest text-center">Maior Sequência de Erros</th>
+                  <th className="p-4 text-[10px] font-black uppercase text-emerald-900/60 tracking-widest text-center">Tempo</th>
+                  <th className="p-4 text-[10px] font-black uppercase text-emerald-900/60 tracking-widest text-center">Pontuação</th>
+                  <th className="p-4 text-[10px] font-black uppercase text-emerald-900/60 tracking-widest text-right">Data</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-pink-50">
+              <tbody className="divide-y divide-emerald-50">
                 {loading ? (
                   <tr>
-                    <td colSpan="7" className="p-8 text-center text-pink-900/50 font-medium">Carregando...</td>
+                    <td colSpan="7" className="p-8 text-center text-emerald-900/50 font-medium">Carregando...</td>
                   </tr>
                 ) : reports.length === 0 ? (
                   <tr>
-                    <td colSpan="7" className="p-8 text-center text-pink-900/50 font-medium">Nenhum registro encontrado.</td>
+                    <td colSpan="7" className="p-8 text-center text-emerald-900/50 font-medium">Nenhum registro encontrado.</td>
                   </tr>
                 ) : (
                   reports.map((report) => (
-                    <tr key={report.id} className="hover:bg-pink-50/50 transition-colors">
-                      <td className="p-4 font-black text-pink-900 text-sm">{report.userName}</td>
-                      <td className="p-4 font-medium text-pink-900/70 text-sm truncate max-w-[150px]">{report.theme?.name || 'Desconhecido'}</td>
+                    <tr key={report.id} className="hover:bg-emerald-50/50 transition-colors">
+                      <td className="p-4 font-black text-emerald-900 text-sm">{report.userName}</td>
+                      <td className="p-4 font-medium text-emerald-900/70 text-sm truncate max-w-[150px]">{report.theme?.name || 'Desconhecido'}</td>
                       <td className="p-4 font-black text-red-500 text-center text-sm">{report.errors}</td>
                       <td className="p-4 font-black text-red-400 text-center text-sm">{report.consecutiveErrors}</td>
-                      <td className="p-4 font-black text-pink-900 text-center text-sm">{formatTime(report.timeSpentSecs)}</td>
+                      <td className="p-4 font-black text-emerald-900 text-center text-sm">{formatTime(report.timeSpentSecs)}</td>
                       <td className="p-4 font-black text-[#FFCE00] text-center text-sm drop-shadow-sm">{report.finalScore}</td>
-                      <td className="p-4 font-medium text-pink-900/60 text-right text-xs">{formatDate(report.createdAt)}</td>
+                      <td className="p-4 font-medium text-emerald-900/60 text-right text-xs">{formatDate(report.createdAt)}</td>
                     </tr>
                   ))
                 )}

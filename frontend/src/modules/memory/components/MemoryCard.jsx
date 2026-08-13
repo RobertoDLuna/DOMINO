@@ -12,7 +12,7 @@ const MemoryCard = ({ card, onClick }) => {
       }}
     >
       <div className="memory-card-inner">
-        <div className="memory-card-front bg-pink-100 border-4 border-pink-300 flex items-center justify-center rounded-2xl shadow-md">
+        <div className="memory-card-front bg-emerald-100 border-4 border-emerald-300 flex items-center justify-center rounded-2xl shadow-md">
           <span className="text-4xl">🧠</span>
         </div>
         <div className="memory-card-back bg-white border-4 border-emerald-400 flex items-center justify-center rounded-2xl shadow-lg overflow-hidden p-2">

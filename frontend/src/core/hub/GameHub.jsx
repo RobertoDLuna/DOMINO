@@ -171,7 +171,7 @@ const GameHub = ({ user, onSelectGame, onLogout }) => {
       icon: '🧠',
       color: '#db2777',
       playersOnline: 15,
-      badge: 'Em Breve'
+      badge: 'Novo'
     }
   ];
 
@@ -252,10 +252,11 @@ const GameHub = ({ user, onSelectGame, onLogout }) => {
                   key={game.id}
                   {...game}
                   onClick={() => {
-                    if (game.id === 'domino' || game.id === 'xadrez' || game.id === 'quiz' || game.id === 'tournaments') {
+                    if (game.id === 'domino' || game.id === 'xadrez' || game.id === 'quiz' || game.id === 'tournaments' || game.id === 'memoria') {
                       onSelectGame(game.id);
                     }
                   }}
+
                 />
               ))}
             </div>

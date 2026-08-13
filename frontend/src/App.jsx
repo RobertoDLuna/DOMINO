@@ -9,6 +9,7 @@ import GameHub from "./core/hub/GameHub";
 import ChessHomeScreen from "./modules/chess/screens/ChessHomeScreen";
 import QuizAppRouter from "./modules/quiz/QuizAppRouter";
 import TournamentAppRouter from "./modules/tournament/TournamentAppRouter";
+import MemoryAppRouter from "./modules/memory/MemoryAppRouter";
 import AuthService from "./services/AuthService";
 import { useGameContext } from "./context/GameContext";
 import ConfirmModal from "./shared/ui/ConfirmModal";
@@ -183,6 +184,8 @@ function App() {
         <QuizAppRouter user={user} onBack={() => setActiveGame(null)} />
       ) : activeGame === 'tournaments' ? (
         <TournamentAppRouter user={user} onBack={() => setActiveGame(null)} />
+      ) : activeGame === 'memoria' ? (
+        <MemoryAppRouter user={user} onBack={() => setActiveGame(null)} />
       ) : (
         <GameHub
           user={user}

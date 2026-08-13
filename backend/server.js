@@ -71,6 +71,8 @@ app.use((req, res, next) => {
   next();
 });
 
+const memoryRoutes = require("./src/modules/memory/memoryRoutes");
+
 // Rotas da API
 app.use("/api/auth", authRoutes);
 app.use("/api/schools", schoolRoutes);
@@ -81,6 +83,7 @@ app.use("/api/chess/ranking", chessRankingRoutes);
 app.use("/api/chess/reports", chessReportRoutes);
 app.use("/api/quiz", quizRoutes);
 app.use("/api/tournaments", tournamentRoutes);
+app.use("/api/memory", memoryRoutes);
 
 // Servindo arquivos estáticos do Frontend (Produção)
 const frontendPath = path.join(__dirname, "../frontend/dist");

@@ -131,6 +131,7 @@ model Theme {
   subcategoryId Int?         @map("subcategory_id")
   
   gameMatches   GameMatch[]
+  memoryGames   MemoryGame[]
   
   createdAt     DateTime     @default(now()) @map("created_at")
   updatedAt     DateTime     @updatedAt @map("updated_at")
@@ -592,4 +593,51 @@ model TournamentRanking {
   updatedAt  DateTime @updatedAt @map("updated_at")
 
   @@map("tournament_ranking")
+}
+
+// ─── JOGO DA MEMÓRIA ─────────────────────────────────────────────────────
+
+enum MemoryGameMode {
+  SINGLE_PLAYER
+}
+
+model MemoryGame {
+  id                String         @id @default(uuid())
+  roomCode          String?        @unique @map("room_code") @db.VarChar(20)
+  mode              MemoryGameMode @default(SINGLE_PLAYER)
+  
+  themeId           String?        @map("theme_id")
+  theme             Theme?         @relation(fields: [themeId], references: [id])
+  
+  userId            String?        @map("user_id")
+  userName          String?        @map("user_name") @db.VarChar(255)
+  
+  totalPairs        Int            @default(6) @map("total_pairs")
+  pairsFound        Int            @default(0) @map("pairs_found")
+  errors            Int            @default(0)
+  consecutiveErrors Int            @default(0) @map("consecutive_errors")
+  timeSpentSecs     Int            @default(0) @map("time_spent_secs")
+  finalScore        Int            @default(0) @map("final_score")
+  
+  createdAt         DateTime       @default(now()) @map("created_at")
+  finishedAt        DateTime?      @map("finished_at")
+
+  @@map("memory_games")
+}
+
+model MemoryRanking {
+  id         String   @id @default(uuid())
+  userId     String   @unique @map("user_id")
+  userName   String   @map("user_name") @db.VarChar(255)
+  schoolId   Int?     @map("school_id")
+  schoolName String?  @map("school_name") @db.VarChar(255)
+
+  gamesPlayed Int     @default(0) @map("games_played")
+  totalScore Int      @default(0) @map("total_score")
+  bestScore  Int      @default(0) @map("best_score")
+
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@map("memory_ranking")
 }

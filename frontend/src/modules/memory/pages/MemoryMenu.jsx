@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Trash2 } from 'lucide-react';
 import ThemeService from '../../../services/ThemeService';
 import { themes as defaultThemes } from '../../../config/themes';
+import ThemeCreator from '../../domino/components/ThemeCreator';
 import logoCampina from '../../../assets/logo-campina.png';
 
 const GameCard = ({ theme, onClick, user, onDelete }) => {
@@ -67,6 +68,7 @@ const MemoryMenu = ({ user, onBack, onStartGame, onViewReports }) => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [activeTab, setActiveTab] = useState('ALL');
+  const [showCreator, setShowCreator] = useState(false);
 
   const fetchThemes = async () => {
     setLoading(true);
@@ -152,12 +154,20 @@ const MemoryMenu = ({ user, onBack, onStartGame, onViewReports }) => {
 
           <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto">
             {(user?.role === 'ADMIN' || user?.role === 'PROFESSOR') && (
-              <button
-                onClick={onViewReports}
-                className="w-full md:w-auto bg-[#009660] text-white px-5 py-4 rounded-[1.5rem] font-black text-[11px] shadow-[0_6px_0_#00764D] hover:brightness-110 transition-all active:translate-y-1 active:shadow-none flex items-center justify-center gap-2 whitespace-nowrap"
-              >
-                <span>📊</span> <span className="inline">RELATÓRIOS (ALUNOS)</span>
-              </button>
+              <>
+                <button
+                  onClick={() => setShowCreator(true)}
+                  className="w-full md:w-auto bg-[#009660] text-white px-5 py-4 rounded-[1.5rem] font-black text-[11px] shadow-[0_6px_0_#00764D] hover:brightness-110 transition-all active:translate-y-1 active:shadow-none flex items-center justify-center gap-2 whitespace-nowrap"
+                >
+                  <span>➕</span> <span className="inline">CRIAR NOVO TEMA</span>
+                </button>
+                <button
+                  onClick={onViewReports}
+                  className="w-full md:w-auto bg-indigo-500 text-white px-5 py-4 rounded-[1.5rem] font-black text-[11px] shadow-[0_6px_0_#3730a3] hover:brightness-110 transition-all active:translate-y-1 active:shadow-none flex items-center justify-center gap-2 whitespace-nowrap"
+                >
+                  <span>📊</span> <span className="inline">RELATÓRIOS (ALUNOS)</span>
+                </button>
+              </>
             )}
           </div>
         </header>
@@ -185,6 +195,17 @@ const MemoryMenu = ({ user, onBack, onStartGame, onViewReports }) => {
           )}
         </div>
       </main>
+
+      {showCreator && (
+        <ThemeCreator 
+          gameType="memory"
+          onThemeCreated={() => {
+            setShowCreator(false);
+            fetchThemes();
+          }} 
+          onClose={() => setShowCreator(false)} 
+        />
+      )}
     </div>
   );
 };

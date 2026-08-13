@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import ThemeService from "../../../services/ThemeService";
 
-const ThemeCreator = ({ onThemeCreated, onClose }) => {
+const ThemeCreator = ({ onThemeCreated, onClose, gameType = "domino" }) => {
   const [categories, setCategories] = useState([]);
   const [subcategories, setSubcategories] = useState([]);
   const [formData, setFormData] = useState({
@@ -198,7 +198,7 @@ const ThemeCreator = ({ onThemeCreated, onClose }) => {
         <header className="p-6 sm:p-8 bg-gradient-to-r from-emerald-50 to-white border-b-2 border-emerald-100 flex justify-between items-center flex-shrink-0">
           <div>
             <h2 className="text-2xl sm:text-3xl font-black text-[#009660] uppercase italic tracking-tighter leading-none">Novo Tema</h2>
-            <p className="text-[10px] sm:text-xs font-black uppercase text-emerald-900/70 tracking-widest mt-1">Crie seu próprio conjunto de dominó</p>
+            <p className="text-[10px] sm:text-xs font-black uppercase text-emerald-900/70 tracking-widest mt-1">Crie seu próprio conjunto de {gameType === 'domino' ? 'dominó' : 'cartas'}</p>
           </div>
           <button onClick={onClose} className="w-10 h-10 rounded-full bg-white text-emerald-900 hover:bg-red-50 hover:text-red-500 transition-colors shadow-sm border border-gray-100 flex items-center justify-center font-black text-sm cursor-pointer">✕</button>
         </header>
@@ -404,7 +404,10 @@ const ThemeCreator = ({ onThemeCreated, onClose }) => {
             {/* Coluna Direita — Imagens */}
             <section>
               <label className="text-[10px] font-black uppercase text-emerald-900/60 mb-2 block ml-1 text-center">
-                Imagens das Peças * <span className="text-emerald-300">(pontos 1 a 6)</span>
+                {gameType === 'domino' ? 'Imagens das Peças * ' : 'Imagens das Cartas * '}
+                <span className="text-emerald-300">
+                  {gameType === 'domino' ? '(pontos 1 a 6)' : '(mínimo 6 pares)'}
+                </span>
               </label>
               <div className="grid grid-cols-3 gap-2 bg-emerald-50/30 p-3 rounded-3xl border-2 border-emerald-100/50">
                 {[...Array(6)].map((_, i) => (
@@ -423,7 +426,7 @@ const ThemeCreator = ({ onThemeCreated, onClose }) => {
                     ) : (
                       <div className="flex flex-col items-center gap-0.5">
                         <span className="text-2xl font-black text-emerald-200">{i + 1}</span>
-                        <span className="text-[8px] font-black text-emerald-200 uppercase">PONTO</span>
+                        <span className="text-[8px] font-black text-emerald-200 uppercase">{gameType === 'domino' ? 'PONTO' : 'PAR'}</span>
                       </div>
                     )}
                     {previews[i] && (
@@ -440,12 +443,20 @@ const ThemeCreator = ({ onThemeCreated, onClose }) => {
                 ))}
               </div>
               <div className="mt-2 space-y-1">
-                <p className="text-[9px] text-center font-black text-emerald-900/70 uppercase tracking-widest italic leading-tight">
-                  O ponto '0' (zero) será vazio por padrão
-                </p>
-                <p className="text-[9px] text-center font-black text-emerald-900/70 uppercase tracking-widest italic leading-tight">
-                  Cada imagem acima vale seu respectivo valor (1 a 6) para o cálculo de pontos no jogo
-                </p>
+                {gameType === 'domino' ? (
+                  <>
+                    <p className="text-[9px] text-center font-black text-emerald-900/70 uppercase tracking-widest italic leading-tight">
+                      O ponto '0' (zero) será vazio por padrão
+                    </p>
+                    <p className="text-[9px] text-center font-black text-emerald-900/70 uppercase tracking-widest italic leading-tight">
+                      Cada imagem acima vale seu respectivo valor (1 a 6) para o cálculo de pontos no jogo
+                    </p>
+                  </>
+                ) : (
+                  <p className="text-[9px] text-center font-black text-emerald-900/70 uppercase tracking-widest italic leading-tight">
+                    As 6 imagens selecionadas serão embaralhadas para formar os pares do jogo
+                  </p>
+                )}
               </div>
             </section>
           </div>

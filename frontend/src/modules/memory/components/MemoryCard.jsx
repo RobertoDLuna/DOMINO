@@ -17,7 +17,11 @@ const MemoryCard = ({ card, onClick }) => {
         </div>
         <div className="memory-card-back bg-white border-4 border-emerald-400 flex items-center justify-center rounded-2xl shadow-lg overflow-hidden p-2">
           {card.symbolUrl ? (
-             <img src={card.symbolUrl} alt="carta" className="w-full h-full object-contain" />
+            card.symbolUrl.startsWith('http') || card.symbolUrl.startsWith('/uploads') ? (
+              <img src={card.symbolUrl} alt="carta" className="w-full h-full object-contain" />
+            ) : (
+              <span className="text-5xl font-black select-none leading-none drop-shadow-sm">{card.symbolUrl}</span>
+            )
           ) : (
             <span className="text-4xl font-black text-emerald-900">?</span>
           )}

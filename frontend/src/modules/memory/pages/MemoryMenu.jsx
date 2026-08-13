@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Trash2 } from 'lucide-react';
 import ThemeService from '../../../services/ThemeService';
-import { themes as defaultThemes } from '../../../config/themes';
+import { memoryThemes as defaultThemes } from '../../../config/themes';
 import ThemeCreator from '../../domino/components/ThemeCreator';
 import logoCampina from '../../../assets/logo-campina.png';
 

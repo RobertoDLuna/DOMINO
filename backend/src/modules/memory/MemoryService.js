@@ -3,6 +3,14 @@ const { getPrisma } = require('../../shared/config/prismaClient');
 class MemoryService {
   async finishGame(user, payload) {
     const prisma = getPrisma();
+    let dbUser = null;
+    if (user && user.id) {
+      dbUser = await prisma.user.findUnique({
+        where: { id: user.id },
+        include: { school: true }
+      });
+    }
+
     const {
       themeId,
       totalPairs = 6,
@@ -47,8 +55,8 @@ class MemoryService {
     const game = await prisma.memoryGame.create({
       data: {
         themeId: themeId || null,
-        userId: user ? user.id : null,
-        userName: user ? user.fullName : 'Guest',
+        userId: dbUser ? dbUser.id : null,
+        userName: dbUser ? dbUser.fullName : 'Guest',
         mode: 'SINGLE_PLAYER',
         totalPairs,
         pairsFound,
@@ -61,24 +69,24 @@ class MemoryService {
     });
 
     // Atualizar Ranking (Apenas para alunos/usuários logados)
-    if (user && user.id) {
+    if (dbUser && dbUser.id) {
       // Obter o melhor score atual
-      const currentRanking = await prisma.memoryRanking.findUnique({ where: { userId: user.id } });
+      const currentRanking = await prisma.memoryRanking.findUnique({ where: { userId: dbUser.id } });
       const currentBest = currentRanking ? currentRanking.bestScore : 0;
       const newBest = Math.max(finalScore, currentBest);
 
       await prisma.memoryRanking.upsert({
-        where: { userId: user.id },
+        where: { userId: dbUser.id },
         update: {
           gamesPlayed: { increment: 1 },
           totalScore: { increment: finalScore },
           bestScore: newBest
         },
         create: {
-          userId: user.id,
-          userName: user.fullName,
-          schoolId: user.schoolId || null,
-          schoolName: user.school ? user.school.name : null,
+          userId: dbUser.id,
+          userName: dbUser.fullName,
+          schoolId: dbUser.schoolId || null,
+          schoolName: dbUser.school ? dbUser.school.name : null,
           gamesPlayed: 1,
           totalScore: finalScore,
           bestScore: finalScore,

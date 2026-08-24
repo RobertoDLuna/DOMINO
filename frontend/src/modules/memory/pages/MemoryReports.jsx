@@ -2,6 +2,66 @@ import React, { useState, useEffect } from 'react';
 import { API_URL } from '../../../config/api';
 import AuthService from '../../../services/AuthService';
 
+const ThemeCombobox = ({ options, value, onChange }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const wrapperRef = React.useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const filteredOptions = options.filter(opt => 
+    opt.toLowerCase().includes(search.toLowerCase())
+  );
+
+  return (
+    <div ref={wrapperRef} className="relative w-full sm:w-auto min-w-[240px]">
+      <input
+        type="text"
+        placeholder="Buscar tema..."
+        value={isOpen ? search : value}
+        onFocus={() => {
+          setIsOpen(true);
+          setSearch('');
+        }}
+        onChange={(e) => setSearch(e.target.value)}
+        className="w-full bg-white border-2 border-emerald-100 text-emerald-900 font-bold text-sm rounded-xl px-4 h-12 outline-none focus:border-emerald-300 shadow-sm transition-colors cursor-text pr-10"
+      />
+      {isOpen && (
+        <ul className="absolute z-50 w-full mt-2 bg-white border-2 border-emerald-100 rounded-xl shadow-xl max-h-60 overflow-y-auto divide-y divide-emerald-50">
+          {filteredOptions.length > 0 ? (
+            filteredOptions.map((opt) => (
+              <li
+                key={opt}
+                onMouseDown={() => {
+                  onChange(opt);
+                  setIsOpen(false);
+                  setSearch('');
+                }}
+                className={`px-4 py-3 cursor-pointer text-sm hover:bg-emerald-50 transition-colors ${value === opt ? 'bg-emerald-100/50 text-emerald-900 font-black' : 'text-emerald-900 font-medium'}`}
+              >
+                {opt}
+              </li>
+            ))
+          ) : (
+            <li className="px-4 py-4 text-sm text-emerald-900/50 italic text-center font-medium">Nenhum tema encontrado</li>
+          )}
+        </ul>
+      )}
+      <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-emerald-900/40 text-xs">
+        ▼
+      </div>
+    </div>
+  );
+};
+
 const MemoryReports = ({ onBack }) => {
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -65,16 +125,11 @@ const MemoryReports = ({ onBack }) => {
               <label htmlFor="theme-filter" className="text-[10px] font-black text-emerald-900/60 uppercase tracking-widest mb-1 ml-1 sm:ml-0">
                 Filtrar por Tema
               </label>
-              <select
-                id="theme-filter"
-                value={selectedTheme}
-                onChange={(e) => setSelectedTheme(e.target.value)}
-                className="bg-white border-2 border-emerald-100 text-emerald-900 font-bold text-sm rounded-xl px-4 py-2 outline-none focus:border-emerald-300 shadow-sm transition-colors cursor-pointer w-full sm:w-auto min-w-[200px]"
-              >
-                {uniqueThemes.map(theme => (
-                  <option key={theme} value={theme}>{theme}</option>
-                ))}
-              </select>
+              <ThemeCombobox 
+                options={uniqueThemes} 
+                value={selectedTheme} 
+                onChange={setSelectedTheme} 
+              />
             </div>
           )}
         </header>

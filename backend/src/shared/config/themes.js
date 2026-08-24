@@ -44,6 +44,13 @@ const themes = {
     description: 'O jogo tradicional com a peça vazia e números de 1 a 6.',
     symbols: ["", "1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣"],
     color: '#1E293B'
+  },
+  cores: {
+    id: 'cores',
+    name: 'Aquarela de Cores 🎨',
+    description: 'Desafio visual das cores primárias e secundárias.',
+    symbols: ["", "🔴", "🔵", "🟡", "🟢", "🟣", "🟠"],
+    color: '#EC4899'
   }
 };
 

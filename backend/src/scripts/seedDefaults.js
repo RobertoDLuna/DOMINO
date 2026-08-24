@@ -7,6 +7,7 @@ const defaultThemes = [
   { id: 'frutas', name: 'Frutas Tropicais' },
   { id: 'espaco', name: 'Espaço Sideral' },
   { id: 'objetos', name: 'Objetos Escolares' },
+  { id: 'cores', name: 'Aquarela de Cores' },
   { id: 'classico', name: 'Dominó Clássico' }
 ];
 

@@ -36,9 +36,9 @@ const MemoryReports = ({ onBack }) => {
   };
 
   return (
-    <div className="flex min-h-screen bg-[#F0FDF4] w-full">
-      <main className="flex-1 p-6 sm:p-10 lg:p-12 overflow-y-auto h-screen max-w-7xl mx-auto">
-        <header className="flex items-center gap-4 mb-12">
+    <div className="flex h-screen bg-[#F0FDF4] w-full overflow-hidden">
+      <main className="flex-1 p-6 sm:p-10 lg:p-12 flex flex-col max-w-7xl mx-auto w-full h-full">
+        <header className="flex items-center gap-4 mb-6 sm:mb-12 shrink-0">
           <button
             onClick={onBack}
             className="w-12 h-12 flex items-center justify-center bg-white rounded-2xl shadow-sm text-emerald-900 border-2 border-emerald-100 active:scale-95 transition-transform shrink-0 font-black text-xl"
@@ -52,18 +52,18 @@ const MemoryReports = ({ onBack }) => {
           </div>
         </header>
 
-        <div className="bg-white rounded-[2rem] shadow-sm border border-emerald-100 overflow-hidden">
-          <div className="overflow-x-auto">
+        <div className="bg-white rounded-[2rem] shadow-sm border border-emerald-100 flex flex-col flex-1 min-h-0 overflow-hidden">
+          <div className="overflow-auto flex-1 relative">
             <table className="w-full text-left border-collapse">
-              <thead>
+              <thead className="sticky top-0 z-10">
                 <tr className="bg-emerald-50 border-b border-emerald-100">
-                  <th className="p-4 text-[10px] font-black uppercase text-emerald-900/60 tracking-widest">Aluno</th>
-                  <th className="p-4 text-[10px] font-black uppercase text-emerald-900/60 tracking-widest">Tema</th>
-                  <th className="p-4 text-[10px] font-black uppercase text-emerald-900/60 tracking-widest text-center">Erros</th>
-                  <th className="p-4 text-[10px] font-black uppercase text-emerald-900/60 tracking-widest text-center">Maior Sequência de Erros</th>
-                  <th className="p-4 text-[10px] font-black uppercase text-emerald-900/60 tracking-widest text-center">Tempo</th>
-                  <th className="p-4 text-[10px] font-black uppercase text-emerald-900/60 tracking-widest text-center">Pontuação</th>
-                  <th className="p-4 text-[10px] font-black uppercase text-emerald-900/60 tracking-widest text-right">Data</th>
+                  <th className="p-4 text-[10px] font-black uppercase text-emerald-900/60 tracking-widest bg-emerald-50">Aluno</th>
+                  <th className="p-4 text-[10px] font-black uppercase text-emerald-900/60 tracking-widest bg-emerald-50">Tema</th>
+                  <th className="p-4 text-[10px] font-black uppercase text-emerald-900/60 tracking-widest text-center bg-emerald-50">Erros</th>
+                  <th className="p-4 text-[10px] font-black uppercase text-emerald-900/60 tracking-widest text-center bg-emerald-50">Maior Sequência de Erros</th>
+                  <th className="p-4 text-[10px] font-black uppercase text-emerald-900/60 tracking-widest text-center bg-emerald-50">Tempo</th>
+                  <th className="p-4 text-[10px] font-black uppercase text-emerald-900/60 tracking-widest text-center bg-emerald-50">Pontuação</th>
+                  <th className="p-4 text-[10px] font-black uppercase text-emerald-900/60 tracking-widest text-right bg-emerald-50">Data</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-emerald-50">
